@@ -1,0 +1,6 @@
+/home/haletas/CLionProjects/LSIM/cmake-build-debug/CMakeFiles/LSIM.dir
+/home/haletas/CLionProjects/LSIM/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/haletas/CLionProjects/LSIM/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/haletas/CLionProjects/LSIM/cmake-build-debug/external/glad/CMakeFiles/glad.dir
+/home/haletas/CLionProjects/LSIM/cmake-build-debug/external/glad/CMakeFiles/edit_cache.dir
+/home/haletas/CLionProjects/LSIM/cmake-build-debug/external/glad/CMakeFiles/rebuild_cache.dir
