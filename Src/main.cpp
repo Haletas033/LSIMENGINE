@@ -7,9 +7,9 @@
 
 #include "../include/shaderClass.h"
 #include "../include/VAO.h"
-#include"VBO.h"
+#include"../include/VBO.h"
 #include "../include/EBO.h"
-#include"camera.h"
+#include"../include/camera.h"
 
 
 
@@ -78,7 +78,7 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	//Generates Shader object using shaders default.vert and default.frag
-	Shader shaderProgram("../Src/default.vert", "../Src/default.frag");
+	Shader shaderProgram("../shaders/default.vert", "../shaders/default.frag");
 
 
 	//Generates Vertex Array Object and binds it
