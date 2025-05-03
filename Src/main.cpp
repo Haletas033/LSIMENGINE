@@ -5,10 +5,10 @@
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
-#include"shaderClass.h"
-#include"VAO.h"
+#include "../include/shaderClass.h"
+#include "../include/VAO.h"
 #include"VBO.h"
-#include"EBO.h"
+#include "../include/EBO.h"
 #include"camera.h"
 
 

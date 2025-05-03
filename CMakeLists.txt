@@ -11,15 +11,15 @@ find_package(glm REQUIRED)
 add_subdirectory(external/glad)
 
 add_executable(LSIM Src/main.cpp
-        Src/shaderClass.h
+        include/shaderClass.h
         Src/shaderClass.cpp
-        Src/VBO.h
+        include/VBO.h
         Src/VBO.cpp
-        Src/VAO.h
+        include/VAO.h
         Src/VAO.cpp
-        Src/EBO.h
+        include/EBO.h
         Src/EBO.cpp
-        Src/camera.h
+        include/camera.h
         Src/camera.cpp)
 
 target_link_libraries(LSIM PRIVATE glfw glm::glm glad)
