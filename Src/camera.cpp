@@ -15,13 +15,17 @@ void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shade
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(projection * view));
 }
 
+float pitch = 0.0f;
+float yaw = -90.0f;
+
 void Camera::Inputs(GLFWwindow* window)
 {
-    //Handle movement keys (W, A, S, D, Space, Left Control, Left Shift)
+    glm::vec3 flatOrientation = glm::normalize(glm::vec3(Orientation.x, 0.0f, Orientation.z));
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        Position += speed * Orientation;
+        Position += speed * flatOrientation;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        Position -= speed * Orientation;
+        Position -= speed * flatOrientation;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         Position -= speed * glm::normalize(glm::cross(Orientation, Up));
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
@@ -60,20 +64,19 @@ void Camera::Inputs(GLFWwindow* window)
         lastMouseY = mouseY;
 
         //Apply sensitivity to the delta values
-        float rotX = sensitivity * (float)deltaY / height; //Vertical (pitch) rotation
-        float rotY = sensitivity * (float)deltaX / width;  //Horizontal (yaw) rotation
+        pitch -= sensitivity * (float)deltaY / height; //Vertical (pitch) rotation
+        yaw += sensitivity * (float)deltaX / width;  //Horizontal (yaw) rotation
 
-        //Vertical rotation (pitch) - looking up and down
-        glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
+        //Clamps pitch to avoid flipping
+        if (pitch > 89.0f) pitch = 89.0f;
+        if (pitch < -89.0f) pitch = -89.0f;
 
-        //Clamp the pitch to prevent flipping the camera upside down
-        if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))
-        {
-            Orientation = newOrientation;
-        }
-
-        //Horizontal rotation (yaw) - looking left and right
-        Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
+        //Rebuilds Orientation vector
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        direction.y = sin(glm::radians(pitch));
+        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        Orientation = glm::normalize(direction);
     }
     else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
     {

@@ -20,7 +20,9 @@ add_executable(LSIM Src/main.cpp
         include/EBO.h
         Src/EBO.cpp
         include/camera.h
-        Src/camera.cpp)
+        Src/camera.cpp
+        include/terrain.h
+        Src/terrain.cpp)
 
 target_link_libraries(LSIM PRIVATE glfw glm::glm glad)
 target_include_directories(LSIM PRIVATE external/glad/include)

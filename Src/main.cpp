@@ -10,6 +10,7 @@
 #include"../include/VBO.h"
 #include "../include/EBO.h"
 #include"../include/camera.h"
+#include"../include/terrain.h"
 
 
 
@@ -24,22 +25,17 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 // Vertices coordinates
 GLfloat vertices[] =
 { //     COORDINATES     /        COLORS      /   TexCoord  //
-	-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-	-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-	 0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	5.0f, 0.0f,
-	 0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	2.5f, 5.0f
+	-0.5f, 0.0f, -0.5f,    1.0f, 0.0f, 0.0f,    0.0f, 0.0f,
+	 0.5f, 0.0f, -0.5f,    0.0f, 1.0f, 0.0f,    1.0f, 0.0f,
+	 0.5f, 0.0f,  0.5f,    0.0f, 0.0f, 1.0f,    1.0f, 1.0f,
+	-0.5,  0.0f,  0.5f,    1.0f, 0.0f, 1.0f,    0.0f, 1.0f
 };
 
 // Indices for vertices order
 GLuint indices[] =
 {
 	0, 1, 2,
-	0, 2, 3,
-	0, 1, 4,
-	1, 2, 4,
-	2, 3, 4,
-	3, 0, 4
+	0, 2, 3
 };
 
 
@@ -57,10 +53,10 @@ int main()
 
 
 	//Creates a GLFWwindow object of 800 by 800 pixels
-	GLFWwindow* window = glfwCreateWindow(width, height, "LSIMENGINE", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(width, height, "LSIMENGINE", nullptr, nullptr);
 
 	//Error check if the window fails to create
-	if (window == NULL)
+	if (window == nullptr)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
@@ -93,18 +89,23 @@ int main()
 	//Links VBO attributes such as coordinates and colors to VAO
 	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 8 * sizeof(float), (void*)0);
 	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	//Unbinds all to prevent accidentally modifying them
 	VAO1.Unbind();
 	VBO1.Unbind();
 	EBO1.Unbind();
-
-
 
 	//Enables the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
 	//Creates camera object
 	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
+
+	std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(512, 512, 5.0f);
+
+	GLuint noiseMapTexture = noiseMapToTexture(noiseMap);
+
+
 
 	//Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -128,7 +129,12 @@ int main()
 
 		camera.Matrix(45.0f, 0.1f, 100.0f, shaderProgram, "camMatrix", aspect);
 
-;
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, noiseMapTexture);
+		// Set the sampler uniform to use texture unit 0
+		GLint texLoc = glGetUniformLocation(shaderProgram.ID, "tex0");
+		glUniform1i(texLoc, 0);
+
 		//Binds the VAO so OpenGL knows to use it
 		VAO1.Bind();
 		//Draws primitives, number of indices, datatype of indices, index of indices
@@ -150,5 +156,6 @@ int main()
 	glfwDestroyWindow(window);
 	//Terminates GLFW before ending the program
 	glfwTerminate();
+
 	return 0;
 }
