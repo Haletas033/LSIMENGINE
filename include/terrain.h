@@ -7,7 +7,7 @@
 #include"FastNoiseLite.h"
 #include "glad/glad.h"
 
-std::vector<std::vector<float>> GenerateNoiseMap(int width, int height, float scale);
+std::vector<std::vector<float>> GenerateNoiseMap(int width, int height, int seed, float scale, int octaves, float persistence, float lacunarity);
 
 GLuint noiseMapToTexture(std::vector<std::vector<float>>& noiseMap);
 

@@ -101,7 +101,7 @@ int main()
 	//Creates camera object
 	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
-	std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(512, 512, 5.0f);
+	std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(512, 512, static_cast<unsigned int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
 
 	GLuint noiseMapTexture = noiseMapToTexture(noiseMap);
 
