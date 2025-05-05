@@ -3,6 +3,17 @@
 #include <cfloat>
 #include <random>
 
+//Define regions based on height, color, and name
+std::vector<TerrainType> regions = {
+    {"Deep Water", 0.3f, Color(0.0f, 0.0f, 0.5f, 1.0f)},
+    {"Shallow Water", 0.4f, Color(0.0f, 0.3f, 0.7f, 1.0f)},
+    {"Sand", 0.5f, Color(0.9f, 0.8f, 0.6f, 1.0f)},
+    {"Grass", 0.7f, Color(0.1f, 0.8f, 0.1f, 1.0f)},
+    {"Forest", 0.8f, Color(0.0f, 0.5f, 0.0f, 1.0f)},
+    {"Mountain", 0.9f, Color(0.5f, 0.5f, 0.5f, 1.0f)},
+    {"Snow", 1.0f, Color(1.0f, 1.0f, 1.0f, 1.0f)}
+};
+
 std::vector<std::vector<float>> GenerateNoiseMap(int width, int height, int seed, float scale, int octaves, float persistence, float lacunarity) {
 
 
@@ -87,18 +98,30 @@ GLuint noiseMapToTexture(std::vector<std::vector<float>>& noiseMap) {
 
     auto* colorMap = new unsigned char[width * height * 4];
 
+    //Loop that creates a texture using the defined regions
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             float perlinValue = noiseMap[y][x];
+            int index = (y * height + x) * 4;
 
-            auto color = static_cast<unsigned char>(perlinValue * 255.0f);
+            unsigned char r = 255, g = 255, b = 255, a = 255;
 
-            //Set the RGBA values for each texel
-            int index = (y * width + x) * 4;
-            colorMap[index + 0] = color;  //R
-            colorMap[index + 1] = color;  //G
-            colorMap[index + 2] = color;  //B
-            colorMap[index + 3] = 255;    //A
+            //Assign the color value based on the perlinValue at its position
+            for (int i = 0; i < regions.size(); i++) {
+                if (perlinValue <= regions[i].height) {
+                    r = static_cast<unsigned char>(regions[i].color.r * 255.0f);
+                    g = static_cast<unsigned char>(regions[i].color.g * 255.0f);
+                    b = static_cast<unsigned char>(regions[i].color.b * 255.0f);
+                    a = static_cast<unsigned char>(regions[i].color.a * 255.0f);
+                    break;
+                }
+            }
+
+            //Set the R, G, B and A values of the texel
+            colorMap[index + 0] = r;
+            colorMap[index + 1] = g;
+            colorMap[index + 2] = b;
+            colorMap[index + 3] = a;
         }
     }
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, colorMap);
