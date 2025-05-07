@@ -10,8 +10,8 @@ std::vector<TerrainType> regions = {
     {"Sand", 0.5f, Color(0.9f, 0.8f, 0.6f, 1.0f)},
     {"Grass", 0.7f, Color(0.1f, 0.8f, 0.1f, 1.0f)},
     {"Forest", 0.8f, Color(0.0f, 0.5f, 0.0f, 1.0f)},
-    {"Mountain", 0.9f, Color(0.5f, 0.5f, 0.5f, 1.0f)},
-    {"Snow", 1.0f, Color(1.0f, 1.0f, 1.0f, 1.0f)}
+    {"Mountain", 0.95f, Color(0.5f, 0.5f, 0.5f, 1.0f)},
+    {"Snow", 0.95f, Color(1.0f, 1.0f, 1.0f, 1.0f)}
 };
 
 std::vector<std::vector<float>> GenerateNoiseMap(int width, int height, int seed, float scale, int octaves, float persistence, float lacunarity) {
@@ -102,7 +102,7 @@ GLuint noiseMapToTexture(std::vector<std::vector<float>>& noiseMap) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             float perlinValue = noiseMap[y][x];
-            int index = (y * height + x) * 4;
+            int index = (y * width + x) * 4;
 
             unsigned char r = 255, g = 255, b = 255, a = 255;
 
@@ -130,4 +130,64 @@ GLuint noiseMapToTexture(std::vector<std::vector<float>>& noiseMap) {
     delete[] colorMap;
 
     return textureID;
+}
+
+void noiseMapToMesh(std::vector<std::vector<float> > &noiseMap, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, float heightScale, float gridScale) {
+    int width = noiseMap[0].size();
+    int height = noiseMap.size();
+
+    vertices.clear();
+    indices.clear();
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+
+            float heightValue = noiseMap[y][x];
+            float z = 0.0f;
+
+            //Make oceans flat and mountains high
+            if (heightValue < 0.4f) {
+                z = 0.0f;
+            } else if (heightValue < 0.7f) {
+                float t = (heightValue - 0.4f) / 0.3f;
+                float eased = pow(t, 1.0f);
+                z = eased * (0.2f * heightScale);
+            } else {
+                float t = (heightValue - 0.7f) / 0.3f;
+                float curved = pow(t, 2.0f);
+                z = (0.2f * heightScale) + (curved * 0.8f * heightScale);
+            }
+
+            vertices.push_back(x * gridScale);
+            vertices.push_back(z);
+            vertices.push_back(y * gridScale);
+
+
+            vertices.push_back(0);
+            vertices.push_back(0);
+            vertices.push_back(0);
+
+            vertices.push_back(static_cast<float>(x) / (width - 1));
+            vertices.push_back(static_cast<float>(y) / (height - 1));
+        }
+    }
+
+    for (int y = 0; y < height - 1; y++) {
+        for (int x = 0; x < width - 1; x++) {
+            int topLeft     = y * width + x;
+            int topRight    = topLeft + 1;
+            int bottomLeft  = (y + 1) * width + x;
+            int bottomRight = bottomLeft + 1;
+
+            // First triangle
+            indices.push_back(topLeft);
+            indices.push_back(bottomLeft);
+            indices.push_back(topRight);
+
+            // Second triangle
+            indices.push_back(topRight);
+            indices.push_back(bottomLeft);
+            indices.push_back(bottomRight);
+        }
+    }
 }

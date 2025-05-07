@@ -35,9 +35,9 @@ void Camera::Inputs(GLFWwindow* window)
 
     //Fast mode
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        speed = 0.4f;
+        speed = 0.8f;
     else
-        speed = 0.1f;
+        speed = 0.4f;
 
     //Handle mouse input for looking around
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)

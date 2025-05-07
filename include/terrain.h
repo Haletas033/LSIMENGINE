@@ -27,4 +27,6 @@ std::vector<std::vector<float>> GenerateNoiseMap(int width, int height, int seed
 //Converts a generated noise map into an RGBA opengl Texture
 GLuint noiseMapToTexture(std::vector<std::vector<float>>& noiseMap);
 
+void noiseMapToMesh(std::vector<std::vector<float>>& noiseMap, std::vector<GLfloat>& vertices, std::vector<GLuint>& indices, float heightScale, float gridScale);
+
 #endif //TERRAIN_CLASS_H
