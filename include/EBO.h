@@ -2,13 +2,14 @@
 #define EBO_CLASS_H
 
 #include<glad/glad.h>
+#include<vector>
 
 class EBO {
     public:
         //Reference ID of EBO
         GLuint ID;
         //Constructor that generates an EBO and links it to indices
-        EBO(GLuint* indices, GLsizeiptr size);
+        EBO(std::vector<GLuint>& indices);
 
         //Binds the EBO
         void Bind();

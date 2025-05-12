@@ -1,18 +1,6 @@
 #include<iostream>
-#include<vector>
-#include<glad/glad.h>
-#include<GLFW/glfw3.h>
-#include<glm/glm.hpp>
-#include<glm/gtc/matrix_transform.hpp>
-#include<glm/gtc/type_ptr.hpp>
-
-#include "../include/shaderClass.h"
-#include "../include/VAO.h"
-#include"../include/VBO.h"
-#include "../include/EBO.h"
-#include"../include/camera.h"
 #include"../include/terrain.h"
-
+#include"../include/mesh.h"
 
 
 const unsigned int width = 800;
@@ -62,8 +50,6 @@ int main()
 	//Introduce the window into the current context
 	glfwMakeContextCurrent(window);
 
-
-
 	//Load GLAD so it configures OpenGL
 	gladLoadGL();
 	//Specify the viewport of OpenGL in the Window
@@ -83,39 +69,13 @@ int main()
 
 	noiseMapToMesh(noiseMap, vertices, indices, 80, 2.0f);
 
-
-	//Generate Vertex Array Object and binds it
-	VAO VAO1;
-	VAO1.Bind();
-
-
-
-	//Generate Vertex Buffer Object and links it to vertices
-	VBO VBO1(vertices.data(), vertices.size() * sizeof(GLfloat));
-
-	//Generate Element Buffer Object and links it to indices
-	EBO EBO1(indices.data(), indices.size() * sizeof(GLuint));
-
-
-
-	//Link VBO attributes such as coordinates and colors to VAO
-	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 8 * sizeof(float), (void*)0);
-	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	//Unbind all to prevent accidentally modifying them
-	VAO1.Unbind();
-	VBO1.Unbind();
-	EBO1.Unbind();
+	Mesh terrain(vertices, indices);
 
 	//Enable the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
 	//Create camera object
 	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
-
-
-
-
 
 	//Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -145,10 +105,7 @@ int main()
 		GLint texLoc = glGetUniformLocation(shaderProgram.ID, "tex0");
 		glUniform1i(texLoc, 0);
 
-		//Bind the VAO so OpenGL knows to use it
-		VAO1.Bind();
-		//Draw primitives, number of indices, datatype of indices, index of indices
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+		terrain.Draw(shaderProgram, camera);
 
 		//Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -157,11 +114,6 @@ int main()
 	}
 
 
-
-	//Deletes all the objects we've created
-	VAO1.Delete();
-	VBO1.Delete();
-	EBO1.Delete();
 	shaderProgram.Delete();
 	//Delete window before ending the program
 	glfwDestroyWindow(window);
