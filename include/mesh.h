@@ -15,7 +15,15 @@ public:
 
     VAO vao;
 
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
 
+    void SetTranslation(const glm::vec3& translation);
+
+    void SetRotation(float angle, const glm::vec3& axis);
+
+    void SetScale(const glm::vec3& scale);
+
+    void ApplyTransformations(const glm::vec3& translation, float angle, const glm::vec3& axis, const glm::vec3& scale);
 
     Mesh(std::vector<GLfloat>& vertices, std::vector<GLuint>& indices);
 

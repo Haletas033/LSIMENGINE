@@ -24,7 +24,9 @@ add_executable(LSIM Src/main.cpp
         include/terrain.h
         Src/terrain.cpp
         include/mesh.h
-        Src/mesh.cpp)
+        Src/mesh.cpp
+        include/primitives.h
+        Src/primitives.cpp)
 
 target_link_libraries(LSIM PRIVATE glfw glm::glm glad)
 target_include_directories(LSIM PRIVATE external/glad/include)

@@ -1,6 +1,7 @@
 #include<iostream>
 #include"../include/terrain.h"
 #include"../include/mesh.h"
+#include"../include/primitives.h"
 
 
 const unsigned int width = 800;
@@ -17,14 +18,10 @@ std::vector<GLfloat> vertices;
 //Indices for vertices order
 std::vector<GLuint> indices;
 
-
-
+std::vector<Mesh> meshes;
 
 int main()
 {
-
-
-
 	//Initialize GLFW
 	glfwInit();
 
@@ -69,7 +66,15 @@ int main()
 
 	noiseMapToMesh(noiseMap, vertices, indices, 80, 2.0f);
 
+	primitives p;
+
+
 	Mesh terrain(vertices, indices);
+
+	Mesh cube = p.GenerateCube();
+
+	meshes.push_back(terrain);
+	meshes.push_back(cube);
 
 	//Enable the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
@@ -105,7 +110,31 @@ int main()
 		GLint texLoc = glGetUniformLocation(shaderProgram.ID, "tex0");
 		glUniform1i(texLoc, 0);
 
-		terrain.Draw(shaderProgram, camera);
+
+
+		for (size_t i = 0; i < meshes.size(); ++i) {
+			auto& mesh = meshes[i];
+
+			glm::vec3 translation(0.0f);
+			float rotationAngle = 0.0f;
+			glm::vec3 rotationAxis(0.0f, 1.0f, 0.0f);
+			glm::vec3 scale(1.0f);
+
+			if (i == 0) {
+				translation = glm::vec3(1.0f, 0.0f, 0.0f);
+				rotationAngle = 45.0f;
+				scale = glm::vec3(1.0f);
+			}
+			else if (i == 1) {
+				translation = glm::vec3(-1.0f, 0.0f, 0.0f);
+				rotationAngle = 90.0f;
+				scale = glm::vec3(0.5f);
+			}
+
+			mesh.ApplyTransformations(translation, rotationAngle, rotationAxis, scale);
+			mesh.Draw(shaderProgram, camera);
+		}
+
 
 		//Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);

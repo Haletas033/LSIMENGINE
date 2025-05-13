@@ -21,7 +21,29 @@ Mesh::Mesh(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices) {
     ebo.Unbind();
 }
 
+void Mesh::SetTranslation(const glm::vec3& translation) {
+    modelMatrix = glm::translate(glm::mat4(1.0f), translation);
+}
+
+void Mesh::SetRotation(float angle, const glm::vec3& axis) {
+    modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(angle), axis);
+}
+
+void Mesh::SetScale(const glm::vec3& scale) {
+    modelMatrix = glm::scale(glm::mat4(1.0f), scale);
+}
+
+void Mesh::ApplyTransformations(const glm::vec3& translation, float angle, const glm::vec3& axis, const glm::vec3& scale) {
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, translation);
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(angle), axis);
+    modelMatrix = glm::scale(modelMatrix, scale);
+}
+
 void Mesh::Draw(Shader& shader, Camera& camera) {
+    GLuint modelLoc = glGetUniformLocation(shader.ID, "model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
     shader.Activate();
     vao.Bind();
 
