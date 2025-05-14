@@ -3,14 +3,24 @@ project(LSIM)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# GLFW and GLM are installed system-wide
+
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
-# Add GLAD manually (see step 4)
 add_subdirectory(external/glad)
 
-add_executable(LSIM Src/main.cpp
+set(IMGUI_SOURCES
+        imgui/imgui.cpp
+        imgui/imgui_draw.cpp
+        imgui/imgui_tables.cpp
+        imgui/imgui_widgets.cpp
+        imgui/imgui_demo.cpp
+        imgui/backends/imgui_impl_glfw.cpp
+        imgui/backends/imgui_impl_opengl3.cpp
+)
+
+add_executable(LSIM
+        Src/main.cpp
         include/shaderClass.h
         Src/shaderClass.cpp
         include/VBO.h
@@ -26,7 +36,15 @@ add_executable(LSIM Src/main.cpp
         include/mesh.h
         Src/mesh.cpp
         include/primitives.h
-        Src/primitives.cpp)
+        Src/primitives.cpp
+
+        ${IMGUI_SOURCES}
+)
+
+target_include_directories(LSIM PRIVATE
+        external/glad/include
+        ${PROJECT_SOURCE_DIR}/imgui
+        ${PROJECT_SOURCE_DIR}/imgui/backends
+)
 
 target_link_libraries(LSIM PRIVATE glfw glm::glm glad)
-target_include_directories(LSIM PRIVATE external/glad/include)

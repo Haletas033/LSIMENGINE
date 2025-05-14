@@ -2,10 +2,17 @@
 #include"../include/terrain.h"
 #include"../include/mesh.h"
 #include"../include/primitives.h"
+#include"../imgui/imgui.h"
+#include"../imgui/backends/imgui_impl_glfw.h"
+#include"../imgui/backends/imgui_impl_opengl3.h"
+
+//TODO: Fix the issue where changing a slider also moves the camera.
 
 
 const unsigned int width = 800;
 const unsigned int height = 800;
+
+float gridScale = 2.0f;
 
 //Callback function for window resizing
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
@@ -60,6 +67,15 @@ int main()
 	//Generate Shader object using shaders default.vert and default.frag
 	Shader shaderProgram("../shaders/default.vert", "../shaders/default.frag");
 
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
 	std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(1024, 1024, static_cast<unsigned int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
 
 	GLuint noiseMapTexture = noiseMapToTexture(noiseMap);
@@ -73,8 +89,9 @@ int main()
 
 	Mesh cube = p.GenerateCube();
 
-	meshes.push_back(terrain);
 	meshes.push_back(cube);
+	meshes.push_back(terrain);
+
 
 	//Enable the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
@@ -135,12 +152,46 @@ int main()
 			mesh.Draw(shaderProgram, camera);
 		}
 
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(300, 1080), ImGuiCond_Always);
+
+
+
+		// Example window
+		ImGui::Begin("Demo Window", nullptr, ImGuiWindowFlags_NoMove| ImGuiWindowFlags_NoResize| ImGuiWindowFlags_NoCollapse);
+		ImGui::Text("Hello from ImGui!");
+		if (ImGui::SliderFloat("Terrain size", &gridScale, 1, 10)) {
+			vertices.clear();
+			indices.clear();
+
+			noiseMapToMesh(noiseMap, vertices, indices, 80, gridScale);
+
+			Mesh terrain(vertices, indices);
+
+			meshes[1] = terrain;
+
+		}
+		ImGui::End();
+
+		// Rendering
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+
 
 		//Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
 		//Take care of all GLFW events
 		glfwPollEvents();
 	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 
 	shaderProgram.Delete();
