@@ -1,5 +1,6 @@
 #include "../include/mesh.h"
 
+
 // Constructor
 Mesh::Mesh(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices) {
     Mesh::vertices = vertices;
@@ -19,24 +20,17 @@ Mesh::Mesh(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices) {
     vao.Unbind();
     vbo.Unbind();
     ebo.Unbind();
+
 }
 
-void Mesh::SetTranslation(const glm::vec3& translation) {
-    modelMatrix = glm::translate(glm::mat4(1.0f), translation);
-}
-
-void Mesh::SetRotation(float angle, const glm::vec3& axis) {
-    modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(angle), axis);
-}
-
-void Mesh::SetScale(const glm::vec3& scale) {
-    modelMatrix = glm::scale(glm::mat4(1.0f), scale);
-}
-
-void Mesh::ApplyTransformations(const glm::vec3& translation, float angle, const glm::vec3& axis, const glm::vec3& scale) {
+void Mesh::ApplyTransformations() {
     modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, translation);
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(angle), axis);
+    modelMatrix = glm::translate(modelMatrix, position);
+
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.x), glm::vec3(1, 0, 0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.y), glm::vec3(0, 1, 0));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.z), glm::vec3(0, 0, 1));
+
     modelMatrix = glm::scale(modelMatrix, scale);
 }
 
@@ -49,3 +43,4 @@ void Mesh::Draw(Shader& shader, Camera& camera) {
 
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 }
+

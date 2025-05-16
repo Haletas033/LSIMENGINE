@@ -17,6 +17,8 @@ set(IMGUI_SOURCES
         imgui/imgui_demo.cpp
         imgui/backends/imgui_impl_glfw.cpp
         imgui/backends/imgui_impl_opengl3.cpp
+        include/gui.h
+        Src/gui.cpp
 )
 
 add_executable(LSIM

@@ -2,17 +2,14 @@
 #include"../include/terrain.h"
 #include"../include/mesh.h"
 #include"../include/primitives.h"
-#include"../imgui/imgui.h"
-#include"../imgui/backends/imgui_impl_glfw.h"
-#include"../imgui/backends/imgui_impl_opengl3.h"
+#include"../include/gui.h"
 
-//TODO: Fix the issue where changing a slider also moves the camera.
-
-
-const unsigned int width = 800;
-const unsigned int height = 800;
+const unsigned int width = 1920;
+const unsigned int height = 1080;
 
 float gridScale = 2.0f;
+
+double mouseX, mouseY;
 
 //Callback function for window resizing
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
@@ -26,6 +23,7 @@ std::vector<GLfloat> vertices;
 std::vector<GLuint> indices;
 
 std::vector<Mesh> meshes;
+
 
 int main()
 {
@@ -67,14 +65,9 @@ int main()
 	//Generate Shader object using shaders default.vert and default.frag
 	Shader shaderProgram("../shaders/default.vert", "../shaders/default.frag");
 
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	Gui gui;
+	gui.Initialize(window);
 
-	ImGui::StyleColorsDark();
-
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
 
 	std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(1024, 1024, static_cast<unsigned int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
 
@@ -110,7 +103,14 @@ int main()
 		shaderProgram.Activate();
 
 		//Handle camera inputs
-		camera.Inputs(window);
+		ImGuiIO& io = ImGui::GetIO();
+
+		// Only process camera movement if ImGui is not using the mouse
+		if (!io.WantCaptureMouse) {
+			camera.Inputs(window);
+		}
+
+		glfwGetCursorPos(window, &mouseX, &mouseY);
 
 		//Update aspect ratio from current framebuffer size
 		int windowWidth, windowHeight;
@@ -121,65 +121,59 @@ int main()
 
 		camera.Matrix(45.0f, 0.1f, 1000000.0f, shaderProgram, "camMatrix", aspect);
 
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, noiseMapTexture);
 		//Set the sampler uniform to use texture unit 0
 		GLint texLoc = glGetUniformLocation(shaderProgram.ID, "tex0");
 		glUniform1i(texLoc, 0);
 
-
-
 		for (size_t i = 0; i < meshes.size(); ++i) {
 			auto& mesh = meshes[i];
 
-			glm::vec3 translation(0.0f);
-			float rotationAngle = 0.0f;
-			glm::vec3 rotationAxis(0.0f, 1.0f, 0.0f);
-			glm::vec3 scale(1.0f);
 
-			if (i == 0) {
-				translation = glm::vec3(1.0f, 0.0f, 0.0f);
-				rotationAngle = 45.0f;
-				scale = glm::vec3(1.0f);
-			}
-			else if (i == 1) {
-				translation = glm::vec3(-1.0f, 0.0f, 0.0f);
-				rotationAngle = 90.0f;
-				scale = glm::vec3(0.5f);
-			}
 
-			mesh.ApplyTransformations(translation, rotationAngle, rotationAxis, scale);
 			mesh.Draw(shaderProgram, camera);
+
+			gui.Begin();
+
+			ImGui::SetNextWindowPos(ImVec2(1620, 0), ImGuiCond_Once);
+			ImGui::SetNextWindowSize(ImVec2(300, 1080), ImGuiCond_Always);
+
+			ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoMove);
+			ImGui::Text("Cube Transform");
+
+
+			ImGui::InputFloat3("Position", glm::value_ptr(meshes[0].position));
+			ImGui::InputFloat3("Rotation", glm::value_ptr(meshes[0].rotation));
+
+			static bool uniformScaleLock = true;
+			static float uniformScale = meshes[0].scale.x;  // Initial uniform scale
+
+			ImGui::Checkbox("Uniform Scale", &uniformScaleLock);
+			ImGui::Text("Mouse X: %.2f", mouseX);
+			ImGui::Text("Mouse Y: %.2f", mouseY);
+			ImGui::Text("FPS: %.1f (%.3f ms/frame)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
+
+
+			if (uniformScaleLock) {
+				if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
+					meshes[0].scale = glm::vec3(uniformScale);
+				}
+			} else {
+				ImGui::InputFloat3("Scale", glm::value_ptr(meshes[0].scale));
+			}
+
+			if (ImGui::Button("Apply Transform")) {
+				meshes[0].ApplyTransformations(); // Apply on button click
+			}
+
+			ImGui::End();
+
+			gui.End();
 		}
 
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
 
-		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(300, 1080), ImGuiCond_Always);
-
-
-
-		// Example window
-		ImGui::Begin("Demo Window", nullptr, ImGuiWindowFlags_NoMove| ImGuiWindowFlags_NoResize| ImGuiWindowFlags_NoCollapse);
-		ImGui::Text("Hello from ImGui!");
-		if (ImGui::SliderFloat("Terrain size", &gridScale, 1, 10)) {
-			vertices.clear();
-			indices.clear();
-
-			noiseMapToMesh(noiseMap, vertices, indices, 80, gridScale);
-
-			Mesh terrain(vertices, indices);
-
-			meshes[1] = terrain;
-
-		}
-		ImGui::End();
-
-		// Rendering
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 
 
@@ -189,10 +183,7 @@ int main()
 		glfwPollEvents();
 	}
 
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-
+	gui.CleanUp();
 
 	shaderProgram.Delete();
 	//Delete window before ending the program

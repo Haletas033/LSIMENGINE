@@ -47,6 +47,8 @@ void Camera::Inputs(GLFWwindow* window)
         double mouseX, mouseY;
         glfwGetCursorPos(window, &mouseX, &mouseY);
 
+
+
         if (firstMouseMove)
         {
             lastMouseX = mouseX;
@@ -69,16 +71,20 @@ void Camera::Inputs(GLFWwindow* window)
         if (pitch > 89.0f) pitch = 89.0f;
         if (pitch < -89.0f) pitch = -89.0f;
 
-        //Rebuilds Orientation vector
-        glm::vec3 direction;
-        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        direction.y = sin(glm::radians(pitch));
-        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        Orientation = glm::normalize(direction);
+            //Rebuilds the orientation vector
+            glm::vec3 direction;
+            direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+            direction.y = sin(glm::radians(pitch));
+            direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+            Orientation = glm::normalize(direction);
     }
     else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
     {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         firstMouseMove = true;
     }
+
+
 }
+
+

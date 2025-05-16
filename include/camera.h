@@ -43,6 +43,8 @@ public:
 
     //Handles camera inputs (keyboard and mouse)
     void Inputs(GLFWwindow* window);
+
+
 };
 
 #endif
