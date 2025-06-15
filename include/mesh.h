@@ -13,6 +13,8 @@ class Mesh {
 public:
     std::vector<GLfloat> vertices;
     std::vector<GLuint> indices;
+    bool useTexture = false;
+    glm::vec4 color = glm::vec4(1.0f);
 
     VAO vao;
 

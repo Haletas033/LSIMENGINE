@@ -1,7 +1,9 @@
 #include"../include/terrain.h"
 
-#include <cfloat>
-#include <random>
+#include<cfloat>
+#include<random>
+#include<glm/glm.hpp>
+#include<glm/gtc/type_ptr.hpp>
 
 //Define regions based on height, color, and name
 std::vector<TerrainType> regions = {
@@ -132,46 +134,37 @@ GLuint noiseMapToTexture(std::vector<std::vector<float>>& noiseMap) {
     return textureID;
 }
 
-void noiseMapToMesh(std::vector<std::vector<float> > &noiseMap, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, float heightScale, float gridScale) {
+void noiseMapToMesh(std::vector<std::vector<float>> &noiseMap, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, float heightScale, float gridScale) {
     int width = noiseMap[0].size();
     int height = noiseMap.size();
 
     vertices.clear();
     indices.clear();
 
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec3> normals(width * height, glm::vec3(0.0f));
+
+    // Step 1: Generate vertex positions (and placeholder normals/UVs)
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-
             float heightValue = noiseMap[y][x];
             float z = 0.0f;
 
-            //Make oceans flat and mountains high
             if (heightValue < 0.4f) {
                 z = 0.0f;
             } else if (heightValue < 0.7f) {
                 float t = (heightValue - 0.4f) / 0.3f;
-                float eased = pow(t, 1.0f);
-                z = eased * (0.2f * heightScale);
+                z = pow(t, 1.0f) * (0.2f * heightScale);
             } else {
                 float t = (heightValue - 0.7f) / 0.3f;
-                float curved = pow(t, 2.0f);
-                z = (0.2f * heightScale) + (curved * 0.8f * heightScale);
+                z = (0.2f * heightScale) + (std::pow(t, 2.0f) * 0.8f * heightScale);
             }
 
-            vertices.push_back(x * gridScale);
-            vertices.push_back(z);
-            vertices.push_back(y * gridScale);
-
-
-            vertices.push_back(0);
-            vertices.push_back(0);
-            vertices.push_back(0);
-
-            vertices.push_back(static_cast<float>(x) / (width - 1));
-            vertices.push_back(static_cast<float>(y) / (height - 1));
+            positions.push_back(glm::vec3(x * gridScale, z, y * gridScale));
         }
     }
 
+    // Step 2: Create indices and accumulate normals
     for (int y = 0; y < height - 1; y++) {
         for (int x = 0; x < width - 1; x++) {
             int topLeft     = y * width + x;
@@ -179,15 +172,50 @@ void noiseMapToMesh(std::vector<std::vector<float> > &noiseMap, std::vector<GLfl
             int bottomLeft  = (y + 1) * width + x;
             int bottomRight = bottomLeft + 1;
 
-            // First triangle
+            glm::vec3 v0 = positions[topLeft];
+            glm::vec3 v1 = positions[bottomLeft];
+            glm::vec3 v2 = positions[topRight];
+            glm::vec3 normal1 = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+
+            normals[topLeft] += normal1;
+            normals[bottomLeft] += normal1;
+            normals[topRight] += normal1;
+
             indices.push_back(topLeft);
             indices.push_back(bottomLeft);
             indices.push_back(topRight);
 
-            // Second triangle
+            glm::vec3 v3 = positions[topRight];
+            glm::vec3 v4 = positions[bottomLeft];
+            glm::vec3 v5 = positions[bottomRight];
+            glm::vec3 normal2 = glm::normalize(glm::cross(v4 - v3, v5 - v3));
+
+            normals[topRight] += normal2;
+            normals[bottomLeft] += normal2;
+            normals[bottomRight] += normal2;
+
             indices.push_back(topRight);
             indices.push_back(bottomLeft);
             indices.push_back(bottomRight);
         }
+    }
+
+    // Step 3: Rebuild final vertices with positions, normals, and UVs
+    for (int i = 0; i < positions.size(); i++) {
+        glm::vec3 pos = positions[i];
+        glm::vec3 norm = glm::normalize(normals[i]);
+        float u = static_cast<float>(i % width) / (width - 1);
+        float v = static_cast<float>(i / width) / (height - 1);
+
+        vertices.push_back(pos.x);
+        vertices.push_back(pos.y);
+        vertices.push_back(pos.z);
+
+        vertices.push_back(norm.x);
+        vertices.push_back(norm.y);
+        vertices.push_back(norm.z);
+
+        vertices.push_back(u);
+        vertices.push_back(v);
     }
 }

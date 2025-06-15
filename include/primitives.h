@@ -8,9 +8,11 @@
 
 class primitives {
 public:
-    Mesh GeneratePlane();
-    Mesh GenerateCube();
-    Mesh GeneratePyramid();
+    static Mesh GeneratePlane();
+    static Mesh GenerateCube();
+    static Mesh GeneratePyramid();
+    static Mesh GenerateSphere(int stacks, int slices);
+    static Mesh GenerateTorus(int ringSegments, int tubeSegments, float ringRadius, float tubeRadius);
 };
 
 #endif //PRIMITIVES_CLASS_H
