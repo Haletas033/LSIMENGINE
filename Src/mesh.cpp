@@ -39,6 +39,15 @@ void Mesh::Draw(Shader& shader, Camera& camera) {
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
     shader.Activate();
+
+    if (useTexture) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texId);
+        //Set the sampler uniform to use texture unit 0
+        GLint texLoc = glGetUniformLocation(shader.ID, "tex0");
+        glUniform1i(texLoc, 0);
+    }
+
     vao.Bind();
 
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

@@ -15,6 +15,7 @@ public:
     std::vector<GLuint> indices;
     bool useTexture = false;
     glm::vec4 color = glm::vec4(1.0f);
+    GLuint texId{};
 
     VAO vao;
 

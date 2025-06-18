@@ -4,15 +4,15 @@
 #include"../include/primitives.h"
 #include"../include/gui.h"
 
-const unsigned int width = 1920;
-const unsigned int height = 1080;
+constexpr unsigned int width = 1920;
+constexpr unsigned int height = 1080;
 
 float gridScale = 2.0f;
 
 double mouseX, mouseY;
 
 //Callback function for window resizing
-void framebuffer_size_callback(GLFWwindow* window, int width, int height){
+void framebuffer_size_callback(GLFWwindow* window, const int width, const int height){
 	glViewport(0, 0, width, height);
 }
 
@@ -39,8 +39,8 @@ int main()
 
 
 
-	//Create a GLFWwindow object of 800 by 800 pixels
-	GLFWwindow* window = glfwCreateWindow(width, height, "LSIMENGINE", nullptr, nullptr);
+	//Create a GLFW window object of 800 by 800 pixels
+	GLFWwindow* window = glfwCreateWindow(width, height, "L-SIM ENGINE", nullptr, nullptr);
 
 	//Error check if the window fails to create
 	if (window == nullptr)
@@ -63,27 +63,17 @@ int main()
 	//Generate Shader object using shaders default.vert and default.frag
 	Shader shaderProgram("../shaders/default.vert", "../shaders/default.frag");
 
-	Gui gui;
-	gui.Initialize(window);
+	Gui::Initialize(window);
 
-	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
-
-
-	std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(1024, 1024, static_cast<unsigned int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
-
-	GLuint noiseMapTexture = noiseMapToTexture(noiseMap);
-
-	noiseMapToMesh(noiseMap, vertices, indices, 80, 2.0f);
-
-	Mesh terrain(vertices, indices);
+	auto lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	auto lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	Mesh cube = primitives::GenerateCube();
 
-	terrain.useTexture = true;
+
 
 	meshes.push_back(cube);
-	meshes.push_back(terrain);
+
 
 	//Enable the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
@@ -115,10 +105,9 @@ int main()
 
 
 		//Handle camera inputs
-		ImGuiIO& io = ImGui::GetIO();
 
 		// Only process camera movement if ImGui is not using the mouse
-		if (!io.WantCaptureMouse) {
+		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureMouse) {
 			camera.Inputs(window);
 		}
 
@@ -129,16 +118,12 @@ int main()
 
 		glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 
-		float aspect = (float)windowWidth / (float)windowHeight;
+		float aspect = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
 
 		camera.Matrix(45.0f, 0.1f, 1000000.0f, shaderProgram, "camMatrix", aspect);
 
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, noiseMapTexture);
-		//Set the sampler uniform to use texture unit 0
-		GLint texLoc = glGetUniformLocation(shaderProgram.ID, "tex0");
-		glUniform1i(texLoc, 0);
+
 
 		static int currentMesh = 0;
 		static int selectedMeshType = 0;
@@ -164,6 +149,20 @@ int main()
 				case 4:
 					mesh = primitives::GenerateTorus(40, 20, 30, 10);
 					break;
+				case 5: {
+					std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(1024, 1024, static_cast<int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
+
+					GLuint noiseMapTexture = noiseMapToTexture(noiseMap);
+
+					noiseMapToMesh(noiseMap, vertices, indices, 80, 2.0f);
+
+					Mesh terrain(vertices, indices);
+
+					terrain.useTexture = true;
+					terrain.texId = noiseMapTexture;
+
+					meshes.push_back(terrain);
+				}
 				default:
 					break;
 			}
@@ -193,75 +192,27 @@ int main()
 			GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
 			glUniform1i(useTexLoc, mesh.useTexture);
 
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, noiseMapTexture);
-			glUniform1i(glGetUniformLocation(shaderProgram.ID, "tex0"), 0);
-
-
 			glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
 
 			mesh.Draw(shaderProgram, camera);
 		}
 
-		gui.Begin();
+		Gui::Begin();
 
 		ImGui::SetNextWindowPos(ImVec2(1620, 0), ImGuiCond_Once);
 		ImGui::SetNextWindowSize(ImVec2(300, 1080), ImGuiCond_Always);
 
-		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoMove);
-		ImGui::Text("Transform");
+		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoMove);
 
-		if (!meshes.empty()) {
-			ImGui::InputFloat3("Position", glm::value_ptr(meshes[currentMesh].position));
-			ImGui::InputFloat3("Rotation", glm::value_ptr(meshes[currentMesh].rotation));
+		Gui::Transform(meshes, currentMesh, selectedMeshType);
 
-			static bool uniformScaleLock = true;
+		Gui::Lighting(lightColor, lightPos, attenuationScale);
 
-			static float uniformScale = meshes[currentMesh].scale.x;  // Initial uniform scale
-
-			if (uniformScaleLock) {
-				if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
-					meshes[currentMesh].scale = glm::vec3(uniformScale);
-				}
-			} else {
-				ImGui::InputFloat3("Scale", glm::value_ptr(meshes[currentMesh].scale));
-			}
-
-			ImGui::Checkbox("Uniform Scale", &uniformScaleLock);
-
-			if (!meshes[currentMesh].useTexture) {
-				ImGui::ColorEdit4("Mesh Color", glm::value_ptr(meshes[currentMesh].color));
-			}
-
-			if (ImGui::Button("Apply Transform")) {
-				meshes[currentMesh].ApplyTransformations(); // Apply on button click
-			}
-
-			ImGui::InputInt("Current Mesh", &currentMesh);
-		}
-
-		const char* meshTypes[] = { "Cube", "Pyramid", "Plane", "Sphere", "Torus" };
-		ImGui::Combo("Mesh Type", &selectedMeshType, meshTypes, IM_ARRAYSIZE(meshTypes));
-
-		ImGui::Text("Mouse X: %.2f", mouseX);
-		ImGui::Text("Mouse Y: %.2f", mouseY);
-		ImGui::Text("FPS: %.1f (%.3f ms/frame)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
-
-		ImGui::ColorEdit4("Light Color", glm::value_ptr(lightColor));
-
-		ImGui::InputFloat3("Light Position", glm::value_ptr(lightPos));
-
-		ImGui::InputFloat("Light Attenuation", &attenuationScale);
-
-
-
-
-
+		Gui::Debug(mouseX, mouseY);
 
 		ImGui::End();
 
-		gui.End();
+		Gui::End();
 
 		//Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -269,7 +220,7 @@ int main()
 		glfwPollEvents();
 	}
 
-	gui.CleanUp();
+	Gui::CleanUp();
 
 	shaderProgram.Delete();
 	//Delete window before ending the program
