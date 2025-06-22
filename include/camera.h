@@ -16,7 +16,7 @@ class Camera
 {
 public:
     //Stores the main vectors of the camera
-    glm::vec3 Position;
+    glm::vec3 Position{};
     glm::vec3 Orientation = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -39,7 +39,7 @@ public:
     Camera(int width, int height, glm::vec3 position);
 
     //Updates and exports the camera matrix to the Vertex Shader
-    void Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float ascept);
+    void Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float aspect) const;
 
     //Handles camera inputs (keyboard and mouse)
     void Inputs(GLFWwindow* window);

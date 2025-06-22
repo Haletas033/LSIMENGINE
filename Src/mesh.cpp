@@ -37,6 +37,10 @@ void Mesh::ApplyTransformations() {
 void Mesh::Draw(Shader& shader, Camera& camera) {
     GLuint modelLoc = glGetUniformLocation(shader.ID, "model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+    GLuint normalLoc = glGetUniformLocation(shader.ID, "normalMatrix");
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
+    glUniformMatrix3fv(normalLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+
 
     shader.Activate();
 

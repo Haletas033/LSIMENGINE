@@ -1,8 +1,11 @@
 #include<iostream>
+#include <unordered_map>
+
 #include"../include/terrain.h"
 #include"../include/mesh.h"
 #include"../include/primitives.h"
 #include"../include/gui.h"
+#include"../include/inputs.h"
 
 constexpr unsigned int width = 1920;
 constexpr unsigned int height = 1080;
@@ -23,7 +26,6 @@ std::vector<GLfloat> vertices;
 std::vector<GLuint> indices;
 
 std::vector<Mesh> meshes;
-
 
 int main()
 {
@@ -81,6 +83,12 @@ int main()
 	//Create camera object
 	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
+	std::unordered_map<int, bool> canPress;
+
+	Inputs inputs;
+
+	inputs.canPress = canPress;
+
 	//Main render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -122,13 +130,12 @@ int main()
 
 		camera.Matrix(45.0f, 0.1f, 1000000.0f, shaderProgram, "camMatrix", aspect);
 
-
-
-
 		static int currentMesh = 0;
 		static int selectedMeshType = 0;
 		static bool deletePressed = false;
 		static bool fPressed = false;
+
+
 
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && !fPressed) {
 			Mesh mesh = primitives::GenerateCube();
@@ -186,6 +193,9 @@ int main()
 
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE)
 			fPressed = false;
+
+		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard)
+			inputs.InputHandler(window, lightPos, meshes, currentMesh, selectedMeshType);
 
 		for (auto & mesh : meshes) {
 

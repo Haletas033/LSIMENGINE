@@ -3,7 +3,6 @@ project(LSIM)
 
 set(CMAKE_CXX_STANDARD 17)
 
-
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
@@ -19,6 +18,8 @@ set(IMGUI_SOURCES
         imgui/backends/imgui_impl_opengl3.cpp
         include/gui.h
         Src/gui.cpp
+        include/inputs.h
+        Src/inputs.cpp
 )
 
 add_executable(LSIM

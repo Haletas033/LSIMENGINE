@@ -7,7 +7,7 @@ Camera::Camera(int width, int height, glm::vec3 position)
 	Position = position;
 }
 
-void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float aspect)
+void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float aspect) const
 {
 	glm::mat4 view = glm::lookAt(Position, Position + Orientation, Up);
 	glm::mat4 projection = glm::perspective(glm::radians(FOVdeg), aspect, nearPlane, farPlane);
@@ -15,8 +15,26 @@ void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shade
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(projection * view));
 }
 
+
 float pitch = 0.0f;
 float yaw = -90.0f;
+
+float speedMultiplier = 1.0f;
+
+void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
+{
+    if (yOffset > 0) {
+        speedMultiplier += 0.05;
+    }
+    else if (yOffset < 0) {
+        speedMultiplier -= 0.1;
+    }
+
+    if (speedMultiplier < 0) {
+        speedMultiplier = 0.01;
+    }
+}
+
 
 void Camera::Inputs(GLFWwindow* window)
 {
@@ -35,9 +53,9 @@ void Camera::Inputs(GLFWwindow* window)
 
     //Fast mode
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        speed = 0.8f;
+        speed = 0.8f * speedMultiplier;
     else
-        speed = 0.4f;
+        speed = 0.4f * speedMultiplier;
 
     //Handle mouse input for looking around
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -46,8 +64,6 @@ void Camera::Inputs(GLFWwindow* window)
 
         double mouseX, mouseY;
         glfwGetCursorPos(window, &mouseX, &mouseY);
-
-
 
         if (firstMouseMove)
         {
@@ -84,7 +100,7 @@ void Camera::Inputs(GLFWwindow* window)
         firstMouseMove = true;
     }
 
-
+    glfwSetScrollCallback(window, scroll_callback);
 }
 
 

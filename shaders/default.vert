@@ -5,17 +5,17 @@ layout (location = 2) in vec2 aTex;
 
 out vec3 Normal;
 out vec3 crntPos;
-
 out vec2 texCoord;
 
 uniform mat4 camMatrix;
 uniform mat4 model;
+uniform mat3 normalMatrix;
 
 void main()
 {
     crntPos = vec3(model * vec4(aPos, 1.0f));
+    gl_Position = camMatrix * vec4(crntPos, 1.0);
 
-    gl_Position = camMatrix * model * vec4(crntPos, 1.0);
-    Normal = aNormal;
+    Normal = normalMatrix * aNormal;
     texCoord = aTex;
 }
