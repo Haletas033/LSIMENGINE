@@ -19,15 +19,15 @@ void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shade
 float pitch = 0.0f;
 float yaw = -90.0f;
 
-float speedMultiplier = 1.0f;
+float speedMultiplier = 50.0f;
 
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
 {
     if (yOffset > 0) {
-        speedMultiplier += 0.05;
+        speedMultiplier += 1.0f;
     }
     else if (yOffset < 0) {
-        speedMultiplier -= 0.1;
+        speedMultiplier -= 1.0f;
     }
 
     if (speedMultiplier < 0) {
@@ -36,20 +36,20 @@ void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
 }
 
 
-void Camera::Inputs(GLFWwindow* window)
+void Camera::Inputs(GLFWwindow* window, float deltaTime)
 {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        Position += speed * Orientation;
+        Position += speed * Orientation * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        Position -= speed * Orientation;
+        Position -= speed * Orientation * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        Position -= speed * glm::normalize(glm::cross(Orientation, Up));
+        Position -= speed * glm::normalize(glm::cross(Orientation, Up)) * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        Position += speed * glm::normalize(glm::cross(Orientation, Up));
+        Position += speed * glm::normalize(glm::cross(Orientation, Up)) * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        Position += speed * Up;
+        Position += speed * Up * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        Position -= speed * Up;
+        Position -= speed * Up * deltaTime;
 
     //Fast mode
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)

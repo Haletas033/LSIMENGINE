@@ -28,7 +28,7 @@ public:
     int height;
 
     //Adjust the speed of the camera and its sensitivity when looking around
-    float speed = 0.1f;
+    float speed = 1.0f;
     float sensitivity = 100.0f;
 
     //Variables to store mouse position for delta calculation
@@ -42,7 +42,7 @@ public:
     void Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float aspect) const;
 
     //Handles camera inputs (keyboard and mouse)
-    void Inputs(GLFWwindow* window);
+    void Inputs(GLFWwindow* window, float deltaTime);
 
 
 };

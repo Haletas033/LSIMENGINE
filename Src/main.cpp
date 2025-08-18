@@ -89,9 +89,17 @@ int main()
 
 	inputs.canPress = canPress;
 
+	float deltaTime = 0.0f;
+	float lastTime = 0.0f;
+
 	//Main render loop
 	while (!glfwWindowShouldClose(window))
 	{
+
+		auto currentTime = static_cast<float>(glfwGetTime());
+		deltaTime = currentTime - lastTime;
+		lastTime = currentTime;
+
 		//Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		//Clean the back buffer and depth buffer
@@ -116,7 +124,7 @@ int main()
 
 		// Only process camera movement if ImGui is not using the mouse
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureMouse) {
-			camera.Inputs(window);
+			camera.Inputs(window, deltaTime);
 		}
 
 		glfwGetCursorPos(window, &mouseX, &mouseY);
@@ -157,7 +165,7 @@ int main()
 					mesh = primitives::GenerateTorus(40, 20, 30, 10);
 					break;
 				case 5: {
-					std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(1024, 1024, static_cast<int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
+					std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(256, 256, static_cast<int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
 
 					GLuint noiseMapTexture = noiseMapToTexture(noiseMap);
 
