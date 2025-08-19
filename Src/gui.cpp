@@ -29,33 +29,83 @@ void Gui::CleanUp() {
     ImGui::DestroyContext();
 }
 
-void Gui::Transform(std::vector<Mesh> &meshes, int &currentMesh, int &selectedMeshType) {
+void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType) {
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
-            ImGui::InputFloat3("Position", glm::value_ptr(meshes[currentMesh].position));
-            ImGui::InputFloat3("Rotation", glm::value_ptr(meshes[currentMesh].rotation));
+
+            Mesh& refMesh = meshes[currentMeshes[0]];
+
+            static glm::vec3 lastPosition = refMesh.position;
+            static glm::vec3 lastRotation = refMesh.rotation;
+            static glm::vec3 lastScale = refMesh.scale;
+
+            glm::vec3 newPosition = lastPosition;
+            glm::vec3 newRotation = lastRotation;
+            glm::vec3 newScale = lastScale;
 
             static bool uniformScaleLock = true;
+            static float uniformScale = refMesh.scale.x;  // Initial uniform scale
 
-            static float uniformScale = meshes[currentMesh].scale.x;  // Initial uniform scale
+            if (ImGui::InputFloat3("Position", glm::value_ptr(newPosition))) {
+                const glm::vec3 delta = newPosition - lastPosition;
+                for (const int mesh : currentMeshes) {
+                    meshes[mesh].position += delta;
+                }
+                lastPosition = newPosition;
+            }
+            if (ImGui::InputFloat3("Rotation", glm::value_ptr(newRotation))) {
+                const glm::vec3 delta = newRotation - lastRotation;
+                for (const int mesh : currentMeshes) {
+                    meshes[mesh].rotation += delta;
+                }
+                lastRotation = newRotation;
+            }
 
             if (uniformScaleLock) {
                 if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
-                    meshes[currentMesh].scale = glm::vec3(uniformScale);
+                    for (const int mesh : currentMeshes) {
+                        meshes[mesh].scale = glm::vec3(uniformScale);
+                    }
+                    lastScale = glm::vec3(uniformScale);
                 }
             } else {
-                ImGui::InputFloat3("Scale", glm::value_ptr(meshes[currentMesh].scale));
+                if (ImGui::InputFloat3("Scale", glm::value_ptr(newScale))) {
+                    const glm::vec3 delta = newScale - lastScale;
+                    for (const int mesh : currentMeshes) {
+                        meshes[mesh].scale += delta;
+                    }
+                    lastScale = newScale;
+                }
             }
 
             ImGui::Checkbox("Uniform Scale", &uniformScaleLock);
 
-            if (!meshes[currentMesh].useTexture) {
-                ImGui::ColorEdit4("Mesh Color", glm::value_ptr(meshes[currentMesh].color));
+
+            if (!refMesh.useTexture) {
+                if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh.color))) {
+                    for (int mesh : currentMeshes) {
+                        meshes[mesh].color = refMesh.color;
+                    }
+                }
             }
 
-            meshes[currentMesh].ApplyTransformations(); // Apply on button click
+            for (const int mesh : currentMeshes) meshes[mesh].ApplyTransformations(); // Apply on button click
 
-            ImGui::InputInt("Current Mesh", &currentMesh);
+            static char meshSelectionBuffer[128] = "";
+            ImGui::InputText("Current Meshes", meshSelectionBuffer, IM_ARRAYSIZE(meshSelectionBuffer));
+            currentMeshes.clear();
+            std::stringstream ss(meshSelectionBuffer);
+            std::string token;
+            while (std::getline(ss, token, ',')) {
+                try {
+                    int idx = std::stoi(token);
+                    if (idx >= 0 && idx < meshes.size()) {
+                        currentMeshes.push_back(idx);
+                    }
+                } catch (...) {
+                    // ignore invalid input
+                }
+            }
         }
 
         const char* meshTypes[] = { "Cube", "Pyramid", "Plane", "Sphere", "Torus", "Terrain" };

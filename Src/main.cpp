@@ -1,3 +1,4 @@
+#include <algorithm>
 #include<iostream>
 #include <unordered_map>
 
@@ -138,7 +139,7 @@ int main()
 
 		camera.Matrix(45.0f, 0.1f, 1000000.0f, shaderProgram, "camMatrix", aspect);
 
-		static int currentMesh = 0;
+		static std::vector currentMeshes = {0};
 		static int selectedMeshType = 0;
 		static bool deletePressed = false;
 		static bool fPressed = false;
@@ -184,15 +185,13 @@ int main()
 			meshes.push_back(mesh);
 			fPressed = true;
 		}
-		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS && !meshes.empty() && !deletePressed) {
-			if (currentMesh >= 0 && currentMesh < meshes.size()) {
-				meshes.erase(meshes.begin() + currentMesh);
-
-				if (currentMesh >= meshes.size()) {
-					currentMesh = static_cast<int>(meshes.size()) - 1;
-				}
+		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS && !meshes.empty() && !deletePressed){
+			std::sort(currentMeshes.begin(), currentMeshes.end());
+			std::reverse(currentMeshes.begin(), currentMeshes.end());
+			for (int mesh : currentMeshes) {
+				meshes.erase(meshes.begin() + mesh);
 			}
-			currentMesh = 0;
+			currentMeshes.clear();
 			deletePressed = true;
 		}
 
@@ -203,9 +202,9 @@ int main()
 			fPressed = false;
 
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard)
-			inputs.InputHandler(window, lightPos, meshes, currentMesh, selectedMeshType);
+			for (int mesh : currentMeshes) inputs.InputHandler(window, lightPos, meshes, mesh, selectedMeshType);
 
-		for (auto & mesh : meshes) {
+		for (auto& mesh : meshes) {
 
 			GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
 			glUniform1i(useTexLoc, mesh.useTexture);
@@ -222,7 +221,7 @@ int main()
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(meshes, currentMesh, selectedMeshType);
+		Gui::Transform(meshes, currentMeshes, selectedMeshType);
 
 		Gui::Lighting(lightColor, lightPos, attenuationScale);
 

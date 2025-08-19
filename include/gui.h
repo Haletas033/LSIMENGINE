@@ -21,7 +21,7 @@ class Gui {
 
     static void CleanUp();
 
-    static void Transform(std::vector<Mesh> &meshes, int &currentMesh, int &selectedMeshType);
+    static void Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType);
 
     static void Lighting(glm::vec4 &lightColor, glm::vec3 &lightPos, float &attenuationScale);
 

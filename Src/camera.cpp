@@ -80,8 +80,8 @@ void Camera::Inputs(GLFWwindow* window, float deltaTime)
         lastMouseY = mouseY;
 
         //Apply sensitivity to the delta values
-        pitch -= sensitivity * (float)deltaY / height; //Vertical (pitch) rotation
-        yaw += sensitivity * (float)deltaX / width;  //Horizontal (yaw) rotation
+        pitch -= sensitivity * static_cast<float>(deltaY) / static_cast<float>(height); //Vertical (pitch) rotation
+        yaw += sensitivity * static_cast<float>(deltaX) / static_cast<float>(width);  //Horizontal (yaw) rotation
 
         //Clamps pitch to avoid flipping
         if (pitch > 89.0f) pitch = 89.0f;
