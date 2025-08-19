@@ -29,7 +29,7 @@ void Gui::CleanUp() {
     ImGui::DestroyContext();
 }
 
-void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType) {
+void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
 
@@ -92,7 +92,37 @@ void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, 
             for (const int mesh : currentMeshes) meshes[mesh].ApplyTransformations(); // Apply on button click
 
             static char meshSelectionBuffer[128] = "";
-            ImGui::InputText("Current Meshes", meshSelectionBuffer, IM_ARRAYSIZE(meshSelectionBuffer));
+
+            // If there is a clicked mesh, add it to the buffer if not already present
+            if (clickedMesh != -1) {
+                std::string bufferStr(meshSelectionBuffer);
+                std::stringstream ss(bufferStr);
+                std::string token;
+                bool alreadyPresent = false;
+                while (std::getline(ss, token, ',')) {
+                    try {
+                        int idx = std::stoi(token);
+                        if (idx == clickedMesh) {
+                            alreadyPresent = true;
+                            break;
+                        }
+                    } catch (...) {}
+                }
+                if (!alreadyPresent) {
+                    if (bufferStr.empty()) {
+                        bufferStr = std::to_string(clickedMesh);
+                    } else {
+                        bufferStr += "," + std::to_string(clickedMesh);
+                    }
+                    strncpy(meshSelectionBuffer, bufferStr.c_str(), 127);
+                    meshSelectionBuffer[127] = '\0';
+                }
+            }
+
+            // Draw the input box
+            ImGui::InputText("Current Meshes", meshSelectionBuffer,  IM_ARRAYSIZE(meshSelectionBuffer));
+
+            // Parse the buffer into currentMeshes
             currentMeshes.clear();
             std::stringstream ss(meshSelectionBuffer);
             std::string token;
@@ -129,5 +159,18 @@ void Gui::Debug(const double &mouseX, const double &mouseY) {
         ImGui::Text("Mouse Y: %.2f", mouseY);
         ImGui::Text("FPS: %.1f (%.3f ms/frame)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
     }
+}
+
+int Gui::Hierarchy(std::vector<Mesh>& meshes) {
+    int clickedMesh = -1;
+    for (int i = 0; i < meshes.size(); i++) {
+        if (ImGui::TreeNode(meshes[i].name.c_str())){
+
+            if (ImGui::IsItemClicked()) clickedMesh = i;
+
+            ImGui::TreePop();
+        }
+    }
+    return clickedMesh;
 }
 

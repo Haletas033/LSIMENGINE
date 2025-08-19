@@ -21,11 +21,13 @@ class Gui {
 
     static void CleanUp();
 
-    static void Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType);
+    static void Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
 
     static void Lighting(glm::vec4 &lightColor, glm::vec3 &lightPos, float &attenuationScale);
 
     static void Debug(const double &mouseX, const double &mouseY);
+
+    static int Hierarchy(std::vector<Mesh>& meshes);
 };
 
 #endif //GUI_CLASS_H

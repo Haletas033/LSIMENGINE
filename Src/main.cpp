@@ -72,6 +72,7 @@ int main()
 	auto lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	Mesh cube = primitives::GenerateCube();
+	cube.name = "First Cube";
 
 
 
@@ -92,6 +93,7 @@ int main()
 
 	float deltaTime = 0.0f;
 	float lastTime = 0.0f;
+	int lastClickMesh = -1;
 
 	//Main render loop
 	while (!glfwWindowShouldClose(window))
@@ -152,18 +154,23 @@ int main()
 			switch (selectedMeshType) {
 				case 0:
 					mesh = primitives::GenerateCube();
+					mesh.name = "Cube";
 					break;
 				case 1:
 					mesh = primitives::GeneratePyramid();
+					mesh.name = "Pyramid";
 					break;
 				case 2:
 					mesh = primitives::GeneratePlane();
+					mesh.name = "Plane";
 					break;
 				case 3:
 					mesh = primitives::GenerateSphere(20, 30);
+					mesh.name = "Sphere";
 					break;
 				case 4:
-					mesh = primitives::GenerateTorus(40, 20, 30, 10);
+					mesh = primitives::GenerateTorus(40, 20, 1, 0.3);
+					mesh.name = "Torus";
 					break;
 				case 5: {
 					std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(256, 256, static_cast<int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
@@ -174,6 +181,7 @@ int main()
 
 					Mesh terrain(vertices, indices);
 
+					terrain.name = "Terrain";
 					terrain.useTexture = true;
 					terrain.texId = noiseMapTexture;
 
@@ -192,6 +200,7 @@ int main()
 				meshes.erase(meshes.begin() + mesh);
 			}
 			currentMeshes.clear();
+			lastClickMesh = -1;
 			deletePressed = true;
 		}
 
@@ -214,18 +223,30 @@ int main()
 			mesh.Draw(shaderProgram, camera);
 		}
 
+
+
 		Gui::Begin();
 
 		ImGui::SetNextWindowPos(ImVec2(1620, 0), ImGuiCond_Once);
 		ImGui::SetNextWindowSize(ImVec2(300, 1080), ImGuiCond_Always);
 
-		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoMove);
+		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(meshes, currentMeshes, selectedMeshType);
+		Gui::Transform(meshes, currentMeshes, selectedMeshType, lastClickMesh);
 
 		Gui::Lighting(lightColor, lightPos, attenuationScale);
 
 		Gui::Debug(mouseX, mouseY);
+
+		ImGui::End();
+
+		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(300, 1080), ImGuiCond_Always);
+
+		ImGui::Begin("Hierarchy", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+		int clickedMesh = Gui::Hierarchy(meshes);
+		if (clickedMesh != -1) lastClickMesh = clickedMesh;
 
 		ImGui::End();
 
