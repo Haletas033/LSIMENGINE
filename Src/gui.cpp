@@ -46,6 +46,17 @@ void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, 
             static bool uniformScaleLock = true;
             static float uniformScale = refMesh.scale.x;  // Initial uniform scale
 
+            static char nameBuffer[128];
+
+            if (!currentMeshes.empty()) {
+                strncpy(nameBuffer, refMesh.name.c_str(), sizeof(nameBuffer));
+                nameBuffer[sizeof(nameBuffer)-1] = '\0';
+            }
+
+            if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
+                for (const int mesh : currentMeshes) meshes[mesh].name = nameBuffer;
+            }
+
             if (ImGui::InputFloat3("Position", glm::value_ptr(newPosition))) {
                 const glm::vec3 delta = newPosition - lastPosition;
                 for (const int mesh : currentMeshes) {

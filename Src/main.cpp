@@ -126,7 +126,7 @@ int main()
 		//Handle camera inputs
 
 		// Only process camera movement if ImGui is not using the mouse
-		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureMouse) {
+		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureMouse && !io.WantCaptureKeyboard) {
 			camera.Inputs(window, deltaTime);
 		}
 
