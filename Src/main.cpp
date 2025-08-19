@@ -210,8 +210,15 @@ int main()
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE)
 			fPressed = false;
 
-		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard)
-			for (int mesh : currentMeshes) inputs.InputHandler(window, lightPos, meshes, mesh, selectedMeshType);
+		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard) {
+			if (currentMeshes.empty()) {
+				int falseMesh = 0;
+				inputs.InputHandler(window, lightPos, meshes, falseMesh, selectedMeshType);
+			} else {
+				for (int mesh : currentMeshes)
+					inputs.InputHandler(window, lightPos, meshes, mesh, selectedMeshType);
+			}
+		}
 
 		for (auto& mesh : meshes) {
 

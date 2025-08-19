@@ -1,7 +1,6 @@
 #include"../include/inputs.h"
 
 
-
 bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
 
     if (canPress.find(key) == canPress.end()) {
