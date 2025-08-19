@@ -92,31 +92,11 @@ void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, 
             for (const int mesh : currentMeshes) meshes[mesh].ApplyTransformations(); // Apply on button click
 
             static char meshSelectionBuffer[128] = "";
+            static int lastClickedMesh = -1;
 
-            // If there is a clicked mesh, add it to the buffer if not already present
-            if (clickedMesh != -1) {
-                std::string bufferStr(meshSelectionBuffer);
-                std::stringstream ss(bufferStr);
-                std::string token;
-                bool alreadyPresent = false;
-                while (std::getline(ss, token, ',')) {
-                    try {
-                        int idx = std::stoi(token);
-                        if (idx == clickedMesh) {
-                            alreadyPresent = true;
-                            break;
-                        }
-                    } catch (...) {}
-                }
-                if (!alreadyPresent) {
-                    if (bufferStr.empty()) {
-                        bufferStr = std::to_string(clickedMesh);
-                    } else {
-                        bufferStr += "," + std::to_string(clickedMesh);
-                    }
-                    strncpy(meshSelectionBuffer, bufferStr.c_str(), 127);
-                    meshSelectionBuffer[127] = '\0';
-                }
+            if (clickedMesh != -1 && clickedMesh != lastClickedMesh) {
+                snprintf(meshSelectionBuffer, sizeof(meshSelectionBuffer), "%d", clickedMesh);
+                lastClickedMesh = clickedMesh;
             }
 
             // Draw the input box
