@@ -164,6 +164,7 @@ void Gui::Debug(const double &mouseX, const double &mouseY) {
 int Gui::Hierarchy(std::vector<Mesh>& meshes) {
     int clickedMesh = -1;
     for (int i = 0; i < meshes.size(); i++) {
+        if (meshes[i].name.empty()) meshes[i].name = "Unnamed";
         if (ImGui::TreeNode(meshes[i].name.c_str())){
 
             if (ImGui::IsItemClicked()) clickedMesh = i;
