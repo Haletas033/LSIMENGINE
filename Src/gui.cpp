@@ -1,5 +1,10 @@
 #include"../include/gui.h"
 
+Gui::Node* Gui::root = nullptr;
+
+#include <memory>
+#include <algorithm>
+
 void Gui::Initialize(GLFWwindow *window) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -9,6 +14,7 @@ void Gui::Initialize(GLFWwindow *window) {
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+    root = new Node{nullptr, nullptr, {}};
 }
 
 
@@ -29,11 +35,11 @@ void Gui::CleanUp() {
     ImGui::DestroyContext();
 }
 
-void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
+void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
 
-            Mesh& refMesh = meshes[currentMeshes[0]];
+            Mesh& refMesh = *meshes[currentMeshes[0]];
 
             static glm::vec3 lastPosition = refMesh.position;
             static glm::vec3 lastRotation = refMesh.rotation;
@@ -54,20 +60,20 @@ void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, 
             }
 
             if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
-                for (const int mesh : currentMeshes) meshes[mesh].name = nameBuffer;
+                for (const int mesh : currentMeshes) meshes[mesh].get()->name = nameBuffer;
             }
 
             if (ImGui::InputFloat3("Position", glm::value_ptr(newPosition))) {
                 const glm::vec3 delta = newPosition - lastPosition;
                 for (const int mesh : currentMeshes) {
-                    meshes[mesh].position += delta;
+                    meshes[mesh].get()->position += delta;
                 }
                 lastPosition = newPosition;
             }
             if (ImGui::InputFloat3("Rotation", glm::value_ptr(newRotation))) {
                 const glm::vec3 delta = newRotation - lastRotation;
                 for (const int mesh : currentMeshes) {
-                    meshes[mesh].rotation += delta;
+                    meshes[mesh].get()->rotation += delta;
                 }
                 lastRotation = newRotation;
             }
@@ -75,7 +81,7 @@ void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, 
             if (uniformScaleLock) {
                 if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
                     for (const int mesh : currentMeshes) {
-                        meshes[mesh].scale = glm::vec3(uniformScale);
+                        meshes[mesh].get()->scale = glm::vec3(uniformScale);
                     }
                     lastScale = glm::vec3(uniformScale);
                 }
@@ -83,7 +89,7 @@ void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, 
                 if (ImGui::InputFloat3("Scale", glm::value_ptr(newScale))) {
                     const glm::vec3 delta = newScale - lastScale;
                     for (const int mesh : currentMeshes) {
-                        meshes[mesh].scale += delta;
+                        meshes[mesh].get()->scale += delta;
                     }
                     lastScale = newScale;
                 }
@@ -95,12 +101,12 @@ void Gui::Transform(std::vector<Mesh> &meshes, std::vector<int> &currentMeshes, 
             if (!refMesh.useTexture) {
                 if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh.color))) {
                     for (int mesh : currentMeshes) {
-                        meshes[mesh].color = refMesh.color;
+                        meshes[mesh].get()->color = refMesh.color;
                     }
                 }
             }
 
-            for (const int mesh : currentMeshes) meshes[mesh].ApplyTransformations(); // Apply on button click
+            for (const int mesh : currentMeshes) meshes[mesh].get()->ApplyTransformations(); // Apply on button click
 
             static char meshSelectionBuffer[128] = "";
             static int lastClickedMesh = -1;
@@ -152,17 +158,64 @@ void Gui::Debug(const double &mouseX, const double &mouseY) {
     }
 }
 
-int Gui::Hierarchy(std::vector<Mesh>& meshes) {
-    int clickedMesh = -1;
-    for (int i = 0; i < meshes.size(); i++) {
-        if (meshes[i].name.empty()) meshes[i].name = "Unnamed";
-        if (ImGui::TreeNode(meshes[i].name.c_str())){
+void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_ptr<Mesh>>& meshes) {
+    if (!node) return;
 
-            if (ImGui::IsItemClicked()) clickedMesh = i;
+    auto nodeName = "Game";
+    if (node->mesh) nodeName = node->mesh->name.empty() ? "Unnamed" : node->mesh->name.c_str();
 
-            ImGui::TreePop();
+    // Create cool hierarchy tree
+    if (ImGui::TreeNode(nodeName)) {
+
+        // Deal with clicking
+        if (node->mesh) {
+            int index = -1;
+            for (int i = 0; i < meshes.size(); i++) {
+                if (meshes[i].get() == node->mesh) {
+                    index = i;
+                    break;
+                }
+            }
+            if (index != -1 && ImGui::IsItemClicked()) clickedMesh = index;
         }
+
+        // First we drag then we drop
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+            ImGui::SetDragDropPayload("DND_NODE", &node, sizeof(Node*));
+            ImGui::Text("Moving: %s", nodeName);
+            ImGui::EndDragDropSource();
+        }
+
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_NODE")) {
+                Node* payloadNode = *static_cast<Node **>(payload->Data);
+
+                if (payloadNode->parent) {
+                    auto& siblings = payloadNode->parent->children;
+                    siblings.erase(std::remove(siblings.begin(), siblings.end(), payloadNode), siblings.end());
+                }
+
+                payloadNode->parent = node;
+                node->children.push_back(payloadNode);
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        // Draw children recursively
+        for (Node* child : node->children) {
+            DrawNode(child, clickedMesh, meshes);
+        }
+
+        ImGui::TreePop();
+    }
+}
+
+int Gui::Hierarchy(const std::vector<std::unique_ptr<Mesh>>& meshes) {
+    int clickedMesh = -1;
+    if (root) {
+        DrawNode(root, clickedMesh, meshes);
     }
     return clickedMesh;
 }
+
 

@@ -1,6 +1,5 @@
 #include"../include/inputs.h"
 
-
 bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
 
     if (canPress.find(key) == canPress.end()) {
@@ -26,25 +25,25 @@ bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
     return false;
 }
 
-void Inputs::MeshInputs(GLFWwindow* window, std::vector<Mesh> &meshes, int &currentMesh, int &selectedMeshType) {
+void Inputs::MeshInputs(GLFWwindow* window, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType) {
 
     if (isDown(GLFW_KEY_UP, false, window)) {
-        (meshes[currentMesh].*currentTransform).z -= 0.1;
+        (meshes[currentMesh].get()->*currentTransform).z -= 0.1;
     }
     if (isDown(GLFW_KEY_DOWN, false, window)) {
-        (meshes[currentMesh].*currentTransform).z += 0.1;
+        (meshes[currentMesh].get()->*currentTransform).z += 0.1;
     }
     if (isDown(GLFW_KEY_RIGHT, false, window)) {
-        (meshes[currentMesh].*currentTransform).x += 0.1;
+        (meshes[currentMesh].get()->*currentTransform).x += 0.1;
     }
     if (isDown(GLFW_KEY_LEFT, false, window)) {
-        (meshes[currentMesh].*currentTransform).x -= 0.1;
+        (meshes[currentMesh].get()->*currentTransform).x -= 0.1;
     }
     if (isDown(GLFW_KEY_PAGE_UP, false, window)) {
-        (meshes[currentMesh].*currentTransform).y += 0.1;
+        (meshes[currentMesh].get()->*currentTransform).y += 0.1;
     }
     if (isDown(GLFW_KEY_PAGE_DOWN, false, window)) {
-        (meshes[currentMesh].*currentTransform).y -= 0.1;
+        (meshes[currentMesh].get()->*currentTransform).y -= 0.1;
     }
     if (isDown(GLFW_KEY_RIGHT_BRACKET, true, window)) {
         currentMesh++;
@@ -91,7 +90,7 @@ void Inputs::LightInputs(glm::vec3 &lightPos, GLFWwindow* window) {
     }
 }
 
-void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, std::vector<Mesh> &meshes, int &currentMesh, int &selectedMeshType) {
+void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType) {
     if (isDown(GLFW_KEY_M, true, window)) {
         currentMode = 0;
     }

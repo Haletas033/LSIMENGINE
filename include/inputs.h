@@ -1,6 +1,8 @@
 #ifndef INPUTS_CLASS_H
 #define INPUTS_CLASS_H
 
+#include <memory>
+
 #include"../include/mesh.h"
 
 #include<unordered_map>
@@ -17,11 +19,11 @@ public:
 
     bool isDown(int key, bool onlyOnPress, GLFWwindow* window);
 
-    void MeshInputs(GLFWwindow* window, std::vector<Mesh> &meshes, int &currentMesh, int &selectedMeshType);
+    void MeshInputs(GLFWwindow* window, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType);
 
     void LightInputs(glm::vec3 &lightPos, GLFWwindow* window);
 
-    void InputHandler(GLFWwindow* window, glm::vec3 &lightPos, std::vector<Mesh> &meshes, int &currentMesh, int &selectedMeshType);
+    void InputHandler(GLFWwindow* window, glm::vec3 &lightPos, const std::vector<std::unique_ptr<Mesh>> &meshes, int &currentMesh, int &selectedMeshType);
 };
 
 #endif //INPUTS_CLASS_H

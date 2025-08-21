@@ -1,5 +1,6 @@
 #include <algorithm>
 #include<iostream>
+#include <memory>
 #include <unordered_map>
 
 #include"../include/terrain.h"
@@ -26,7 +27,7 @@ std::vector<GLfloat> vertices;
 //Indices for vertices order
 std::vector<GLuint> indices;
 
-std::vector<Mesh> meshes;
+std::vector<std::unique_ptr<Mesh>> meshes;
 
 int main()
 {
@@ -71,13 +72,8 @@ int main()
 	auto lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	auto lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	Mesh cube = primitives::GenerateCube();
-	cube.name = "First Cube";
-
-
-
-	meshes.push_back(cube);
-
+	meshes.push_back(std::make_unique<Mesh>(primitives::GenerateCube()));
+	meshes.back()->name = "First Cube";
 
 	//Enable the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
@@ -130,6 +126,7 @@ int main()
 			camera.Inputs(window, deltaTime);
 		}
 
+
 		glfwGetCursorPos(window, &mouseX, &mouseY);
 
 		//Update aspect ratio from current framebuffer size
@@ -149,28 +146,28 @@ int main()
 
 
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && !fPressed) {
-			Mesh mesh = primitives::GenerateCube();
+			std::unique_ptr<Mesh> newMesh;
 
 			switch (selectedMeshType) {
 				case 0:
-					mesh = primitives::GenerateCube();
-					mesh.name = "Cube";
+					newMesh = std::make_unique<Mesh>(primitives::GenerateCube());
+					newMesh->name = "Cube";
 					break;
 				case 1:
-					mesh = primitives::GeneratePyramid();
-					mesh.name = "Pyramid";
+					newMesh = std::make_unique<Mesh>(primitives::GeneratePyramid());
+					newMesh->name = "Pyramid";
 					break;
 				case 2:
-					mesh = primitives::GeneratePlane();
-					mesh.name = "Plane";
+					newMesh = std::make_unique<Mesh>(primitives::GeneratePlane());
+					newMesh->name = "Plane";
 					break;
 				case 3:
-					mesh = primitives::GenerateSphere(20, 30);
-					mesh.name = "Sphere";
+					newMesh = std::make_unique<Mesh>(primitives::GenerateSphere(20, 30));
+					newMesh->name = "Sphere";
 					break;
 				case 4:
-					mesh = primitives::GenerateTorus(40, 20, 1, 0.3);
-					mesh.name = "Torus";
+					newMesh = std::make_unique<Mesh>(primitives::GenerateTorus(40, 20, 1, 0.3));
+					newMesh->name = "Torus";
 					break;
 				case 5: {
 					std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(256, 256, static_cast<int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
@@ -179,18 +176,23 @@ int main()
 
 					noiseMapToMesh(noiseMap, vertices, indices, 80, 2.0f);
 
-					Mesh terrain(vertices, indices);
-
-					terrain.name = "Terrain";
-					terrain.useTexture = true;
-					terrain.texId = noiseMapTexture;
-
-					meshes.push_back(terrain);
+					newMesh = std::make_unique<Mesh>(vertices, indices);
+					newMesh->name = "Terrain";
+					newMesh->useTexture = true;
+					newMesh->texId = noiseMapTexture;
+					break;
 				}
 				default:
 					break;
 			}
-			meshes.push_back(mesh);
+
+			if (newMesh) {
+				auto* node = new Gui::Node{ newMesh.get(), Gui::root, {} };
+				Gui::root->children.push_back(node);
+
+				meshes.push_back(std::move(newMesh));
+			}
+
 			fPressed = true;
 		}
 		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS && !meshes.empty() && !deletePressed){
@@ -220,7 +222,8 @@ int main()
 			}
 		}
 
-		for (auto& mesh : meshes) {
+		for (auto& meshPtr : meshes) {
+			Mesh& mesh = *meshPtr;
 
 			GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
 			glUniform1i(useTexLoc, mesh.useTexture);
@@ -252,8 +255,7 @@ int main()
 
 		ImGui::Begin("Hierarchy", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		int clickedMesh = Gui::Hierarchy(meshes);
-		if (clickedMesh != -1) lastClickMesh = clickedMesh;
+		if (int clickedMesh = Gui::Hierarchy(meshes); clickedMesh != -1) lastClickMesh = clickedMesh;
 
 		ImGui::End();
 

@@ -13,6 +13,8 @@ class Mesh {
 public:
     std::string name;
 
+
+
     std::vector<GLfloat> vertices;
     std::vector<GLuint> indices;
     bool useTexture = false;
