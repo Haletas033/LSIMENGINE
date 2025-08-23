@@ -6,10 +6,17 @@ This is my attempt at making a game engine with opengl
 * OpenGL rendering pipeline with GLFW windowing
 * Support for basic 3D transformations via GLM
 * Controllable camera (WASD + mouse)
+* Procedural terrain generation (Perlin noise)
+* Creating geometric primitives
+* Simple lighting
+
+## In progress features
+- Heirarchy system
+- GUI improvements
+- Multiple lights, cameras, and improved lighting
 
 ## Upcoming Features
-- Procedural terrain generation (Perlin noise)
-- Importing models and geometric primitives
+- Importing models
 - File I/O for scene loading and saving
 - Basic physics and collision detection
 
