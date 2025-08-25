@@ -210,6 +210,36 @@ void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_p
     }
 }
 
+void Gui::DeleteNode(Node* node) {
+    if (!node || node == root) return;
+
+    Node* parent = node->parent;
+    if (!parent) return;
+
+    // Reparent children to node's parent
+    for (Node* child : node->children) {
+        child->parent = parent;
+        parent->children.push_back(child);
+    }
+    node->children.clear();
+
+    // Remove node from parent's children
+    auto& siblings = parent->children;
+    siblings.erase(std::remove(siblings.begin(), siblings.end(), node), siblings.end());
+
+    delete node;
+}
+
+Gui::Node* Gui::FindNodeByMesh(Node* node, const Mesh* mesh) {
+    if (!node) return nullptr;
+    if (node->mesh == mesh) return node;
+    for (Node* child : node->children) {
+        Node* result = FindNodeByMesh(child, mesh);
+        if (result) return result;
+    }
+    return nullptr;
+}
+
 int Gui::Hierarchy(const std::vector<std::unique_ptr<Mesh>>& meshes) {
     int clickedMesh = -1;
     if (root) {

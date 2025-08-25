@@ -195,10 +195,17 @@ int main()
 
 			fPressed = true;
 		}
+
 		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS && !meshes.empty() && !deletePressed){
 			std::sort(currentMeshes.begin(), currentMeshes.end());
 			std::reverse(currentMeshes.begin(), currentMeshes.end());
 			for (int mesh : currentMeshes) {
+				Mesh* meshToDelete = meshes[mesh].get();
+
+				if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete)) {
+					Gui::DeleteNode(nodeToDelete); // This handles reparenting children
+				}
+
 				meshes.erase(meshes.begin() + mesh);
 			}
 			currentMeshes.clear();

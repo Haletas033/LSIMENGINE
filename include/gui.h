@@ -38,6 +38,10 @@ class Gui {
 
     static void DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_ptr<Mesh>>& meshes);
 
+    static void DeleteNode(Node *node);
+
+    static Node *FindNodeByMesh(Node *node, const Mesh *mesh);
+
     static int Hierarchy(const std::vector<std::unique_ptr<Mesh>>& meshes);
 
 
