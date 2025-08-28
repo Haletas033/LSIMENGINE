@@ -41,13 +41,9 @@ void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vecto
 
             Mesh& refMesh = *meshes[currentMeshes[0]];
 
-            static glm::vec3 lastPosition = refMesh.position;
-            static glm::vec3 lastRotation = refMesh.rotation;
-            static glm::vec3 lastScale = refMesh.scale;
-
-            glm::vec3 newPosition = lastPosition;
-            glm::vec3 newRotation = lastRotation;
-            glm::vec3 newScale = lastScale;
+            glm::vec3 position = refMesh.position;
+            glm::vec3 rotation = refMesh.rotation;
+            glm::vec3 scale = refMesh.scale;
 
             static bool uniformScaleLock = true;
             static float uniformScale = refMesh.scale.x;  // Initial uniform scale
@@ -63,35 +59,28 @@ void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vecto
                 for (const int mesh : currentMeshes) meshes[mesh].get()->name = nameBuffer;
             }
 
-            if (ImGui::InputFloat3("Position", glm::value_ptr(newPosition))) {
-                const glm::vec3 delta = newPosition - lastPosition;
-                for (const int mesh : currentMeshes) {
-                    meshes[mesh].get()->position += delta;
+            if (ImGui::InputFloat3("Position", glm::value_ptr(position))) {
+                for (int idx : currentMeshes) {
+                    meshes[idx]->position = position;
                 }
-                lastPosition = newPosition;
             }
-            if (ImGui::InputFloat3("Rotation", glm::value_ptr(newRotation))) {
-                const glm::vec3 delta = newRotation - lastRotation;
-                for (const int mesh : currentMeshes) {
-                    meshes[mesh].get()->rotation += delta;
+            if (ImGui::InputFloat3("Rotation", glm::value_ptr(rotation))) {
+                for (int idx : currentMeshes) {
+                    meshes[idx]->rotation = rotation;
                 }
-                lastRotation = newRotation;
             }
 
             if (uniformScaleLock) {
                 if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
-                    for (const int mesh : currentMeshes) {
-                        meshes[mesh].get()->scale = glm::vec3(uniformScale);
+                    for (int idx : currentMeshes) {
+                        meshes[idx]->scale = glm::vec3(uniformScale);
                     }
-                    lastScale = glm::vec3(uniformScale);
                 }
             } else {
-                if (ImGui::InputFloat3("Scale", glm::value_ptr(newScale))) {
-                    const glm::vec3 delta = newScale - lastScale;
-                    for (const int mesh : currentMeshes) {
-                        meshes[mesh].get()->scale += delta;
+                if (ImGui::InputFloat3("Scale", glm::value_ptr(scale))) {
+                    for (int idx : currentMeshes) {
+                        meshes[idx]->scale = scale;
                     }
-                    lastScale = newScale;
                 }
             }
 
