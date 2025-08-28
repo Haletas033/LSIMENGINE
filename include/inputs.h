@@ -19,11 +19,11 @@ public:
 
     bool isDown(int key, bool onlyOnPress, GLFWwindow* window);
 
-    void MeshInputs(GLFWwindow* window, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType);
+    void MeshInputs(GLFWwindow* window, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType, glm::vec3 Orientation);
 
     void LightInputs(glm::vec3 &lightPos, GLFWwindow* window);
 
-    void InputHandler(GLFWwindow* window, glm::vec3 &lightPos, const std::vector<std::unique_ptr<Mesh>> &meshes, int &currentMesh, int &selectedMeshType);
+    void InputHandler(GLFWwindow* window, glm::vec3 &lightPos, const std::vector<std::unique_ptr<Mesh>> &meshes, int &currentMesh, int &selectedMeshType, glm::vec3 Orientation);
 };
 
 #endif //INPUTS_CLASS_H

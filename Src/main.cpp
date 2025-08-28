@@ -190,6 +190,7 @@ int main()
 				auto* node = new Gui::Node{ newMesh.get(), Gui::root, {} };
 				Gui::root->children.push_back(node);
 
+
 				meshes.push_back(std::move(newMesh));
 			}
 
@@ -222,10 +223,10 @@ int main()
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard) {
 			if (currentMeshes.empty()) {
 				int falseMesh = 0;
-				inputs.InputHandler(window, lightPos, meshes, falseMesh, selectedMeshType);
+				inputs.InputHandler(window, lightPos, meshes, falseMesh, selectedMeshType, camera.Orientation);
 			} else {
 				for (int mesh : currentMeshes)
-					inputs.InputHandler(window, lightPos, meshes, mesh, selectedMeshType);
+					inputs.InputHandler(window, lightPos, meshes, mesh, selectedMeshType, camera.Orientation);
 			}
 		}
 

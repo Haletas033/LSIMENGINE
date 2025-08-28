@@ -1,5 +1,7 @@
 #include"../include/inputs.h"
 
+#include <iostream>
+
 bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
 
     if (canPress.find(key) == canPress.end()) {
@@ -25,25 +27,73 @@ bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
     return false;
 }
 
-void Inputs::MeshInputs(GLFWwindow* window, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType) {
+void Inputs::MeshInputs(GLFWwindow* window, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType, glm::vec3 Orientation) {
+    // Flatten y
+    Orientation.y = 0;
+
+    float *cameraForward = nullptr;
+    float *cameraSide = nullptr;
+    bool positive;
+
+    const glm::vec2 flatForward(Orientation.x, Orientation.z);
+    const double yaw = atan2(flatForward.y, flatForward.x);
+    double yawDeg = yaw * 180.0f / glm::pi<float>();
+
+    /*  Relative to the world
+
+              forward
+                -90d
+                 |
+       left 0d --+-- 180d right
+                 |
+                90d
+             backwards
+    */
+
+    if (yawDeg >= -45 && yawDeg <= 45) {
+        // Facing left relative to word view
+        cameraForward = &(meshes[currentMesh].get()->*currentTransform).x;
+        cameraSide = &(meshes[currentMesh].get()->*currentTransform).z;
+        positive = false;
+    }
+    else if (yawDeg > 45 && yawDeg <= 135) {
+        // Facing backwards relative to world view
+        cameraForward = &(meshes[currentMesh].get()->*currentTransform).z;
+        cameraSide = &(meshes[currentMesh].get()->*currentTransform).x;
+        positive = false;
+    }
+    else if (yawDeg > 135 || yawDeg <= -135) {
+        // Facing right relative to world view
+        cameraForward = &(meshes[currentMesh].get()->*currentTransform).x;
+        cameraSide = &(meshes[currentMesh].get()->*currentTransform).z;
+        positive = true;
+    }
+    else {
+        // Facing forward relative to world view
+        cameraForward = &(meshes[currentMesh].get()->*currentTransform).z;
+        cameraSide = &(meshes[currentMesh].get()->*currentTransform).x;
+        positive = true;
+    }
+
+    float &cameraUp = (meshes[currentMesh].get()->*currentTransform).y;
 
     if (isDown(GLFW_KEY_UP, false, window)) {
-        (meshes[currentMesh].get()->*currentTransform).z -= 0.1;
+        *cameraForward -= positive ? 0.1 : -0.1;
     }
     if (isDown(GLFW_KEY_DOWN, false, window)) {
-        (meshes[currentMesh].get()->*currentTransform).z += 0.1;
+        *cameraForward += positive ? 0.1 : -0.1;
     }
     if (isDown(GLFW_KEY_RIGHT, false, window)) {
-        (meshes[currentMesh].get()->*currentTransform).x += 0.1;
+         *cameraSide += positive ? 0.1 : -0.1;
     }
     if (isDown(GLFW_KEY_LEFT, false, window)) {
-        (meshes[currentMesh].get()->*currentTransform).x -= 0.1;
+        *cameraSide -= positive ? 0.1 : -0.1;
     }
     if (isDown(GLFW_KEY_PAGE_UP, false, window)) {
-        (meshes[currentMesh].get()->*currentTransform).y += 0.1;
+         cameraUp += 0.1;
     }
     if (isDown(GLFW_KEY_PAGE_DOWN, false, window)) {
-        (meshes[currentMesh].get()->*currentTransform).y -= 0.1;
+        cameraUp -= 0.1;
     }
     if (isDown(GLFW_KEY_RIGHT_BRACKET, true, window)) {
         currentMesh++;
@@ -90,7 +140,7 @@ void Inputs::LightInputs(glm::vec3 &lightPos, GLFWwindow* window) {
     }
 }
 
-void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType) {
+void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType, glm::vec3 Orientation) {
     if (isDown(GLFW_KEY_M, true, window)) {
         currentMode = 0;
     }
@@ -99,7 +149,7 @@ void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, const std::ve
     }
 
     if (currentMode == 0) {
-        MeshInputs(window, meshes, currentMesh, selectedMeshType);
+        MeshInputs(window, meshes, currentMesh, selectedMeshType, Orientation);
     }
     else if (currentMode == 1) {
         LightInputs(lightPos, window);
