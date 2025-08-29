@@ -54,37 +54,81 @@ make
 ## Project Structure
 ```bash
 .
-├── external
-│   └── glad
-├── .git
-│   ├── hooks
-│   ├── info
-│   ├── logs
-│   ├── objects
-│   ├── refs
-│   ├── COMMIT_EDITMSG
-│   ├── config
-│   ├── description
-│   ├── HEAD
-│   └── index
-├── include
-│   ├── camera.h
-│   ├── EBO.h
-│   ├── shaderClass.h
-│   ├── VAO.h
-│   └── VBO.h
-├── shaders
-│   ├── default.frag
-│   └── default.vert
-├── Src
-│   ├── camera.cpp
-│   ├── EBO.cpp
-│   ├── main.cpp
-│   ├── shaderClass.cpp
-│   ├── VAO.cpp
-│   └── VBO.cpp
+LSIMENGINE/
+├── .gitignore
 ├── CMakeLists.txt
-└── .gitignore
+├── external/
+│   └── glad/
+│       ├── CMakeLists.txt
+│       ├── include/
+│       │   ├── glad/
+│       │   │   └── glad.h
+│       │   └── KHR/
+│       │       └── khrplatform.h
+│       └── src/
+│           └── glad.c
+├── imgui/
+│   ├── .editorconfig
+│   ├── .gitattributes
+│   ├── .github/
+│   │   ├── FUNDING.yml
+│   │   ├── ISSUE_TEMPLATE/
+│   │   │   ├── config.yml
+│   │   │   └── issue_template.yml
+│   │   ├── pull_request_template.md
+│   │   └── workflows/
+│   │       ├── build.yml
+│   │       ├── manual.yml
+│   │       ├── scheduled.yml
+│   │       └── static-analysis.yml
+│   ├── .gitignore
+│   ├── backends/
+│   │   ├── imgui_impl_glfw.cpp
+│   │   ├── imgui_impl_glfw.h
+│   │   ├── imgui_impl_opengl3.cpp
+│   │   └── imgui_impl_opengl3.h
+│   ├── imconfig.h
+│   ├── imgui_demo.cpp
+│   ├── imgui_draw.cpp
+│   ├── imgui_impl_opengl3_loader.h
+│   ├── imgui_internal.h
+│   ├── imgui_tables.cpp
+│   ├── imgui_widgets.cpp
+│   ├── imgui.cpp
+│   ├── imgui.h
+│   ├── imstb_rectpack.h
+│   ├── imstb_textedit.h
+│   └── imstb_truetype.h
+├── include/
+│   ├── camera.h
+│   ├── EBO.h
+│   ├── FastNoiseLite.h
+│   ├── gui.h
+│   ├── inputs.h
+│   ├── mesh.h
+│   ├── primitives.h
+│   ├── shaderClass.h
+│   ├── terrain.h
+│   ├── VAO.h
+│   └── VBO.h
+├── LICENSE
+├── README.md
+├── shaders/
+│   ├── default.frag
+│   └── default.vert
+└── Src/
+    ├── camera.cpp
+    ├── EBO.cpp
+    ├── gui.cpp
+    ├── inputs.cpp
+    ├── main.cpp
+    ├── mesh.cpp
+    ├── primitives.cpp
+    ├── shaderClass.cpp
+    ├── terrain.cpp
+    ├── VAO.cpp
+    └── VBO.cpp
+
 
 ```
 
