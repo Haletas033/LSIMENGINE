@@ -44,6 +44,8 @@ add_executable(LSIM
         Src/primitives.cpp
 
         ${IMGUI_SOURCES}
+        include/fileIO.h
+        Src/fileIO.cpp
 )
 
 target_include_directories(LSIM PRIVATE

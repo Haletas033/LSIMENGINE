@@ -3,7 +3,8 @@
 
 #include <memory>
 
-#include"../include/mesh.h"
+#include"mesh.h"
+#include"fileIO.h"
 
 #include<unordered_map>
 #include<GLFW/glfw3.h>

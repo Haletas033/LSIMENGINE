@@ -112,6 +112,14 @@ void Inputs::MeshInputs(GLFWwindow* window, const std::vector<std::unique_ptr<Me
         currentTransform = &Mesh::scale;
     }
 
+    if (isDown(GLFW_KEY_I, true, window)) {
+        std::cout << "Saving" << std::endl;
+        if (std::ofstream file("project.bin", std::ios::out | std::ios::binary); file.is_open()) {
+            IO::saveToFile(file, meshes);
+        }
+        std::cout << "Saved" << std::endl;
+    }
+
     for (int i = 0 + GLFW_KEY_0; i < 10 + GLFW_KEY_0; i++) {
         if (isDown(i, true, window)) {
             selectedMeshType = i - 48;
