@@ -39,58 +39,63 @@ void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vecto
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
 
-            Mesh& refMesh = *meshes[currentMeshes[0]];
-
-            glm::vec3 position = refMesh.position;
-            glm::vec3 rotation = refMesh.rotation;
-            glm::vec3 scale = refMesh.scale;
-
-            static bool uniformScaleLock = true;
-            static float uniformScale = refMesh.scale.x;  // Initial uniform scale
-
-            static char nameBuffer[128];
-
-            if (!currentMeshes.empty()) {
-                strncpy(nameBuffer, refMesh.name.c_str(), sizeof(nameBuffer));
-                nameBuffer[sizeof(nameBuffer)-1] = '\0';
+            Mesh* refMesh = nullptr;
+            if (!currentMeshes.empty()){
+                refMesh = meshes[currentMeshes[0]].get();
             }
 
-            if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
-                for (const int mesh : currentMeshes) meshes[mesh].get()->name = nameBuffer;
-            }
-
-            if (ImGui::InputFloat3("Position", glm::value_ptr(position))) {
-                for (int idx : currentMeshes) {
-                    meshes[idx]->position = position;
+            if (refMesh){
+                glm::vec3 position = refMesh->position;
+                glm::vec3 rotation = refMesh->rotation;
+                glm::vec3 scale = refMesh->scale;
+    
+                static bool uniformScaleLock = true;
+                static float uniformScale = refMesh->scale.x;  // Initial uniform scale
+    
+                static char nameBuffer[128];
+    
+                if (!currentMeshes.empty()) {
+                    strncpy(nameBuffer, refMesh->name.c_str(), sizeof(nameBuffer));
+                    nameBuffer[sizeof(nameBuffer)-1] = '\0';
                 }
-            }
-            if (ImGui::InputFloat3("Rotation", glm::value_ptr(rotation))) {
-                for (int idx : currentMeshes) {
-                    meshes[idx]->rotation = rotation;
+    
+                if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
+                    for (const int mesh : currentMeshes) meshes[mesh].get()->name = nameBuffer;
                 }
-            }
-
-            if (uniformScaleLock) {
-                if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
+    
+                if (ImGui::InputFloat3("Position", glm::value_ptr(position))) {
                     for (int idx : currentMeshes) {
-                        meshes[idx]->scale = glm::vec3(uniformScale);
+                        meshes[idx]->position = position;
                     }
                 }
-            } else {
-                if (ImGui::InputFloat3("Scale", glm::value_ptr(scale))) {
+                if (ImGui::InputFloat3("Rotation", glm::value_ptr(rotation))) {
                     for (int idx : currentMeshes) {
-                        meshes[idx]->scale = scale;
+                        meshes[idx]->rotation = rotation;
                     }
                 }
-            }
-
-            ImGui::Checkbox("Uniform Scale", &uniformScaleLock);
-
-
-            if (!refMesh.useTexture) {
-                if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh.color))) {
-                    for (int mesh : currentMeshes) {
-                        meshes[mesh].get()->color = refMesh.color;
+    
+                if (uniformScaleLock) {
+                    if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
+                        for (int idx : currentMeshes) {
+                            meshes[idx]->scale = glm::vec3(uniformScale);
+                        }
+                    }
+                } else {
+                    if (ImGui::InputFloat3("Scale", glm::value_ptr(scale))) {
+                        for (int idx : currentMeshes) {
+                            meshes[idx]->scale = scale;
+                        }
+                    }
+                }
+    
+                ImGui::Checkbox("Uniform Scale", &uniformScaleLock);
+    
+    
+                if (!refMesh->useTexture) {
+                    if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh.color))) {
+                        for (int mesh : currentMeshes) {
+                            meshes[mesh].get()->color = refMesh->color;
+                        }
                     }
                 }
             }
