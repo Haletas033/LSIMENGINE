@@ -15,7 +15,7 @@
 class IO {
 public:
     static void saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>> &meshes);
-    static std::vector<Mesh> loadFromFile(std::ifstream &file);
+    static std::vector<std::unique_ptr<Mesh>> loadFromFile(std::ifstream &file);
 };
 
 #endif //FILEIO_CLASS_H

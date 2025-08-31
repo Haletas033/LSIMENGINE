@@ -27,7 +27,7 @@ bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
     return false;
 }
 
-void Inputs::MeshInputs(GLFWwindow* window, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType, glm::vec3 Orientation) {
+void Inputs::MeshInputs(GLFWwindow* window, std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType, glm::vec3 Orientation) {
     // Flatten y
     Orientation.y = 0;
 
@@ -112,12 +112,20 @@ void Inputs::MeshInputs(GLFWwindow* window, const std::vector<std::unique_ptr<Me
         currentTransform = &Mesh::scale;
     }
 
-    if (isDown(GLFW_KEY_I, true, window)) {
+    if (isDown(GLFW_KEY_O, true, window)) {
         std::cout << "Saving" << std::endl;
-        if (std::ofstream file("project.bin", std::ios::out | std::ios::binary); file.is_open()) {
+        if (std::ofstream file("project.lsim", std::ios::out | std::ios::binary); file.is_open()) {
             IO::saveToFile(file, meshes);
         }
         std::cout << "Saved" << std::endl;
+    }
+
+    if (isDown(GLFW_KEY_I, true, window)) {
+        std::cout << "Loading" << std::endl;
+        if (std::ifstream file("project.lsim", std::ios::in | std::ios::binary); file.is_open()) {
+            meshes = IO::loadFromFile(file);
+        }
+        std::cout << "Loaded" << std::endl;
     }
 
     for (int i = 0 + GLFW_KEY_0; i < 10 + GLFW_KEY_0; i++) {
@@ -148,7 +156,7 @@ void Inputs::LightInputs(glm::vec3 &lightPos, GLFWwindow* window) {
     }
 }
 
-void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, const std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType, glm::vec3 Orientation) {
+void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType, glm::vec3 Orientation) {
     if (isDown(GLFW_KEY_M, true, window)) {
         currentMode = 0;
     }
