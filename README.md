@@ -20,36 +20,29 @@ This is my attempt at making a game engine with opengl
 - File I/O for scene loading and saving
 - Basic physics and collision detection
 
-## Prerequisites (Fedora)
-
-Intsall neccessary dependencies:
-
-```bash
-sudo dnf install glfw-devel glm-devel
-```
-
+## Prerequisites (Windows)
+This project requires Git, Cmake, Ninja(or another build system)
 ## How to run
 1. Clone the repository
 ```bash
 git clone https://github.com/Haletas033/LSIMENGINE.git
-cd opengl-clion-project
+cd LSIMENGINE
 ```
-2. Create a build directory
+2. cd into build directory
 ```bash
-mkdir build
 cd build
 ```
 3. Run cmake to configure the project
 ```bash
 cmake ..
 ```
-4. Build the project using make
+4. Build the project using ninja (or another build system)
 ```bash
-make
+ninja
 ```
 5. Run the project
 ```bash
-./LSIMENGINE
+./LSIM
 ```
 ## Project Structure
 ```bash
@@ -57,52 +50,12 @@ make
 LSIMENGINE/
 ├── .gitignore
 ├── CMakeLists.txt
-├── external/
-│   └── glad/
-│       ├── CMakeLists.txt
-│       ├── include/
-│       │   ├── glad/
-│       │   │   └── glad.h
-│       │   └── KHR/
-│       │       └── khrplatform.h
-│       └── src/
-│           └── glad.c
-├── imgui/
-│   ├── .editorconfig
-│   ├── .gitattributes
-│   ├── .github/
-│   │   ├── FUNDING.yml
-│   │   ├── ISSUE_TEMPLATE/
-│   │   │   ├── config.yml
-│   │   │   └── issue_template.yml
-│   │   ├── pull_request_template.md
-│   │   └── workflows/
-│   │       ├── build.yml
-│   │       ├── manual.yml
-│   │       ├── scheduled.yml
-│   │       └── static-analysis.yml
-│   ├── .gitignore
-│   ├── backends/
-│   │   ├── imgui_impl_glfw.cpp
-│   │   ├── imgui_impl_glfw.h
-│   │   ├── imgui_impl_opengl3.cpp
-│   │   └── imgui_impl_opengl3.h
-│   ├── imconfig.h
-│   ├── imgui_demo.cpp
-│   ├── imgui_draw.cpp
-│   ├── imgui_impl_opengl3_loader.h
-│   ├── imgui_internal.h
-│   ├── imgui_tables.cpp
-│   ├── imgui_widgets.cpp
-│   ├── imgui.cpp
-│   ├── imgui.h
-│   ├── imstb_rectpack.h
-│   ├── imstb_textedit.h
-│   └── imstb_truetype.h
+├── external/ ;;Contains glfw, glad, imgui, and glm
 ├── include/
 │   ├── camera.h
 │   ├── EBO.h
 │   ├── FastNoiseLite.h
+│   ├── fileIO.h
 │   ├── gui.h
 │   ├── inputs.h
 │   ├── mesh.h
@@ -119,6 +72,7 @@ LSIMENGINE/
 └── Src/
     ├── camera.cpp
     ├── EBO.cpp
+    ├── fileIO.cpp
     ├── gui.cpp
     ├── inputs.cpp
     ├── main.cpp
