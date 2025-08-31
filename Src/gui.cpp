@@ -92,7 +92,7 @@ void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vecto
     
     
                 if (!refMesh->useTexture) {
-                    if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh.color))) {
+                    if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh->color))) {
                         for (int mesh : currentMeshes) {
                             meshes[mesh].get()->color = refMesh->color;
                         }

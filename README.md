@@ -28,8 +28,9 @@ This project requires Git, Cmake, Ninja(or another build system)
 git clone https://github.com/Haletas033/LSIMENGINE.git
 cd LSIMENGINE
 ```
-2. cd into build directory
+2. create build directory
 ```bash
+mkdir build
 cd build
 ```
 3. Run cmake to configure the project
@@ -45,47 +46,8 @@ ninja
 ./LSIM
 ```
 ## Project Structure
-```bash
-.
-LSIMENGINE/
-├── .gitignore
-├── CMakeLists.txt
-├── external/ ;;Contains glfw, glad, imgui, and glm
-├── include/
-│   ├── camera.h
-│   ├── EBO.h
-│   ├── FastNoiseLite.h
-│   ├── fileIO.h
-│   ├── gui.h
-│   ├── inputs.h
-│   ├── mesh.h
-│   ├── primitives.h
-│   ├── shaderClass.h
-│   ├── terrain.h
-│   ├── VAO.h
-│   └── VBO.h
-├── LICENSE
-├── README.md
-├── shaders/
-│   ├── default.frag
-│   └── default.vert
-└── Src/
-    ├── camera.cpp
-    ├── EBO.cpp
-    ├── fileIO.cpp
-    ├── gui.cpp
-    ├── inputs.cpp
-    ├── main.cpp
-    ├── mesh.cpp
-    ├── primitives.cpp
-    ├── shaderClass.cpp
-    ├── terrain.cpp
-    ├── VAO.cpp
-    └── VBO.cpp
-
-
-```
-
+<!-- TREE_START -->
+<!-- TREE_END -->
 ## Contributing
 Contributions are welcome! Whether it's a bug fix, new feature, or documentation improvement, feel free to open an issue or submit a pull request.
 

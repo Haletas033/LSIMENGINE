@@ -1,0 +1,42 @@
+name: generateStructureTree
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build-structure-tree:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate project tree
+        run: tree -I "external" > tree.txt
+
+      - name: Update README with project tree
+        run: |
+          # Wrap tree.txt in markdown code block
+          echo '```bash' > tree_block.txt
+          cat tree.txt >> tree_block.txt
+          echo '```' >> tree_block.txt
+  
+
+          # Replace content between TREE_START and TREE_END
+          awk '
+          BEGIN {skip=0}
+          /<!-- TREE_START -->/ {print; system("cat tree_block.txt"); skip=1; next}
+          /<!-- TREE_END -->/ {skip=0}
+          !skip {print}
+          ' README.md > README_new.md
+
+          mv README_new.md README.md
+
+      - name: Commit updated README
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Update project structure" || echo "No changes to commit"
+          git push
