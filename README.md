@@ -47,6 +47,62 @@ ninja
 ```
 ## Project Structure
 <!-- TREE_START -->
+```bash
+.
+├── CMakeLists.txt
+├── LICENSE
+├── README.md
+├── Src
+│   ├── EBO.cpp
+│   ├── VAO.cpp
+│   ├── VBO.cpp
+│   ├── camera.cpp
+│   ├── fileIO.cpp
+│   ├── gui.cpp
+│   ├── inputs.cpp
+│   ├── main.cpp
+│   ├── mesh.cpp
+│   ├── primitives.cpp
+│   ├── shaderClass.cpp
+│   └── terrain.cpp
+├── imgui
+│   ├── backends
+│   │   ├── imgui_impl_glfw.cpp
+│   │   ├── imgui_impl_glfw.h
+│   │   ├── imgui_impl_opengl3.cpp
+│   │   └── imgui_impl_opengl3.h
+│   ├── imconfig.h
+│   ├── imgui.cpp
+│   ├── imgui.h
+│   ├── imgui_demo.cpp
+│   ├── imgui_draw.cpp
+│   ├── imgui_impl_opengl3_loader.h
+│   ├── imgui_internal.h
+│   ├── imgui_tables.cpp
+│   ├── imgui_widgets.cpp
+│   ├── imstb_rectpack.h
+│   ├── imstb_textedit.h
+│   └── imstb_truetype.h
+├── include
+│   ├── EBO.h
+│   ├── FastNoiseLite.h
+│   ├── VAO.h
+│   ├── VBO.h
+│   ├── camera.h
+│   ├── fileIO.h
+│   ├── gui.h
+│   ├── inputs.h
+│   ├── mesh.h
+│   ├── primitives.h
+│   ├── shaderClass.h
+│   └── terrain.h
+├── shaders
+│   ├── default.frag
+│   └── default.vert
+└── tree.txt
+
+6 directories, 46 files
+```
 <!-- TREE_END -->
 ## Contributing
 Contributions are welcome! Whether it's a bug fix, new feature, or documentation improvement, feel free to open an issue or submit a pull request.
