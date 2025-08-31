@@ -3,10 +3,9 @@ project(LSIM)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
-
 add_subdirectory(external/glad)
+add_subdirectory(external/glm)
+add_subdirectory(external/glfw)
 
 set(IMGUI_SOURCES
         imgui/imgui.cpp
@@ -50,8 +49,10 @@ add_executable(LSIM
 
 target_include_directories(LSIM PRIVATE
         external/glad/include
+        external/glfw/include
+        external/
         ${PROJECT_SOURCE_DIR}/imgui
         ${PROJECT_SOURCE_DIR}/imgui/backends
 )
 
-target_link_libraries(LSIM PRIVATE glfw glm::glm glad)
+target_link_libraries(LSIM PRIVATE glfw glm::glm-header-only glad)
