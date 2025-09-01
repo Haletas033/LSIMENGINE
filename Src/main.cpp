@@ -99,7 +99,7 @@ int main()
 		glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 		float aspect = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
 
-		//Check if the window is minimized if so skip renderloop and just poll events
+		//Check if the window is minimized if so skip render loop and just poll events
 		if (windowWidth <= 0 || windowHeight <= 0) {
 			glfwPollEvents();
 			continue;
@@ -233,15 +233,17 @@ int main()
 			}
 		}
 
-		for (auto& meshPtr : meshes) {
-			Mesh& mesh = *meshPtr;
+		if (!meshes.empty()) {
+			for (auto& meshPtr : meshes) {
+				Mesh& mesh = *meshPtr;
 
-			GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
-			glUniform1i(useTexLoc, mesh.useTexture);
+				GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
+				glUniform1i(useTexLoc, mesh.useTexture);
 
-			glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
+				glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
 
-			mesh.Draw(shaderProgram, camera);
+				mesh.Draw(shaderProgram, camera);
+			}
 		}
 
 

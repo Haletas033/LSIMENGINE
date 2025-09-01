@@ -165,7 +165,9 @@ void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, std::vector<s
     }
 
     if (currentMode == 0) {
-        MeshInputs(window, meshes, currentMesh, selectedMeshType, Orientation);
+        if (!meshes.empty() && currentMesh >= 0 && currentMesh < meshes.size()) {
+            MeshInputs(window, meshes, currentMesh, selectedMeshType, Orientation);
+        }
     }
     else if (currentMode == 1) {
         LightInputs(lightPos, window);
