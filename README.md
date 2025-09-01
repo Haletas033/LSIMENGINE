@@ -31,14 +31,14 @@ cd LSIMENGINE
 2. create build directory
 ```bash
 mkdir build
-cd build
 ```
 3. Run cmake to configure the project
 ```bash
-cmake ..
+cmake -S . -B build -G Ninja
 ```
 4. Build the project using ninja (or another build system)
 ```bash
+cd build
 ninja
 ```
 5. Run the project
