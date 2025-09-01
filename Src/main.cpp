@@ -94,6 +94,16 @@ int main()
 	//Main render loop
 	while (!glfwWindowShouldClose(window))
 	{
+		//Update aspect ratio from current framebuffer size
+		int windowWidth, windowHeight;
+		glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
+		float aspect = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
+
+		//Check if the window is minimized if so skip renderloop and just poll events
+		if (windowWidth <= 0 || windowHeight <= 0) {
+			glfwPollEvents();
+			continue;
+		}
 
 		auto currentTime = static_cast<float>(glfwGetTime());
 		deltaTime = currentTime - lastTime;
@@ -128,13 +138,6 @@ int main()
 
 
 		glfwGetCursorPos(window, &mouseX, &mouseY);
-
-		//Update aspect ratio from current framebuffer size
-		int windowWidth, windowHeight;
-
-		glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
-
-		float aspect = static_cast<float>(windowWidth) / static_cast<float>(windowHeight);
 
 		camera.Matrix(45.0f, 0.1f, 1000000.0f, shaderProgram, "camMatrix", aspect);
 
