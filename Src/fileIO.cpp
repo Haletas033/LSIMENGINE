@@ -4,9 +4,9 @@
 
 #include "../include/fileIO.h"
 
-OPENFILENAME ofn;           //common dialog box structure
-char szFile[260] = {"untitled.lsim"};     //File size buffer
-HWND hwnd;                  //owner window
+OPENFILENAME ofn;                           //common dialog box structure
+char szFile[260] = {"untitled.lsim"};       //File size buffer
+HWND hwnd;                                  //owner window
 
 std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
     //Initialize OPENFILENAME
@@ -17,7 +17,9 @@ std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
     ofn.nMaxFile = sizeof(szFile);
     ofn.lpstrFilter = filter;
     ofn.nFilterIndex = 1;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_OVERWRITEPROMPT;
+
+    //Display the dialog box
     if (func(&ofn) == TRUE) {
         return ofn.lpstrFile;
     }

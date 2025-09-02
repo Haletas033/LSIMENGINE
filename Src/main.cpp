@@ -74,6 +74,8 @@ int main()
 
 	meshes.push_back(std::make_unique<Mesh>(primitives::GenerateCube()));
 	meshes.back()->name = "First Cube";
+	auto* node = new Gui::Node{ meshes.back().get(), Gui::root, {} };
+	Gui::root->children.push_back(node);
 
 	//Enable the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
