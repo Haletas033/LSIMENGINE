@@ -114,7 +114,8 @@ void Inputs::MeshInputs(GLFWwindow* window, std::vector<std::unique_ptr<Mesh>>& 
 
     if (isDown(GLFW_KEY_O, true, window)) {
         std::cout << "Saving" << std::endl;
-        if (std::ofstream file("project.lsim", std::ios::out | std::ios::binary); file.is_open()) {
+        std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetSaveFileNameA);
+        if (std::ofstream file(fileName, std::ios::out | std::ios::binary); file.is_open()) {
             IO::saveToFile(file, meshes);
         }
         std::cout << "Saved" << std::endl;
@@ -122,7 +123,8 @@ void Inputs::MeshInputs(GLFWwindow* window, std::vector<std::unique_ptr<Mesh>>& 
 
     if (isDown(GLFW_KEY_I, true, window)) {
         std::cout << "Loading" << std::endl;
-        if (std::ifstream file("project.lsim", std::ios::in | std::ios::binary); file.is_open()) {
+        std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetOpenFileNameA);
+        if (std::ifstream file(fileName, std::ios::in | std::ios::binary); file.is_open()) {
             meshes = IO::loadFromFile(file);
         }
         std::cout << "Loaded" << std::endl;

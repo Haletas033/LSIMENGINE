@@ -7,6 +7,8 @@
 
 #include <fstream>
 #include <memory>
+#include <windows.h>
+#include <commdlg.h>
 
 #include "mesh.h"
 #include "glad/glad.h"
@@ -14,6 +16,9 @@
 
 class IO {
 public:
+    typedef WINBOOL (*FileDialogFunc)(LPOPENFILENAMEA);
+
+    static std::string Dialog(const char* filter, FileDialogFunc func);
     static void saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>> &meshes);
     static std::vector<std::unique_ptr<Mesh>> loadFromFile(std::ifstream &file);
 };

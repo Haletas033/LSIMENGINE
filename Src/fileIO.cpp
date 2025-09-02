@@ -4,6 +4,28 @@
 
 #include "../include/fileIO.h"
 
+OPENFILENAME ofn;           //common dialog box structure
+char szFile[260] = {"untitled.lsim"};     //File size buffer
+HWND hwnd;                  //owner window
+
+std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
+    //Initialize OPENFILENAME
+    ZeroMemory(&ofn, sizeof(OPENFILENAME));
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = filter;
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+    if (func(&ofn) == TRUE) {
+        return ofn.lpstrFile;
+    }
+
+    return {};
+}
+
+
 void IO::saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>> &meshes) {
     for (const auto& mesh : meshes) {
 
