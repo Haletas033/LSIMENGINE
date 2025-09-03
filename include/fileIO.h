@@ -16,7 +16,7 @@
 
 class IO {
 public:
-    typedef WINBOOL (*FileDialogFunc)(LPOPENFILENAMEA);
+    typedef BOOL (__stdcall *FileDialogFunc)(LPOPENFILENAMEA);
 
     static std::string Dialog(const char* filter, FileDialogFunc func);
     static void saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>> &meshes);

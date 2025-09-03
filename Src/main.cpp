@@ -65,7 +65,7 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	//Generate Shader object using shaders default.vert and default.frag
-	Shader shaderProgram("../shaders/default.vert", "../shaders/default.frag");
+	Shader shaderProgram("shaders/default.vert", "shaders/default.frag");
 
 	Gui::Initialize(window);
 

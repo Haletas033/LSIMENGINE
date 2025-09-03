@@ -55,4 +55,6 @@ target_include_directories(LSIM PRIVATE
         ${PROJECT_SOURCE_DIR}/imgui/backends
 )
 
+file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
+
 target_link_libraries(LSIM PRIVATE glfw glm::glm-header-only glad)
