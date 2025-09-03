@@ -21,6 +21,7 @@ set(IMGUI_SOURCES
         Src/inputs.cpp
         Src/main.cpp
         Src/main.cpp
+        include/light.h
 )
 
 add_executable(LSIM

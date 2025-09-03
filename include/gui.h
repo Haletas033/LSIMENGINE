@@ -11,6 +11,7 @@
 #include"../imgui/backends/imgui_impl_opengl3.h"
 
 #include"../include/mesh.h"
+#include"../include/light.h"
 
 class Gui {
     public:
@@ -32,7 +33,7 @@ class Gui {
 
     static void Transform(const std::vector<std::unique_ptr<Mesh>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
 
-    static void Lighting(glm::vec4 &lightColor, glm::vec3 &lightPos, float &attenuationScale);
+    static void Lighting(std::vector<Light> &lights, int &currentLight);
 
     static void Debug(const double &mouseX, const double &mouseY);
 

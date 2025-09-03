@@ -29,6 +29,9 @@ std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
 
 
 void IO::saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>> &meshes) {
+    const int meshCount = meshes.size();
+    file.write(reinterpret_cast<const char*>(&meshCount), sizeof(meshCount));
+
     for (const auto& mesh : meshes) {
 
         int nameLen = mesh->name.size();
@@ -72,7 +75,10 @@ void IO::saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>
 std::vector<std::unique_ptr<Mesh>> IO::loadFromFile(std::ifstream &file) {
     std::vector<std::unique_ptr<Mesh>> meshes;
 
-    while (true) {
+    int meshCount;
+    file.read(reinterpret_cast<char*>(&meshCount), sizeof(meshCount));
+
+    for (int i = 0; i < meshCount; ++i) {
         int nameLen;
         int verticesLen;
         int indicesLen;

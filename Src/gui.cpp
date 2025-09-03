@@ -134,13 +134,15 @@ void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vecto
     }
 }
 
-void Gui::Lighting(glm::vec4 &lightColor, glm::vec3 &lightPos, float &attenuationScale) {
+void Gui::Lighting(std::vector<Light> &lights, int &currentLight) {
     if (ImGui::CollapsingHeader("Lighting")) {
-        ImGui::ColorEdit4("Light Color", glm::value_ptr(lightColor));
+        ImGui::ColorEdit4("Light Color", glm::value_ptr(lights[currentLight].lightColor));
 
-        ImGui::InputFloat3("Light Position", glm::value_ptr(lightPos));
+        ImGui::InputFloat3("Light Position", glm::value_ptr(lights[currentLight].lightPos));
 
-        ImGui::InputFloat("Light Attenuation", &attenuationScale);
+        ImGui::InputFloat("Light Attenuation", &lights[currentLight].attenuationScale);
+
+        ImGui::InputInt("Current Light", &currentLight);
     }
 }
 

@@ -8,6 +8,7 @@
 #include"../include/primitives.h"
 #include"../include/gui.h"
 #include"../include/inputs.h"
+#include"../include/light.h"
 
 constexpr unsigned int width = 1920;
 constexpr unsigned int height = 1080;
@@ -40,8 +41,13 @@ int main()
 	//Tell GLFW we are using the CORE profile
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-
-
+	std::vector<Light> lights;
+	Light light1;
+	Light light2;
+	Light light3;
+	lights.push_back(light1);
+	lights.push_back(light2);
+	lights.push_back(light3);
 
 	//Create a GLFW window object of 800 by 800 pixels
 	GLFWwindow* window = glfwCreateWindow(width, height, "L-SIM ENGINE", nullptr, nullptr);
@@ -69,8 +75,7 @@ int main()
 
 	Gui::Initialize(window);
 
-	auto lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	auto lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
+
 
 	meshes.push_back(std::make_unique<Mesh>(primitives::GenerateCube()));
 	meshes.back()->name = "First Cube";
@@ -92,6 +97,7 @@ int main()
 	float deltaTime = 0.0f;
 	float lastTime = 0.0f;
 	int lastClickMesh = -1;
+	int currentLight = 0;
 
 	//Main render loop
 	while (!glfwWindowShouldClose(window))
@@ -118,17 +124,18 @@ int main()
 		//Tells OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 
-		glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-		glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+		for (int i = 0; i < std::size(lights); ++i) {
+			std::string prefix = "lights[" + std::to_string(i) + "].";
 
-		static float attenuationScale = 1.0f;
+			lights[i].linear = 0.09f / (lights[i].attenuationScale + 0.001f);
+			lights[i].quadratic = 0.032f / (lights[i].attenuationScale + 0.001f);
 
-		float invScale = 1.0f / (attenuationScale + 0.001f); // Avoid division by zero
-		float linear     = 0.09f * invScale;
-		float quadratic  = 0.032f * invScale;
+			glUniform4fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightColor").c_str()), 1, &lights[i].lightColor[0]);
+			glUniform3fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightPos").c_str()), 1, &lights[i].lightPos[0]);
 
-		glUniform1f(glGetUniformLocation(shaderProgram.ID, "linear"), linear);
-		glUniform1f(glGetUniformLocation(shaderProgram.ID, "quadratic"), quadratic);
+			glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "linear").c_str()), lights[i].linear);
+			glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "quadratic").c_str()), lights[i].quadratic);
+		}
 
 
 		//Handle camera inputs
@@ -229,10 +236,10 @@ int main()
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard) {
 			if (currentMeshes.empty()) {
 				int falseMesh = 0;
-				inputs.InputHandler(window, lightPos, meshes, falseMesh, selectedMeshType, lastClickMesh, camera.Orientation);
+				inputs.InputHandler(window, lights[currentLight].lightPos, meshes, falseMesh, selectedMeshType, lastClickMesh, camera.Orientation);
 			} else {
 				for (int mesh : currentMeshes)
-					inputs.InputHandler(window, lightPos, meshes, mesh, selectedMeshType, lastClickMesh, camera.Orientation);
+					inputs.InputHandler(window, lights[currentLight].lightPos, meshes, mesh, selectedMeshType, lastClickMesh, camera.Orientation);
 			}
 		}
 
@@ -260,7 +267,7 @@ int main()
 
 		Gui::Transform(meshes, currentMeshes, selectedMeshType, lastClickMesh);
 
-		Gui::Lighting(lightColor, lightPos, attenuationScale);
+		Gui::Lighting(lights, currentLight);
 
 		Gui::Debug(mouseX, mouseY);
 

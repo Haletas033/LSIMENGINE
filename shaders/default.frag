@@ -7,28 +7,39 @@ in vec3 crntPos;
 
 in vec2 texCoord;
 
-uniform vec4 lightColor;
-uniform vec3 lightPos;
-uniform vec4 meshColor;
+struct Light{
+    vec4 lightColor;
+    vec3 lightPos;
+    float linear;
+    float quadratic;
+};
 
-uniform float linear;
-uniform float quadratic;
+const int NUM_LIGHTS = 8;
+
+uniform Light lights[NUM_LIGHTS];
+
+uniform vec4 meshColor;
 
 uniform sampler2D tex0;
 uniform bool useTexture;
 
 void main(){
     vec3 normal = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - crntPos);
 
-    float diffuse = max(dot(normal, lightDir), 0.0f);
-    float ambient = 0.2f;
+    vec4 result = vec4(0.0f);
 
-    float distance = length(lightPos - crntPos);
-    float attenuation = 1.0 / (1.0 + linear * distance + quadratic * distance * distance);
+    for (int i = 0; i < NUM_LIGHTS; ++i){
+        vec3 lightDir = normalize(lights[i].lightPos - crntPos);
 
-    vec4 baseColor = useTexture ? texture(tex0, texCoord) : meshColor;
+        float diffuse = max(dot(normal, lightDir), 0.0f);
+        float ambient = 0.2f;
 
-    vec4 result = baseColor * lightColor * (ambient + diffuse) * attenuation;
+        float distance = length(lights[i].lightPos - crntPos);
+        float attenuation = 1.0 / (1.0 + lights[i].linear * distance + lights[i].quadratic * distance * distance);
+
+        vec4 baseColor = useTexture ? texture(tex0, texCoord) : meshColor;
+
+        result += baseColor * lights[i].lightColor * (ambient + diffuse) * attenuation;
+    }
     FragColor = result;
 }
