@@ -50,6 +50,7 @@ ninja
 ```bash
 .
 ├── CMakeLists.txt
+├── CMakeSettings.json
 ├── LICENSE
 ├── README.md
 ├── Src
@@ -101,7 +102,7 @@ ninja
 │   └── default.vert
 └── tree.txt
 
-6 directories, 46 files
+6 directories, 47 files
 ```
 <!-- TREE_END -->
 ## Contributing
