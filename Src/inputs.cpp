@@ -27,7 +27,8 @@ bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
     return false;
 }
 
-void Inputs::MeshInputs(GLFWwindow* window, std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType, glm::vec3 Orientation) {
+void Inputs::MeshInputs(GLFWwindow* window, std::vector<std::unique_ptr<Mesh>>& meshes,
+    int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
     // Flatten y
     Orientation.y = 0;
 
@@ -96,10 +97,10 @@ void Inputs::MeshInputs(GLFWwindow* window, std::vector<std::unique_ptr<Mesh>>& 
         cameraUp -= 0.1;
     }
     if (isDown(GLFW_KEY_RIGHT_BRACKET, true, window)) {
-        currentMesh++;
+        selectedMesh++;
     }
     if (isDown(GLFW_KEY_LEFT_BRACKET, true, window)) {
-        currentMesh--;
+        selectedMesh--;
     }
 
     if (isDown(GLFW_KEY_G, true, window)) {
@@ -158,7 +159,8 @@ void Inputs::LightInputs(glm::vec3 &lightPos, GLFWwindow* window) {
     }
 }
 
-void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType, glm::vec3 Orientation) {
+void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, std::vector<std::unique_ptr<Mesh>>& meshes,
+    int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
     if (isDown(GLFW_KEY_M, true, window)) {
         currentMode = 0;
     }
@@ -168,7 +170,7 @@ void Inputs::InputHandler(GLFWwindow* window, glm::vec3 &lightPos, std::vector<s
 
     if (currentMode == 0) {
         if (!meshes.empty() && currentMesh >= 0 && currentMesh < meshes.size()) {
-            MeshInputs(window, meshes, currentMesh, selectedMeshType, Orientation);
+            MeshInputs(window, meshes, currentMesh, selectedMeshType, selectedMesh, Orientation);
         }
     }
     else if (currentMode == 1) {
