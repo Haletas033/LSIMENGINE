@@ -93,6 +93,7 @@ ninja
 │   ├── fileIO.h
 │   ├── gui.h
 │   ├── inputs.h
+│   ├── light.h
 │   ├── mesh.h
 │   ├── primitives.h
 │   ├── shaderClass.h
@@ -102,7 +103,7 @@ ninja
 │   └── default.vert
 └── tree.txt
 
-6 directories, 47 files
+6 directories, 48 files
 ```
 <!-- TREE_END -->
 ## Contributing
