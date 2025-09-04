@@ -226,6 +226,23 @@ void Gui::DeleteNode(Node* node) {
     delete node;
 }
 
+void Gui::DeleteNodeRercursively(Node* node) {
+    for (const auto child : node->children) {
+        DeleteNodeRercursively(child);
+    }
+    node->children = {};
+    if (node != root)
+        delete node;
+}
+
+void Gui::ClearRoot() {
+    for (auto* child : root->children) {
+        DeleteNodeRercursively(child);
+    }
+    root->children.clear();
+}
+
+
 Gui::Node* Gui::FindNodeByMesh(Node* node, const Mesh* mesh) {
     if (!node) return nullptr;
     if (node->mesh == mesh) return node;
@@ -235,6 +252,17 @@ Gui::Node* Gui::FindNodeByMesh(Node* node, const Mesh* mesh) {
     }
     return nullptr;
 }
+
+Gui::Node *Gui::FindNodeByMeshID(Node *node, const uint16_t meshID) {
+    if (!node) return nullptr;
+    if (node->mesh && node->mesh->meshID == meshID) return node;
+    for (Node* child : node->children) {
+        Node* result = FindNodeByMeshID(child, meshID);
+        if (result) return result;
+    }
+    return nullptr;
+}
+
 
 int Gui::Hierarchy(const std::vector<std::unique_ptr<Mesh>>& meshes) {
     int clickedMesh = -1;

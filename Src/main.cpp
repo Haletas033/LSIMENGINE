@@ -290,6 +290,8 @@ int main()
 		glfwPollEvents();
 	}
 
+	Gui::DeleteNodeRercursively(Gui::root);
+
 	Gui::CleanUp();
 
 	shaderProgram.Delete();

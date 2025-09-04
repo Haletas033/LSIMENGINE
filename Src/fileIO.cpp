@@ -32,6 +32,13 @@ void IO::saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>
     const int meshCount = meshes.size();
     file.write(reinterpret_cast<const char*>(&meshCount), sizeof(meshCount));
 
+    uint16_t NextMeshID = 0;
+
+    for (auto& mesh : meshes) {
+        mesh->meshID = NextMeshID;
+        NextMeshID++;
+    }
+
     for (const auto& mesh : meshes) {
 
         int nameLen = mesh->name.size();
@@ -61,6 +68,18 @@ void IO::saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>
         //Write color
         file.write(reinterpret_cast<const char*>(&mesh->color), sizeof(mesh->color));
 
+        //Write meshID
+        file.write(reinterpret_cast<const char *>(&mesh->meshID), sizeof(mesh->meshID));
+
+        //Write the meshID of the parent node
+        uint16_t parentID = -1;
+        if (const Gui::Node* node = Gui::FindNodeByMesh(Gui::root, mesh.get());
+            node->parent && node->parent != Gui::root) {
+            parentID = node->parent->mesh->meshID;
+        }
+
+        file.write(reinterpret_cast<const char*>(&parentID), sizeof(parentID));
+
         //Write the transformation matrix
         file.write(reinterpret_cast<const char*>(&mesh->position), sizeof(mesh->position));
         file.write(reinterpret_cast<const char*>(&mesh->rotation), sizeof(mesh->rotation));
@@ -73,6 +92,8 @@ void IO::saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>
 }
 
 std::vector<std::unique_ptr<Mesh>> IO::loadFromFile(std::ifstream &file) {
+    Gui::ClearRoot();
+
     std::vector<std::unique_ptr<Mesh>> meshes;
 
     int meshCount;
@@ -115,6 +136,13 @@ std::vector<std::unique_ptr<Mesh>> IO::loadFromFile(std::ifstream &file) {
         //Read color
         file.read(reinterpret_cast<char*>(&mesh.color[0]), 4 * sizeof(float));
 
+        //Read meshID
+        file.read(reinterpret_cast<char*>(&mesh.meshID), sizeof(mesh.meshID));
+
+        //Read parentID
+        uint16_t parentID;
+        file.read(reinterpret_cast<char*>(&parentID), sizeof(parentID));
+
         //Read Position, Rotation, and Scale
         file.read(reinterpret_cast<char*>(&mesh.position[0]), 3 * sizeof(float));
         file.read(reinterpret_cast<char*>(&mesh.rotation[0]), 3 * sizeof(float));
@@ -125,7 +153,17 @@ std::vector<std::unique_ptr<Mesh>> IO::loadFromFile(std::ifstream &file) {
 
         mesh.setupBuffers();
 
-        meshes.push_back(std::make_unique<Mesh>(mesh));
+        //Recreate mesh hierarchy
+        auto* node = new Gui::Node;
+        auto meshPtr = std::make_unique<Mesh>(mesh);
+        node->mesh = meshPtr.get();
+        Gui::Node* parentNode = Gui::FindNodeByMeshID(Gui::root, parentID);
+        if (!parentNode) parentNode = Gui::root;
+
+        node->parent = parentNode;
+        parentNode->children.push_back(node);
+
+        meshes.push_back(std::move(meshPtr));
     }
 
     return meshes;

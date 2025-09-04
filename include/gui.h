@@ -41,7 +41,13 @@ class Gui {
 
     static void DeleteNode(Node *node);
 
+    static void DeleteNodeRercursively(Node *node);
+
+    static void ClearRoot();
+
     static Node *FindNodeByMesh(Node *node, const Mesh *mesh);
+
+    static Node *FindNodeByMeshID(Node *node, uint16_t meshID);
 
     static int Hierarchy(const std::vector<std::unique_ptr<Mesh>>& meshes);
 

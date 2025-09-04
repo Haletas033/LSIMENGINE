@@ -11,6 +11,7 @@
 #include <commdlg.h>
 
 #include "mesh.h"
+#include "gui.h"
 #include "glad/glad.h"
 #include "glm/glm.hpp"
 

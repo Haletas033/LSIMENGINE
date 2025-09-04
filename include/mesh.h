@@ -20,6 +20,7 @@ public:
     bool useTexture = false;
     glm::vec4 color = glm::vec4(1.0f);
     GLuint texId{};
+    uint16_t meshID = 0;
 
     VAO vao;
 
