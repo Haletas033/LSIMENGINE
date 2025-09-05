@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include"mesh.h"
+#include"scene.h"
 #include"fileIO.h"
 
 #include<unordered_map>
@@ -20,11 +20,12 @@ public:
 
     bool isDown(int key, bool onlyOnPress, GLFWwindow* window);
 
-    void MeshInputs(GLFWwindow* window, std::vector<std::unique_ptr<Mesh>>& meshes, int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
+    void MeshInputs(GLFWwindow* window, Scene &scene, int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
 
-    void LightInputs(glm::vec3 &lightPos, GLFWwindow* window);
+    void LightInputs(Scene &scene, const int &currentLight, GLFWwindow* window);
 
-    void InputHandler(GLFWwindow* window, glm::vec3 &lightPos, std::vector<std::unique_ptr<Mesh>> &meshes, int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
+    void InputHandler(GLFWwindow* window, Scene &scene,
+    int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
 };
 
 #endif //INPUTS_CLASS_H

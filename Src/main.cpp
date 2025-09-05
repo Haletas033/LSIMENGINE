@@ -3,12 +3,11 @@
 #include <memory>
 #include <unordered_map>
 
+#include"../include/scene.h"
 #include"../include/terrain.h"
-#include"../include/mesh.h"
 #include"../include/primitives.h"
 #include"../include/gui.h"
 #include"../include/inputs.h"
-#include"../include/light.h"
 
 constexpr unsigned int width = 1920;
 constexpr unsigned int height = 1080;
@@ -99,6 +98,8 @@ int main()
 	int lastClickMesh = -1;
 	int currentLight = 0;
 
+	Scene scene = {std::move(meshes), std::move(lights)};
+
 	//Main render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -124,17 +125,17 @@ int main()
 		//Tells OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 
-		for (int i = 0; i < std::size(lights); ++i) {
+		for (int i = 0; i < std::size(scene.lights); ++i) {
 			std::string prefix = "lights[" + std::to_string(i) + "].";
 
-			lights[i].linear = 0.09f / (lights[i].attenuationScale + 0.001f);
-			lights[i].quadratic = 0.032f / (lights[i].attenuationScale + 0.001f);
+			scene.lights[i].linear = 0.09f / (scene.lights[i].attenuationScale + 0.001f);
+			scene.lights[i].quadratic = 0.032f / (scene.lights[i].attenuationScale + 0.001f);
 
-			glUniform4fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightColor").c_str()), 1, &lights[i].lightColor[0]);
-			glUniform3fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightPos").c_str()), 1, &lights[i].lightPos[0]);
+			glUniform4fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightColor").c_str()), 1, &scene.lights[i].lightColor[0]);
+			glUniform3fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightPos").c_str()), 1, &scene.lights[i].lightPos[0]);
 
-			glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "linear").c_str()), lights[i].linear);
-			glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "quadratic").c_str()), lights[i].quadratic);
+			glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "linear").c_str()), scene.lights[i].linear);
+			glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "quadratic").c_str()), scene.lights[i].quadratic);
 		}
 
 
@@ -202,25 +203,25 @@ int main()
 				auto* node = new Gui::Node{ newMesh.get(), Gui::root, {} };
 				Gui::root->children.push_back(node);
 
-				meshes.push_back(std::move(newMesh));
+				scene.meshes.push_back(std::move(newMesh));
 
-				lastClickMesh = meshes.size() - 1;
+				lastClickMesh = scene.meshes.size() - 1;
 			}
 
 			fPressed = true;
 		}
 
-		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS && !meshes.empty() && !deletePressed){
+		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS && !scene.meshes.empty() && !deletePressed){
 			std::sort(currentMeshes.begin(), currentMeshes.end());
 			std::reverse(currentMeshes.begin(), currentMeshes.end());
 			for (int mesh : currentMeshes) {
-				Mesh* meshToDelete = meshes[mesh].get();
+				Mesh* meshToDelete = scene.meshes[mesh].get();
 
 				if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete)) {
 					Gui::DeleteNode(nodeToDelete); // This handles reparenting children
 				}
 
-				meshes.erase(meshes.begin() + mesh);
+				scene.meshes.erase(scene.meshes.begin() + mesh);
 			}
 			currentMeshes.clear();
 			lastClickMesh = -1;
@@ -234,17 +235,21 @@ int main()
 			fPressed = false;
 
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard) {
+
 			if (currentMeshes.empty()) {
 				int falseMesh = 0;
-				inputs.InputHandler(window, lights[currentLight].lightPos, meshes, falseMesh, selectedMeshType, lastClickMesh, camera.Orientation);
+
+				inputs.InputHandler(window, scene, currentLight,
+					falseMesh, selectedMeshType, lastClickMesh, camera.Orientation);
 			} else {
 				for (int mesh : currentMeshes)
-					inputs.InputHandler(window, lights[currentLight].lightPos, meshes, mesh, selectedMeshType, lastClickMesh, camera.Orientation);
+					inputs.InputHandler(window, scene, currentLight,
+						mesh, selectedMeshType, lastClickMesh, camera.Orientation);
 			}
 		}
 
-		if (!meshes.empty()) {
-			for (auto& meshPtr : meshes) {
+		if (!scene.meshes.empty()) {
+			for (auto& meshPtr : scene.meshes) {
 				Mesh& mesh = *meshPtr;
 
 				GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
@@ -265,9 +270,9 @@ int main()
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(meshes, currentMeshes, selectedMeshType, lastClickMesh);
+		Gui::Transform(scene.meshes, currentMeshes, selectedMeshType, lastClickMesh);
 
-		Gui::Lighting(lights, currentLight);
+		Gui::Lighting(scene.lights, currentLight);
 
 		Gui::Debug(mouseX, mouseY);
 
@@ -278,7 +283,7 @@ int main()
 
 		ImGui::Begin("Hierarchy", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		if (int clickedMesh = Gui::Hierarchy(meshes); clickedMesh != -1) lastClickMesh = clickedMesh;
+		if (int clickedMesh = Gui::Hierarchy(scene.meshes); clickedMesh != -1) lastClickMesh = clickedMesh;
 
 		ImGui::End();
 

@@ -28,18 +28,18 @@ std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
 }
 
 
-void IO::saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>> &meshes) {
-    const int meshCount = meshes.size();
+void IO::saveToFile(std::ofstream &file, const Scene& scene) {
+    const int meshCount = scene.meshes.size();
     file.write(reinterpret_cast<const char*>(&meshCount), sizeof(meshCount));
 
     uint16_t NextMeshID = 0;
 
-    for (auto& mesh : meshes) {
+    for (auto& mesh : scene.meshes) {
         mesh->meshID = NextMeshID;
         NextMeshID++;
     }
 
-    for (const auto& mesh : meshes) {
+    for (const auto& mesh : scene.meshes) {
 
         int nameLen = mesh->name.size();
         int verticesLen = mesh->vertices.size();
@@ -88,13 +88,23 @@ void IO::saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>
         //Write the model matrix
         file.write(reinterpret_cast<const char*>(&mesh->modelMatrix), sizeof(mesh->modelMatrix));
     }
+
+    const int lightCount = scene.lights.size();
+    file.write(reinterpret_cast<const char*>(&lightCount), sizeof(lightCount));
+
+    for (Light light : scene.lights) {
+        file.write(reinterpret_cast<const char*>(&light.lightPos), sizeof(light.lightPos));
+        file.write(reinterpret_cast<const char*>(&light.lightColor), sizeof(light.lightColor));
+        file.write(reinterpret_cast<const char*>(&light.attenuationScale), sizeof(light.attenuationScale));
+    }
     file.close();
 }
 
-std::vector<std::unique_ptr<Mesh>> IO::loadFromFile(std::ifstream &file) {
+Scene IO::loadFromFile(std::ifstream &file) {
     Gui::ClearRoot();
 
     std::vector<std::unique_ptr<Mesh>> meshes;
+    std::vector<Light> lights;
 
     int meshCount;
     file.read(reinterpret_cast<char*>(&meshCount), sizeof(meshCount));
@@ -166,7 +176,21 @@ std::vector<std::unique_ptr<Mesh>> IO::loadFromFile(std::ifstream &file) {
         meshes.push_back(std::move(meshPtr));
     }
 
-    return meshes;
+    int lightCount;
+    file.read(reinterpret_cast<char*>(&lightCount), sizeof(lightCount));
+
+    for (int i = 0; i < lightCount; ++i) {
+        Light light;
+
+        file.read(reinterpret_cast<char*>(&light.lightPos[0]), 3 * sizeof(float));
+        file.read(reinterpret_cast<char*>(&light.lightColor[0]), 4 * sizeof(float));
+        file.read(reinterpret_cast<char*>(&light.attenuationScale), sizeof(light.attenuationScale));
+
+        lights.push_back(light);
+    }
+
+    return Scene {std::move(meshes), std::move(lights)};
+
 }
 
 
