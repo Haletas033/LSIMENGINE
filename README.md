@@ -66,6 +66,8 @@ ninja
 │   ├── primitives.cpp
 │   ├── shaderClass.cpp
 │   └── terrain.cpp
+├── config
+│   └── config.json
 ├── imgui
 │   ├── backends
 │   │   ├── imgui_impl_glfw.cpp
@@ -90,6 +92,7 @@ ninja
 │   ├── VAO.h
 │   ├── VBO.h
 │   ├── camera.h
+│   ├── defaults.h
 │   ├── fileIO.h
 │   ├── gui.h
 │   ├── inputs.h
@@ -104,7 +107,7 @@ ninja
 │   └── default.vert
 └── tree.txt
 
-6 directories, 49 files
+7 directories, 51 files
 ```
 <!-- TREE_END -->
 ## Contributing
