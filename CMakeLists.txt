@@ -23,6 +23,7 @@ set(IMGUI_SOURCES
         Src/main.cpp
         include/light.h
         include/scene.h
+        include/defaults.h
 )
 
 add_executable(LSIM
@@ -58,5 +59,6 @@ target_include_directories(LSIM PRIVATE
 )
 
 file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
 
 target_link_libraries(LSIM PRIVATE glfw glm::glm-header-only glad)

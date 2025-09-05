@@ -11,21 +11,28 @@
 #include<vector>
 
 class Inputs {
+private:
+    bool isDown(int key, bool onlyOnPress, GLFWwindow* window);
+
+    void MeshInputs(GLFWwindow* window, const Scene &scene, const int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
+
+    void LightInputs(Scene &scene, const int &currentLight, GLFWwindow* window);
+
+    void IOInputs(GLFWwindow* window, Scene &scene);
 public:
     std::unordered_map<int, bool> canPress;
 
     glm::vec3 Mesh::*currentTransform = &Mesh::position;
 
-    int currentMode = 0;
+    enum CurrentMode {
+        meshMode,
+        lightMode
+    };
 
-    bool isDown(int key, bool onlyOnPress, GLFWwindow* window);
-
-    void MeshInputs(GLFWwindow* window, Scene &scene, int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
-
-    void LightInputs(Scene &scene, const int &currentLight, GLFWwindow* window);
+    CurrentMode currentMode = meshMode;
 
     void InputHandler(GLFWwindow* window, Scene &scene,
-    int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
+    const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
 };
 
 #endif //INPUTS_CLASS_H

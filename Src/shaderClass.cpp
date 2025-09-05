@@ -17,11 +17,11 @@ std::string getFileContent(const char *filename) {
 }
 
 //Constructor that builds the shader program from to different arrays
-Shader::Shader(const char *vertexFile, const char *fragmentFile) {
+Shader::Shader(const char *vertexFile, const char *fragmentFile, bool useRawString) {
 
     //Creates strings of the vertex and fragment shaders and stores them
-    const std::string vertexCode = getFileContent(vertexFile);
-    const std::string fragmentCode = getFileContent(fragmentFile);
+    const std::string vertexCode = useRawString ? vertexFile : getFileContent(vertexFile);
+    const std::string fragmentCode = useRawString ? fragmentFile : getFileContent(fragmentFile);
 
     //turns the shader strings into character arrays
     const char* vertexSource= vertexCode.c_str();

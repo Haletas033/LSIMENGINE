@@ -1,0 +1,10 @@
+{
+  "shader-constants": {
+    "MAX_LIGHTS": 8
+  },
+  "defaults": {
+    "defaultWindowWidth": 1920,
+    "defaultWindowHeight": 1080,
+    "gridScale": 2.0
+  }
+}

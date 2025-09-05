@@ -15,7 +15,7 @@ class Shader {
         //Reference ID of the shaderProgram
         GLuint ID;
         //Constructor that builds the shaderProgram from 2 different shaders
-        Shader(const char* vertexFile, const char* fragmentFile);
+        Shader(const char* vertexFile, const char* fragmentFile, bool useRawString);
 
         //Activates the shaderProgram
         void Activate();

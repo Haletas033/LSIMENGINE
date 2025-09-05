@@ -1,5 +1,6 @@
 #include"../include/inputs.h"
 
+#include <algorithm>
 #include <iostream>
 
 bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
@@ -27,8 +28,8 @@ bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
     return false;
 }
 
-void Inputs::MeshInputs(GLFWwindow* window, Scene &scene,
-    int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
+void Inputs::MeshInputs(GLFWwindow* window, const Scene &scene,
+    const int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
     // Flatten y
     Orientation.y = 0;
 
@@ -98,9 +99,11 @@ void Inputs::MeshInputs(GLFWwindow* window, Scene &scene,
     }
     if (isDown(GLFW_KEY_RIGHT_BRACKET, true, window)) {
         selectedMesh++;
+        selectedMesh = std::clamp(selectedMesh, 0, static_cast<int>(scene.meshes.size() - 1));
     }
     if (isDown(GLFW_KEY_LEFT_BRACKET, true, window)) {
         selectedMesh--;
+        selectedMesh = std::clamp(selectedMesh, 0, static_cast<int>(scene.meshes.size() - 1));
     }
 
     if (isDown(GLFW_KEY_G, true, window)) {
@@ -111,24 +114,6 @@ void Inputs::MeshInputs(GLFWwindow* window, Scene &scene,
     }
     if (isDown(GLFW_KEY_N, true, window)) {
         currentTransform = &Mesh::scale;
-    }
-
-    if (isDown(GLFW_KEY_O, true, window)) {
-        std::cout << "Saving" << std::endl;
-        std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetSaveFileNameA);
-        if (std::ofstream file(fileName, std::ios::out | std::ios::binary); file.is_open()) {
-            IO::saveToFile(file, scene);
-        }
-        std::cout << "Saved" << std::endl;
-    }
-
-    if (isDown(GLFW_KEY_I, true, window)) {
-        std::cout << "Loading" << std::endl;
-        std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetOpenFileNameA);
-        if (std::ifstream file(fileName, std::ios::in | std::ios::binary); file.is_open()) {
-            scene = IO::loadFromFile(file);
-        }
-        std::cout << "Loaded" << std::endl;
     }
 
     for (int i = 0 + GLFW_KEY_0; i < 10 + GLFW_KEY_0; i++) {
@@ -157,25 +142,64 @@ void Inputs::LightInputs(Scene &scene, const int &currentLight, GLFWwindow* wind
     if (isDown(GLFW_KEY_PAGE_DOWN, false, window)) {
         scene.lights[currentLight].lightPos.y -= 0.1;
     }
+
+}
+
+void Inputs::IOInputs(GLFWwindow *window, Scene &scene) {
+    if (isDown(GLFW_KEY_O, true, window)) {
+        std::cout << "Saving" << std::endl;
+        std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetSaveFileNameA);
+        if (std::ofstream file(fileName, std::ios::out | std::ios::binary); file.is_open()) {
+            IO::saveToFile(file, scene);
+        }
+        std::cout << "Saved" << std::endl;
+    }
+
+    if (isDown(GLFW_KEY_I, true, window)) {
+        std::cout << "Loading" << std::endl;
+        std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetOpenFileNameA);
+        if (std::ifstream file(fileName, std::ios::in | std::ios::binary); file.is_open()) {
+            scene = IO::loadFromFile(file);
+        }
+        std::cout << "Loaded" << std::endl;
+    }
 }
 
 void Inputs::InputHandler(GLFWwindow* window, Scene &scene,
-    int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
+    const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
     if (isDown(GLFW_KEY_M, true, window)) {
-        currentMode = 0;
+        currentMode = meshMode;
     }
     if (isDown(GLFW_KEY_L, true, window)) {
-        currentMode = 1;
+        currentMode = lightMode;
     }
 
-    if (currentMode == 0) {
+    if (currentMode == meshMode) {
         if (!scene.meshes.empty() && currentMesh >= 0 && currentMesh < scene.meshes.size()) {
             MeshInputs(window, scene, currentMesh, selectedMeshType, selectedMesh, Orientation);
         }
+
+        // Handle adding and deleting meshes
+        if (isDown(GLFW_KEY_F, true, window)) {
+            scene.addMeshSignal = true;
+        }
+        if (!scene.meshes.empty() && isDown(GLFW_KEY_DELETE, true, window)) {
+            scene.deleteMeshSignal = true;
+        }
     }
-    else if (currentMode == 1) {
+    else if (currentMode == lightMode) {
         LightInputs(scene, currentLight, window);
+
+        //Handle adding and deleting lights
+        if (isDown(GLFW_KEY_F, true, window)) {
+            scene.addLightSignal = true;
+        }
+        if (!scene.lights.empty() && isDown(GLFW_KEY_DELETE, true, window)) {
+            scene.deleteLightSignal = true;
+        }
     }
+
+    IOInputs(window, scene);
 }
 
 

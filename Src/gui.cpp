@@ -136,13 +136,18 @@ void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vecto
 
 void Gui::Lighting(std::vector<Light> &lights, int &currentLight) {
     if (ImGui::CollapsingHeader("Lighting")) {
-        ImGui::ColorEdit4("Light Color", glm::value_ptr(lights[currentLight].lightColor));
+        if (currentLight != -1) {
+            ImGui::ColorEdit4("Light Color", glm::value_ptr(lights[currentLight].lightColor));
 
-        ImGui::InputFloat3("Light Position", glm::value_ptr(lights[currentLight].lightPos));
+            ImGui::InputFloat3("Light Position", glm::value_ptr(lights[currentLight].lightPos));
 
-        ImGui::InputFloat("Light Attenuation", &lights[currentLight].attenuationScale);
+            ImGui::InputFloat("Light Attenuation", &lights[currentLight].attenuationScale);
 
-        ImGui::InputInt("Current Light", &currentLight);
+            if (ImGui::InputInt("Current Light", &currentLight))
+                currentLight = std::clamp(currentLight, 0, static_cast<int>(lights.size() - 1));
+        } else {
+            ImGui::Text("No lights exist in the current scene.");
+        }
     }
 }
 

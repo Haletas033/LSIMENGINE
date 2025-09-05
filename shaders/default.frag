@@ -1,4 +1,3 @@
-#version 330 core
 
 out vec4 FragColor;
 
@@ -14,9 +13,7 @@ struct Light{
     float quadratic;
 };
 
-const int NUM_LIGHTS = 8;
-
-uniform Light lights[NUM_LIGHTS];
+uniform Light lights[MAX_LIGHTS];
 
 uniform vec4 meshColor;
 
@@ -28,7 +25,7 @@ void main(){
 
     vec4 result = vec4(0.0f);
 
-    for (int i = 0; i < NUM_LIGHTS; ++i){
+    for (int i = 0; i < MAX_LIGHTS; ++i){
         vec3 lightDir = normalize(lights[i].lightPos - crntPos);
 
         float diffuse = max(dot(normal, lightDir), 0.0f);

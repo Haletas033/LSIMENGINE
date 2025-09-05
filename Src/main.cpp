@@ -1,5 +1,5 @@
 #include <algorithm>
-#include<iostream>
+#include <iostream>
 #include <memory>
 #include <unordered_map>
 
@@ -8,17 +8,50 @@
 #include"../include/primitives.h"
 #include"../include/gui.h"
 #include"../include/inputs.h"
+#include"../include/defaults.h"
 
-constexpr unsigned int width = 1920;
-constexpr unsigned int height = 1080;
-
-float gridScale = 2.0f;
+#include <nlohmann/json.hpp>
 
 double mouseX, mouseY;
+
+using json = nlohmann::json;
+
+json engineConfig;
 
 //Callback function for window resizing
 void framebuffer_size_callback(GLFWwindow* window, const int width, const int height){
 	glViewport(0, 0, width, height);
+}
+
+void LoadJSON(const std::string &path) {
+	std::ifstream file(path);
+	if (!file.is_open()) throw std::runtime_error("Failed to open config.json");
+	file >> engineConfig;
+}
+
+Defaults LoadConfigDefaults(json config) {
+	Defaults configDefaults;
+
+	configDefaults.MAX_LIGHTS = config["shader-constants"]["MAX_LIGHTS"].get<unsigned int>();
+	configDefaults.defaultWindowWidth = config["defaults"]["defaultWindowWidth"].get<unsigned int>();
+	configDefaults.defaultWindowHeight = config["defaults"]["defaultWindowHeight"].get<unsigned int>();
+	configDefaults.gridScale = config["defaults"]["gridScale"].get<float>();
+
+	return configDefaults;
+}
+
+std::string LoadShaderWithDefines(const std::string &path) {
+	std::ifstream file(path);
+	std::stringstream buffer;
+	buffer << file.rdbuf();
+
+	std::string defines = "#version 330 core\n";
+
+	// Inject defines into the shader
+	for (auto[name, value] : engineConfig["shader-constants"].items())
+		defines += "#define " + name + " " + std::to_string(value.get<int>()) + "\n";
+
+	return defines + buffer.str();
 }
 
 //Vertices coordinates
@@ -29,8 +62,109 @@ std::vector<GLuint> indices;
 
 std::vector<std::unique_ptr<Mesh>> meshes;
 
+void AddMesh(Scene &scene, Defaults defaults, const int selectedMeshType, int &lastClickMesh) {
+	scene.addMeshSignal = false;
+
+	std::unique_ptr<Mesh> newMesh;
+
+	switch (selectedMeshType) {
+		case 0:
+			newMesh = std::make_unique<Mesh>(primitives::GenerateCube());
+			newMesh->name = "Cube";
+			break;
+		case 1:
+			newMesh = std::make_unique<Mesh>(primitives::GeneratePyramid());
+			newMesh->name = "Pyramid";
+			break;
+		case 2:
+			newMesh = std::make_unique<Mesh>(primitives::GeneratePlane());
+			newMesh->name = "Plane";
+			break;
+		case 3:
+			newMesh = std::make_unique<Mesh>(primitives::GenerateSphere(20, 30));
+			newMesh->name = "Sphere";
+			break;
+		case 4:
+			newMesh = std::make_unique<Mesh>(primitives::GenerateTorus(40, 20, 1, 0.3));
+			newMesh->name = "Torus";
+			break;
+		case 5: {
+			std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(256, 256, static_cast<int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
+
+			const GLuint noiseMapTexture = noiseMapToTexture(noiseMap);
+
+			noiseMapToMesh(noiseMap, vertices, indices, 80, defaults.gridScale);
+
+			newMesh = std::make_unique<Mesh>(vertices, indices);
+			newMesh->name = "Terrain";
+			newMesh->useTexture = true;
+			newMesh->texId = noiseMapTexture;
+			break;
+		}
+		default:
+			break;
+	}
+
+	if (newMesh) {
+		auto* node = new Gui::Node{ newMesh.get(), Gui::root, {} };
+		Gui::root->children.push_back(node);
+
+		scene.meshes.push_back(std::move(newMesh));
+
+		lastClickMesh = scene.meshes.size() - 1;
+	}
+}
+
+void DeleteMesh(Scene &scene, std::vector<int>& currentMeshes, int &lastClickMesh) {
+	scene.deleteMeshSignal = false;
+
+	std::sort(currentMeshes.begin(), currentMeshes.end());
+	std::reverse(currentMeshes.begin(), currentMeshes.end());
+	for (const int mesh : currentMeshes) {
+		const Mesh* meshToDelete = scene.meshes[mesh].get();
+
+		if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete)) {
+			Gui::DeleteNode(nodeToDelete); // This handles reparenting children
+		}
+
+		scene.meshes.erase(scene.meshes.begin() + mesh);
+	}
+	currentMeshes.clear();
+	if (lastClickMesh > scene.meshes.size() -1)
+		lastClickMesh = scene.meshes.size() - 1;
+}
+
+void AddLight(Scene &scene, int &currentLight) {
+	scene.addLightSignal = false;
+
+	constexpr Light light;
+	scene.lights.push_back(light);
+
+	currentLight = scene.lights.size() - 1;
+}
+
+void DeleteLight(Scene &scene, int &currentLight) {
+	scene.deleteLightSignal = false;
+	scene.lights.erase(scene.lights.begin() + currentLight);
+
+	if (!scene.lights.empty()) {
+		currentLight = scene.lights.size() - 1;
+		return;
+	}
+	currentLight = -1;
+}
+
 int main()
 {
+	//Load config
+	LoadJSON("config/config.json");
+
+	std::string vertexShader = LoadShaderWithDefines("shaders/default.vert");
+	std::string fragmentShader = LoadShaderWithDefines("shaders/default.frag");
+
+	const Defaults engineDefaults = LoadConfigDefaults(engineConfig);
+
+
 	//Initialize GLFW
 	glfwInit();
 
@@ -42,14 +176,10 @@ int main()
 
 	std::vector<Light> lights;
 	Light light1;
-	Light light2;
-	Light light3;
 	lights.push_back(light1);
-	lights.push_back(light2);
-	lights.push_back(light3);
 
 	//Create a GLFW window object of 800 by 800 pixels
-	GLFWwindow* window = glfwCreateWindow(width, height, "L-SIM ENGINE", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, "L-SIM ENGINE", nullptr, nullptr);
 
 	//Error check if the window fails to create
 	if (window == nullptr)
@@ -64,17 +194,15 @@ int main()
 	//Load GLAD so it configures OpenGL
 	gladLoadGL();
 	//Specify the viewport of OpenGL in the Window
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight);
 
 	// Register the window resize callback function
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	//Generate Shader object using shaders default.vert and default.frag
-	Shader shaderProgram("shaders/default.vert", "shaders/default.frag");
+	Shader shaderProgram(vertexShader.c_str(), fragmentShader.c_str(), true);
 
 	Gui::Initialize(window);
-
-
 
 	meshes.push_back(std::make_unique<Mesh>(primitives::GenerateCube()));
 	meshes.back()->name = "First Cube";
@@ -85,7 +213,7 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 
 	//Create camera object
-	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
+	Camera camera(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, glm::vec3(0.0f, 0.0f, 2.0f));
 
 	std::unordered_map<int, bool> canPress;
 
@@ -125,18 +253,22 @@ int main()
 		//Tells OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 
-		for (int i = 0; i < std::size(scene.lights); ++i) {
+		for (int i = 0; i < engineDefaults.MAX_LIGHTS; ++i) {
 			std::string prefix = "lights[" + std::to_string(i) + "].";
-
-			scene.lights[i].linear = 0.09f / (scene.lights[i].attenuationScale + 0.001f);
-			scene.lights[i].quadratic = 0.032f / (scene.lights[i].attenuationScale + 0.001f);
-
-			glUniform4fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightColor").c_str()), 1, &scene.lights[i].lightColor[0]);
-			glUniform3fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightPos").c_str()), 1, &scene.lights[i].lightPos[0]);
-
-			glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "linear").c_str()), scene.lights[i].linear);
-			glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "quadratic").c_str()), scene.lights[i].quadratic);
+			if (i < scene.lights.size()) {
+				glUniform4fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightColor").c_str()), 1, &scene.lights[i].lightColor[0]);
+				glUniform3fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightPos").c_str()), 1, &scene.lights[i].lightPos[0]);
+				glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "linear").c_str()), scene.lights[i].linear);
+				glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "quadratic").c_str()), scene.lights[i].quadratic);
+			} else {
+				// Clear unused lights
+				glUniform4fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightColor").c_str()), 1, glm::value_ptr(glm::vec4(0.0f)));
+				glUniform3fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightPos").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
+				glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "linear").c_str()), 0.0f);
+				glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "quadratic").c_str()), 0.0f);
+			}
 		}
+
 
 
 		//Handle camera inputs
@@ -153,98 +285,35 @@ int main()
 
 		static std::vector currentMeshes = {0};
 		static int selectedMeshType = 0;
-		static bool deletePressed = false;
-		static bool fPressed = false;
 
 
-
-		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && !fPressed) {
-			std::unique_ptr<Mesh> newMesh;
-
-			switch (selectedMeshType) {
-				case 0:
-					newMesh = std::make_unique<Mesh>(primitives::GenerateCube());
-					newMesh->name = "Cube";
-					break;
-				case 1:
-					newMesh = std::make_unique<Mesh>(primitives::GeneratePyramid());
-					newMesh->name = "Pyramid";
-					break;
-				case 2:
-					newMesh = std::make_unique<Mesh>(primitives::GeneratePlane());
-					newMesh->name = "Plane";
-					break;
-				case 3:
-					newMesh = std::make_unique<Mesh>(primitives::GenerateSphere(20, 30));
-					newMesh->name = "Sphere";
-					break;
-				case 4:
-					newMesh = std::make_unique<Mesh>(primitives::GenerateTorus(40, 20, 1, 0.3));
-					newMesh->name = "Torus";
-					break;
-				case 5: {
-					std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(256, 256, static_cast<int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
-
-					GLuint noiseMapTexture = noiseMapToTexture(noiseMap);
-
-					noiseMapToMesh(noiseMap, vertices, indices, 80, 2.0f);
-
-					newMesh = std::make_unique<Mesh>(vertices, indices);
-					newMesh->name = "Terrain";
-					newMesh->useTexture = true;
-					newMesh->texId = noiseMapTexture;
-					break;
-				}
-				default:
-					break;
-			}
-
-			if (newMesh) {
-				auto* node = new Gui::Node{ newMesh.get(), Gui::root, {} };
-				Gui::root->children.push_back(node);
-
-				scene.meshes.push_back(std::move(newMesh));
-
-				lastClickMesh = scene.meshes.size() - 1;
-			}
-
-			fPressed = true;
+		if (scene.addMeshSignal) {
+			AddMesh(scene, engineDefaults, selectedMeshType, lastClickMesh);
 		}
 
-		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_PRESS && !scene.meshes.empty() && !deletePressed){
-			std::sort(currentMeshes.begin(), currentMeshes.end());
-			std::reverse(currentMeshes.begin(), currentMeshes.end());
-			for (int mesh : currentMeshes) {
-				Mesh* meshToDelete = scene.meshes[mesh].get();
-
-				if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete)) {
-					Gui::DeleteNode(nodeToDelete); // This handles reparenting children
-				}
-
-				scene.meshes.erase(scene.meshes.begin() + mesh);
-			}
-			currentMeshes.clear();
-			lastClickMesh = -1;
-			deletePressed = true;
+		if (scene.deleteMeshSignal) {
+			DeleteMesh(scene, currentMeshes, lastClickMesh);
 		}
 
-		if (glfwGetKey(window, GLFW_KEY_DELETE) == GLFW_RELEASE)
-			deletePressed = false;
+		if (scene.addLightSignal && scene.lights.size() < engineDefaults.MAX_LIGHTS) {
+			AddLight(scene, currentLight);
+		}
 
-		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE)
-			fPressed = false;
+		if (scene.deleteLightSignal) {
+			DeleteLight(scene, currentLight);
+		}
 
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard) {
 
 			if (currentMeshes.empty()) {
 				int falseMesh = 0;
 
-				inputs.InputHandler(window, scene, currentLight,
-					falseMesh, selectedMeshType, lastClickMesh, camera.Orientation);
+				inputs.InputHandler(window, scene, falseMesh,
+					currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			} else {
 				for (int mesh : currentMeshes)
-					inputs.InputHandler(window, scene, currentLight,
-						mesh, selectedMeshType, lastClickMesh, camera.Orientation);
+					inputs.InputHandler(window, scene, mesh,
+						currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			}
 		}
 
