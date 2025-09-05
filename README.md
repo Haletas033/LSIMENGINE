@@ -96,6 +96,7 @@ ninja
 │   ├── light.h
 │   ├── mesh.h
 │   ├── primitives.h
+│   ├── scene.h
 │   ├── shaderClass.h
 │   └── terrain.h
 ├── shaders
@@ -103,7 +104,7 @@ ninja
 │   └── default.vert
 └── tree.txt
 
-6 directories, 48 files
+6 directories, 49 files
 ```
 <!-- TREE_END -->
 ## Contributing
