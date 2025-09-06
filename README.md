@@ -54,60 +54,51 @@ ninja
 ├── LICENSE
 ├── README.md
 ├── Src
-│   ├── EBO.cpp
-│   ├── VAO.cpp
-│   ├── VBO.cpp
-│   ├── camera.cpp
-│   ├── fileIO.cpp
-│   ├── gui.cpp
-│   ├── inputs.cpp
+│   ├── geometry
+│   │   ├── mesh.cpp
+│   │   ├── primitives.cpp
+│   │   └── terrain.cpp
+│   ├── gl
+│   │   ├── EBO.cpp
+│   │   ├── VAO.cpp
+│   │   ├── VBO.cpp
+│   │   └── shaderClass.cpp
+│   ├── inputs
+│   │   ├── gui.cpp
+│   │   └── inputs.cpp
 │   ├── main.cpp
-│   ├── mesh.cpp
-│   ├── primitives.cpp
-│   ├── shaderClass.cpp
-│   └── terrain.cpp
+│   ├── scene
+│   │   └── camera.cpp
+│   └── utils
+│       └── fileIO.cpp
 ├── config
 │   └── config.json
-├── imgui
-│   ├── backends
-│   │   ├── imgui_impl_glfw.cpp
-│   │   ├── imgui_impl_glfw.h
-│   │   ├── imgui_impl_opengl3.cpp
-│   │   └── imgui_impl_opengl3.h
-│   ├── imconfig.h
-│   ├── imgui.cpp
-│   ├── imgui.h
-│   ├── imgui_demo.cpp
-│   ├── imgui_draw.cpp
-│   ├── imgui_impl_opengl3_loader.h
-│   ├── imgui_internal.h
-│   ├── imgui_tables.cpp
-│   ├── imgui_widgets.cpp
-│   ├── imstb_rectpack.h
-│   ├── imstb_textedit.h
-│   └── imstb_truetype.h
 ├── include
-│   ├── EBO.h
-│   ├── FastNoiseLite.h
-│   ├── VAO.h
-│   ├── VBO.h
-│   ├── camera.h
-│   ├── defaults.h
-│   ├── fileIO.h
-│   ├── gui.h
-│   ├── inputs.h
-│   ├── light.h
-│   ├── mesh.h
-│   ├── primitives.h
-│   ├── scene.h
-│   ├── shaderClass.h
-│   └── terrain.h
+│   ├── geometry
+│   │   ├── mesh.h
+│   │   ├── primitives.h
+│   │   └── terrain.h
+│   ├── gl
+│   │   ├── EBO.h
+│   │   ├── VAO.h
+│   │   ├── VBO.h
+│   │   └── shaderClass.h
+│   ├── inputs
+│   │   ├── gui.h
+│   │   └── inputs.h
+│   ├── scene
+│   │   ├── camera.h
+│   │   ├── light.h
+│   │   └── scene.h
+│   └── utils
+│       ├── defaults.h
+│       └── fileIO.h
 ├── shaders
 │   ├── default.frag
 │   └── default.vert
 └── tree.txt
 
-7 directories, 51 files
+15 directories, 34 files
 ```
 <!-- TREE_END -->
 ## Contributing
