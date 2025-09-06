@@ -6,12 +6,12 @@
 #include<glm/glm.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
-#include"../imgui/imgui.h"
-#include"../imgui/backends/imgui_impl_glfw.h"
-#include"../imgui/backends/imgui_impl_opengl3.h"
+#include "../../imgui/imgui.h"
+#include "../../imgui/backends/imgui_impl_glfw.h"
+#include "../../imgui/backends/imgui_impl_opengl3.h"
 
-#include"../include/mesh.h"
-#include"../include/light.h"
+#include "../geometry/mesh.h"
+#include "../scene/light.h"
 
 class Gui {
     public:

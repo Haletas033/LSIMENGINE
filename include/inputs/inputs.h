@@ -3,8 +3,8 @@
 
 #include <memory>
 
-#include"scene.h"
-#include"fileIO.h"
+#include "../scene/scene.h"
+#include "../utils/fileIO.h"
 
 #include<unordered_map>
 #include<GLFW/glfw3.h>

@@ -11,8 +11,8 @@
 #include <windows.h>
 #include <commdlg.h>
 
-#include "scene.h"
-#include "gui.h"
+#include "../scene/scene.h"
+#include "../inputs/gui.h"
 #include "glad/glad.h"
 #include "glm/glm.hpp"
 

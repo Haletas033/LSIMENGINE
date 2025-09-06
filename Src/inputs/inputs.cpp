@@ -1,4 +1,4 @@
-#include"../include/inputs.h"
+#include "../../include/inputs/inputs.h"
 
 #include <algorithm>
 #include <iostream>

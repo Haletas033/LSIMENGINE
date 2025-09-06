@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "mesh.h"
+#include "../geometry/mesh.h"
 #include "light.h"
 
 struct Scene {

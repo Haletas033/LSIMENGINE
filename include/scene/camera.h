@@ -10,7 +10,7 @@
 #include<glm/gtx/rotate_vector.hpp>
 #include<glm/gtx/vector_angle.hpp>
 
-#include "shaderClass.h"
+#include "../gl/shaderClass.h"
 
 class Camera
 {

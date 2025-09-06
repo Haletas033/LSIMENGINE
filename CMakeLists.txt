@@ -8,54 +8,54 @@ add_subdirectory(external/glm)
 add_subdirectory(external/glfw)
 
 set(IMGUI_SOURCES
-        imgui/imgui.cpp
-        imgui/imgui_draw.cpp
-        imgui/imgui_tables.cpp
-        imgui/imgui_widgets.cpp
-        imgui/imgui_demo.cpp
-        imgui/backends/imgui_impl_glfw.cpp
-        imgui/backends/imgui_impl_opengl3.cpp
-        include/gui.h
-        Src/gui.cpp
-        include/inputs.h
-        Src/inputs.cpp
+        external/imgui/imgui.cpp
+        external/imgui/imgui_draw.cpp
+        external/imgui/imgui_tables.cpp
+        external/imgui/imgui_widgets.cpp
+        external/imgui/imgui_demo.cpp
+        external/imgui/backends/imgui_impl_glfw.cpp
+        external/imgui/backends/imgui_impl_opengl3.cpp
+        include/inputs/gui.h
+        Src/inputs/gui.cpp
+        include/inputs/inputs.h
+        Src/inputs/inputs.cpp
         Src/main.cpp
         Src/main.cpp
-        include/light.h
-        include/scene.h
-        include/defaults.h
+        include/scene/light.h
+        include/scene/scene.h
+        include/utils/defaults.h
 )
 
 add_executable(LSIM
         Src/main.cpp
-        include/shaderClass.h
-        Src/shaderClass.cpp
-        include/VBO.h
-        Src/VBO.cpp
-        include/VAO.h
-        Src/VAO.cpp
-        include/EBO.h
-        Src/EBO.cpp
-        include/camera.h
-        Src/camera.cpp
-        include/terrain.h
-        Src/terrain.cpp
-        include/mesh.h
-        Src/mesh.cpp
-        include/primitives.h
-        Src/primitives.cpp
+        include/gl/shaderClass.h
+        Src/gl/shaderClass.cpp
+        include/gl/VBO.h
+        Src/gl/VBO.cpp
+        include/gl/VAO.h
+        Src/gl/VAO.cpp
+        include/gl/EBO.h
+        Src/gl/EBO.cpp
+        include/scene/camera.h
+        Src/scene/camera.cpp
+        include/geometry/terrain.h
+        Src/geometry/terrain.cpp
+        include/geometry/mesh.h
+        Src/geometry/mesh.cpp
+        include/geometry/primitives.h
+        Src/geometry/primitives.cpp
 
         ${IMGUI_SOURCES}
-        include/fileIO.h
-        Src/fileIO.cpp
+        include/utils/fileIO.h
+        Src/utils/fileIO.cpp
 )
 
 target_include_directories(LSIM PRIVATE
         external/glad/include
         external/glfw/include
         external/
-        ${PROJECT_SOURCE_DIR}/imgui
-        ${PROJECT_SOURCE_DIR}/imgui/backends
+        external/imgui
+        external/imgui/backends
 )
 
 file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})

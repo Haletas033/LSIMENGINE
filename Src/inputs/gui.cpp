@@ -1,4 +1,4 @@
-#include"../include/gui.h"
+#include "../../include/inputs/gui.h"
 
 Gui::Node* Gui::root = nullptr;
 

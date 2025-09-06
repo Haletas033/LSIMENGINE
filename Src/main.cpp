@@ -3,12 +3,12 @@
 #include <memory>
 #include <unordered_map>
 
-#include"../include/scene.h"
-#include"../include/terrain.h"
-#include"../include/primitives.h"
-#include"../include/gui.h"
-#include"../include/inputs.h"
-#include"../include/defaults.h"
+#include "../include/scene/scene.h"
+#include "../include/geometry/terrain.h"
+#include"../include/geometry/primitives.h"
+#include "../include/inputs/gui.h"
+#include "../include/inputs/inputs.h"
+#include "../include/utils/defaults.h"
 
 #include <nlohmann/json.hpp>
 
@@ -48,7 +48,7 @@ std::string LoadShaderWithDefines(const std::string &path) {
 	std::string defines = "#version 330 core\n";
 
 	// Inject defines into the shader
-	for (auto[name, value] : engineConfig["shader-constants"].items())
+	for (const auto&[name, value] : engineConfig["shader-constants"].items())
 		defines += "#define " + name + " " + std::to_string(value.get<int>()) + "\n";
 
 	return defines + buffer.str();

@@ -1,4 +1,4 @@
-#include "../include/EBO.h"
+#include "../../include/gl/EBO.h"
 
 //Constructor that generates an EBO and links it to indices
 EBO::EBO(std::vector<GLuint>& indices) {

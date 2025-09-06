@@ -2,7 +2,7 @@
 // Created by halet on 8/30/2025.
 //
 
-#include "../include/fileIO.h"
+#include "../../include/utils/fileIO.h"
 
 OPENFILENAME ofn;                           //common dialog box structure
 char szFile[260] = {"untitled.lsim"};       //File size buffer

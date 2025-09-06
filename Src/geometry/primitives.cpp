@@ -1,5 +1,5 @@
-#include"../include/primitives.h"
-#include "../include/mesh.h"
+#include <include/geometry/primitives.h>
+#include <include/geometry/mesh.h>
 
 constexpr float PI = 3.14159265359f;
 

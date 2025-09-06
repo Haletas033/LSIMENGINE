@@ -1,4 +1,4 @@
-#include "../include/shaderClass.h"
+#include "../../include/gl/shaderClass.h"
 
 //Reads a text file and outputs a string with everything in the file
 std::string getFileContent(const char *filename) {

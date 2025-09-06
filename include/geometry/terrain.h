@@ -5,7 +5,7 @@
 #include<ctime>
 #include <string>
 
-#include"FastNoiseLite.h"
+#include "../../external/FastNoiseLite/FastNoiseLite.h"
 #include "glad/glad.h"
 
 //Color struct

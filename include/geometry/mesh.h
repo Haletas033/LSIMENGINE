@@ -4,9 +4,9 @@
 #include<string>
 #include <vector>
 
-#include"VAO.h"
-#include"camera.h"
-#include"EBO.h"
+#include "../gl/VAO.h"
+#include "../scene/camera.h"
+#include "../gl/EBO.h"
 
 
 class Mesh {
