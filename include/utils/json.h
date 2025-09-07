@@ -16,13 +16,13 @@ using json = nlohmann::json;
 class JSONManager {
 private:
     static std::unordered_map<std::string, const char*> colourMap;
-
+public:
     static void LoadJSON(const std::string &path, json &config);
 
     static Defaults LoadConfigDefaults(json &config);
 
     static void LoadLoggers(json &config, std::unordered_map<std::string, std::unique_ptr<Logger>> &loggers);
-public:
+
     static Defaults InitJSON(const std::string &path, json &config,
         std::unordered_map<std::string, std::unique_ptr<Logger>> &loggers);
 

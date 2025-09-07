@@ -73,7 +73,7 @@ public:
 
     Logger Temp() const;
 
-    void operator()(const std::string &message);
+    void operator()(const std::string &message) const;
 };
 
 #endif //LOG_H

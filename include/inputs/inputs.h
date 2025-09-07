@@ -31,6 +31,8 @@ public:
 
     CurrentMode currentMode = meshMode;
 
+    static void InitInputs();
+
     void InputHandler(GLFWwindow* window, Scene &scene,
     const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
 };

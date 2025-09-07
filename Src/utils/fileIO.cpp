@@ -2,13 +2,39 @@
 // Created by halet on 8/30/2025.
 //
 
-#include "../../include/utils/fileIO.h"
+#include <include/utils/fileIO.h>
+
+#include "include/utils/json.h"
 
 OPENFILENAME ofn;                           //common dialog box structure
 char szFile[260] = {"untitled.lsim"};       //File size buffer
 HWND hwnd;                                  //owner window
 
+extern json config;
+static std::unordered_map<std::string, std::unique_ptr<Logger>> loggers;
+
+static void Log(const std::string& key, const std::string& msg) {
+    if (const auto it = loggers.find(key); it != loggers.end())
+        (*it->second)(msg);
+}
+
+void IO::InitIO() {
+    JSONManager::LoadLoggers(config, loggers);
+
+    // Ensure logger exists
+    if (!loggers.count("stdInfo"))
+        loggers["stdInfo"] = std::make_unique<Logger>();
+
+    loggers["stdInfo"]->SetModule("FILE");
+    loggers["stdWarn"]->SetModule("FILE");
+    loggers["stdError"]->SetModule("FILE");
+
+    Log("stdInfo", "Successfully initialized the file loggers");
+}
+
+
 std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
+    Log("stdInfo", "Initializing file dialog");
     //Initialize OPENFILENAME
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
     ofn.lStructSize = sizeof(OPENFILENAME);
@@ -20,177 +46,206 @@ std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_OVERWRITEPROMPT;
 
     //Display the dialog box
+    Log("stdInfo", "Displaying file dialog");
     if (func(&ofn) == TRUE) {
         return ofn.lpstrFile;
     }
-
+    Log("stdInfo", "File dialog closed without selecting a file");
     return {};
 }
 
 
 void IO::saveToFile(std::ofstream &file, const Scene& scene) {
-    const int meshCount = scene.meshes.size();
-    file.write(reinterpret_cast<const char*>(&meshCount), sizeof(meshCount));
+    std::cout << std::endl;
+    Log("stdInfo", "Beginning to write to file");
 
-    uint16_t NextMeshID = 0;
+    auto safeWrite = [&](const auto* data, const std::streamsize size, const char* errorMsg) {
+        if (!file.write(reinterpret_cast<const char*>(data), size)) {
+            throw std::ios_base::failure(errorMsg);
+        }
+    };
 
-    for (auto& mesh : scene.meshes) {
-        mesh->meshID = NextMeshID;
-        NextMeshID++;
-    }
+    try {
+        const int meshCount = scene.meshes.size();
+        safeWrite(&meshCount, sizeof(meshCount), "Failed to write mesh count");
 
-    for (const auto& mesh : scene.meshes) {
+        uint16_t NextMeshID = 0;
 
-        int nameLen = mesh->name.size();
-        int verticesLen = mesh->vertices.size();
-        int indicesLen = mesh->indices.size();
-
-        file.write(reinterpret_cast<const char*>(&nameLen), sizeof(nameLen));
-
-        //Write name
-        file.write(mesh->name.c_str(), mesh->name.size() * sizeof(char));
-
-        //Write vertices
-        file.write(reinterpret_cast<const char*>(&verticesLen), sizeof(verticesLen));
-        for (auto vertex : mesh->vertices) {
-            file.write(reinterpret_cast<const char*>(&vertex), sizeof(vertex));
+        for (auto& mesh : scene.meshes) {
+            mesh->meshID = NextMeshID;
+            NextMeshID++;
         }
 
-        //Write indices
-        file.write(reinterpret_cast<const char*>(&indicesLen), sizeof(indicesLen));
-        for (auto index : mesh->indices) {
-            file.write(reinterpret_cast<const char*>(&index), sizeof(index));
+        for (const auto& mesh : scene.meshes) {
+            int nameLen = mesh->name.size();
+            int verticesLen = mesh->vertices.size();
+            int indicesLen = mesh->indices.size();
+
+            safeWrite(&nameLen, sizeof(nameLen), "Failed to write name length");
+
+            //Write name
+            safeWrite(mesh->name.c_str(), mesh->name.size() * sizeof(char), "Failed to write namee");
+
+            //Write vertices
+            safeWrite(&verticesLen, sizeof(verticesLen), "Failed to write verticesLen");
+            safeWrite(mesh->vertices.data(), verticesLen * sizeof(mesh->vertices[0]), "Failed to write vertices");
+
+            //Write indices
+            safeWrite(&indicesLen, sizeof(indicesLen), "Failed to write indicesLen");
+            safeWrite(mesh->indices.data(), indicesLen * sizeof(mesh->indices[0]), "Failed to write indices");
+
+            //Write useTexture
+            safeWrite(&mesh->useTexture, sizeof(mesh->useTexture), "Failed to write useTexture");
+
+            //Write color
+            safeWrite(&mesh->color, sizeof(mesh->color), "Failed to write colour");
+
+            //Write meshID
+            safeWrite(&mesh->meshID, sizeof(mesh->meshID), "Failed to write meshID");
+
+            //Write the meshID of the parent node
+            uint16_t parentID = -1;
+            if (const Gui::Node* node = Gui::FindNodeByMesh(Gui::root, mesh.get());
+                node->parent && node->parent != Gui::root) {
+                parentID = node->parent->mesh->meshID;
+            }
+
+            safeWrite(&parentID, sizeof(parentID), "Failed to write parentID");
+
+            //Write the transformation matrix
+            safeWrite(&mesh->position, sizeof(mesh->position), "Failed to write position");
+            safeWrite(&mesh->rotation, sizeof(mesh->rotation), "Failed to write rotation");
+            safeWrite(&mesh->scale, sizeof(mesh->scale), "Failed to write scale");
+
+            //Write the model matrix
+            safeWrite(&mesh->modelMatrix, sizeof(mesh->modelMatrix), "Failed to write model matrix");
         }
 
-        //Write useTexture
-        file.write(reinterpret_cast<const char*>(&mesh->useTexture), sizeof(mesh->useTexture));
+        const int lightCount = scene.lights.size();
+        safeWrite(&lightCount, sizeof(lightCount), "Failed to write lightCount");
 
-        //Write color
-        file.write(reinterpret_cast<const char*>(&mesh->color), sizeof(mesh->color));
-
-        //Write meshID
-        file.write(reinterpret_cast<const char *>(&mesh->meshID), sizeof(mesh->meshID));
-
-        //Write the meshID of the parent node
-        uint16_t parentID = -1;
-        if (const Gui::Node* node = Gui::FindNodeByMesh(Gui::root, mesh.get());
-            node->parent && node->parent != Gui::root) {
-            parentID = node->parent->mesh->meshID;
+        for (Light light : scene.lights) {
+            safeWrite(&light.lightPos, sizeof(light.lightPos), "Failed to write light position");
+            safeWrite(&light.lightColor, sizeof(light.lightColor), "Failed to write light colour");
+            safeWrite(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to write attenuation scale");
         }
-
-        file.write(reinterpret_cast<const char*>(&parentID), sizeof(parentID));
-
-        //Write the transformation matrix
-        file.write(reinterpret_cast<const char*>(&mesh->position), sizeof(mesh->position));
-        file.write(reinterpret_cast<const char*>(&mesh->rotation), sizeof(mesh->rotation));
-        file.write(reinterpret_cast<const char*>(&mesh->scale), sizeof(mesh->scale));
-
-        //Write the model matrix
-        file.write(reinterpret_cast<const char*>(&mesh->modelMatrix), sizeof(mesh->modelMatrix));
+    } catch (std::ios_base::failure &e) {
+        Log("stdError", e.what());
     }
 
-    const int lightCount = scene.lights.size();
-    file.write(reinterpret_cast<const char*>(&lightCount), sizeof(lightCount));
-
-    for (Light light : scene.lights) {
-        file.write(reinterpret_cast<const char*>(&light.lightPos), sizeof(light.lightPos));
-        file.write(reinterpret_cast<const char*>(&light.lightColor), sizeof(light.lightColor));
-        file.write(reinterpret_cast<const char*>(&light.attenuationScale), sizeof(light.attenuationScale));
-    }
-    file.close();
+    Log("stdInfo", "Successfully wrote to file");
+    std::cout << std::endl;
 }
 
 Scene IO::loadFromFile(std::ifstream &file) {
+    std::cout << std::endl;
+    Log("stdInfo", "beginning to read from file");
+
     Gui::ClearRoot();
 
     std::vector<std::unique_ptr<Mesh>> meshes;
     std::vector<Light> lights;
 
-    int meshCount;
-    file.read(reinterpret_cast<char*>(&meshCount), sizeof(meshCount));
+    auto safeRead = [&](auto* data, const std::streamsize size, const char* errorMsg) {
+        if (!file.read(reinterpret_cast<char*>(data), size)) {
+            throw std::ios_base::failure(errorMsg);
+        }
+    };
 
-    for (int i = 0; i < meshCount; ++i) {
-        int nameLen;
-        int verticesLen;
-        int indicesLen;
+    try {
+        int meshCount;
+        safeRead(&meshCount, sizeof(meshCount), "Failed to read mesh count");
 
-        //Get name length
-        if (!file.read(reinterpret_cast<char*>(&nameLen), sizeof(nameLen)))
-            break; // stop if we couldn't read (EOF)
+        for (int i = 0; i < meshCount; ++i) {
+            int nameLen;
+            int verticesLen;
+            int indicesLen;
 
-        Mesh mesh;
+            //Get name length
+            safeRead(&nameLen, sizeof(nameLen), "Failed to read name len");
+            if (nameLen < 0 || nameLen > 1024) {
+                throw std::ios_base::failure("Invalid name length");
+            }
+
+            Mesh mesh;
 
 
-        mesh.name.resize(nameLen);
+            mesh.name.resize(nameLen);
 
-        //Read name
-        file.read(mesh.name.data(), nameLen);
+            //Read name
+            safeRead(mesh.name.data(), nameLen, "Failed to read name");
 
-        //Get vertices length
-        file.read(reinterpret_cast<char*>(&verticesLen), sizeof(verticesLen));
-        mesh.vertices.resize(verticesLen);
+            //Get vertices length
+            safeRead(&verticesLen, sizeof(verticesLen), "Failed to read verticesLen");
+            mesh.vertices.resize(verticesLen);
 
-        //Read every vertex
-        file.read(reinterpret_cast<char*>(mesh.vertices.data()), verticesLen * sizeof(GLfloat));
+            //Read every vertex
+            safeRead(mesh.vertices.data(), verticesLen * sizeof(GLfloat), "Failed to read vertices");
 
-        //Get indices length
-        file.read(reinterpret_cast<char*>(&indicesLen), sizeof(indicesLen));
-        mesh.indices.resize(indicesLen);
+            //Get indices length
+            safeRead(&indicesLen, sizeof(indicesLen), "Failed to read indicesLen");
+            mesh.indices.resize(indicesLen);
 
-        //Read every index
-        file.read(reinterpret_cast<char*>(mesh.indices.data()), indicesLen * sizeof(GLuint));
+            //Read every index
+            safeRead(mesh.indices.data(), indicesLen * sizeof(GLuint), "Failed to read indices");
 
-        //Read useTexture
-        file.read(reinterpret_cast<char*>(&mesh.useTexture), 1);
+            //Read useTexture
+            safeRead(&mesh.useTexture, 1, "Failed to read useTexture");
 
-        //Read color
-        file.read(reinterpret_cast<char*>(&mesh.color[0]), 4 * sizeof(float));
+            //Read color
+            safeRead(&mesh.color[0], 4 * sizeof(float), "Failed to read colour");
 
-        //Read meshID
-        file.read(reinterpret_cast<char*>(&mesh.meshID), sizeof(mesh.meshID));
+            //Read meshID
+            safeRead(&mesh.meshID, sizeof(mesh.meshID), "Failed to read meshID");
 
-        //Read parentID
-        uint16_t parentID;
-        file.read(reinterpret_cast<char*>(&parentID), sizeof(parentID));
+            //Read parentID
+            uint16_t parentID;
+            safeRead(&parentID, sizeof(parentID), "Failed to read parentID");
 
-        //Read Position, Rotation, and Scale
-        file.read(reinterpret_cast<char*>(&mesh.position[0]), 3 * sizeof(float));
-        file.read(reinterpret_cast<char*>(&mesh.rotation[0]), 3 * sizeof(float));
-        file.read(reinterpret_cast<char*>(&mesh.scale[0]), 3 * sizeof(float));
+            //Read Position, Rotation, and Scale
+            safeRead(&mesh.position[0], 3 * sizeof(float), "Failed to read position");
+            safeRead(&mesh.rotation[0], 3 * sizeof(float), "Failed to read rotation");
+            safeRead(&mesh.scale[0], 3 * sizeof(float), "Failed to read scale");
 
-        //Read model matrix
-        file.read(reinterpret_cast<char*>(&mesh.modelMatrix[0][0]), 16 * sizeof(float));
+            //Read model matrix
+            safeRead(&mesh.modelMatrix[0][0], 16 * sizeof(float), "Failed to read model matrix");
 
-        mesh.setupBuffers();
+            mesh.setupBuffers();
 
-        //Recreate mesh hierarchy
-        auto* node = new Gui::Node;
-        auto meshPtr = std::make_unique<Mesh>(mesh);
-        node->mesh = meshPtr.get();
-        Gui::Node* parentNode = Gui::FindNodeByMeshID(Gui::root, parentID);
-        if (!parentNode) parentNode = Gui::root;
+            //Recreate mesh hierarchy
+            auto* node = new Gui::Node;
+            auto meshPtr = std::make_unique<Mesh>(mesh);
+            node->mesh = meshPtr.get();
+            Gui::Node* parentNode = Gui::FindNodeByMeshID(Gui::root, parentID);
+            if (!parentNode) parentNode = Gui::root;
 
-        node->parent = parentNode;
-        parentNode->children.push_back(node);
+            node->parent = parentNode;
+            parentNode->children.push_back(node);
 
-        meshes.push_back(std::move(meshPtr));
+            meshes.push_back(std::move(meshPtr));
+        }
+
+        int lightCount;
+        safeRead(&lightCount, sizeof(lightCount), "Failed to read ligth count");
+
+        for (int i = 0; i < lightCount; ++i) {
+            Light light;
+
+            safeRead(&light.lightPos[0], 3 * sizeof(float), "Failed to read light position");
+            safeRead(&light.lightColor[0], 4 * sizeof(float), "Failed to read light colour");
+            safeRead(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to read attenuation scale");
+
+            lights.push_back(light);
+        }
+    } catch (std::ios_base::failure &e) {
+        Log("stdError", e.what());
+        return Scene{std::vector<std::unique_ptr<Mesh>>{}, std::vector<Light>{}};
     }
 
-    int lightCount;
-    file.read(reinterpret_cast<char*>(&lightCount), sizeof(lightCount));
-
-    for (int i = 0; i < lightCount; ++i) {
-        Light light;
-
-        file.read(reinterpret_cast<char*>(&light.lightPos[0]), 3 * sizeof(float));
-        file.read(reinterpret_cast<char*>(&light.lightColor[0]), 4 * sizeof(float));
-        file.read(reinterpret_cast<char*>(&light.attenuationScale), sizeof(light.attenuationScale));
-
-        lights.push_back(light);
-    }
+    Log("stdInfo", "Successfully read file");
+    std::cout << std::endl;
 
     return Scene {std::move(meshes), std::move(lights)};
-
 }
 
 

@@ -64,20 +64,18 @@ Logger Logger::Temp() const {
 }
 
 
-void Logger::operator()(const std::string &message) {
-    this->type = InsertBrackets(type);
-    this->module = InsertBrackets(module);
+void Logger::operator()(const std::string &message) const {
+    const std::string localType = InsertBrackets(type);
+    const std::string localModule = InsertBrackets(module);
 
     std::string timeStamp;
-
-    if (this->hasTimeStamp) {
-        if (this->useCustomTimeStamp) {
-            timeStamp = GetTimeStamp(this->useCustomTimeStamp);
-        } else {
+    if (hasTimeStamp) {
+        if (useCustomTimeStamp)
+            timeStamp = GetTimeStamp(useCustomTimeStamp);
+        else
             timeStamp = GetTimeStamp();
-        }
         timeStamp = InsertBrackets(timeStamp);
     }
 
-    std::cout << START << this->colour << timeStamp << this->module << VectorToString(this->subModules) << this->type << message << END << std::endl;
+    std::cout << START << colour << timeStamp << localModule << VectorToString(subModules) << localType << message << END << std::endl;
 }

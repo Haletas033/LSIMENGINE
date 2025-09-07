@@ -20,14 +20,12 @@ using json = nlohmann::json;
 
 json config;
 
-std::unordered_map<std::string, std::unique_ptr<Logger>> loggers;
+static std::unordered_map<std::string, std::unique_ptr<Logger>> loggers;
 
 //Callback function for window resizing
 void framebuffer_size_callback(GLFWwindow* window, const int width, const int height){
 	glViewport(0, 0, width, height);
 }
-
-
 
 //Vertices coordinates
 std::vector<GLfloat> vertices;
@@ -36,6 +34,11 @@ std::vector<GLfloat> vertices;
 std::vector<GLuint> indices;
 
 std::vector<std::unique_ptr<Mesh>> meshes;
+
+static void Log(const std::string& key, const std::string& msg) {
+	if (const auto it = loggers.find(key); it != loggers.end())
+		(*it->second)(msg);
+}
 
 void AddMesh(Scene &scene, Defaults defaults, const int selectedMeshType, int &lastClickMesh) {
 	scene.addMeshSignal = false;
@@ -88,6 +91,8 @@ void AddMesh(Scene &scene, Defaults defaults, const int selectedMeshType, int &l
 
 		lastClickMesh = scene.meshes.size() - 1;
 	}
+
+	Log("stdInfo", "Successfully added mesh");
 }
 
 void DeleteMesh(Scene &scene, std::vector<int>& currentMeshes, int &lastClickMesh) {
@@ -107,6 +112,8 @@ void DeleteMesh(Scene &scene, std::vector<int>& currentMeshes, int &lastClickMes
 	currentMeshes.clear();
 	if (lastClickMesh > scene.meshes.size() -1)
 		lastClickMesh = scene.meshes.size() - 1;
+
+	Log("stdInfo", "Successfully deleted mesh");
 }
 
 void AddLight(Scene &scene, int &currentLight) {
@@ -116,6 +123,8 @@ void AddLight(Scene &scene, int &currentLight) {
 	scene.lights.push_back(light);
 
 	currentLight = scene.lights.size() - 1;
+
+	Log("stdInfo", "Successfully added light");
 }
 
 void DeleteLight(Scene &scene, int &currentLight) {
@@ -127,11 +136,8 @@ void DeleteLight(Scene &scene, int &currentLight) {
 		return;
 	}
 	currentLight = -1;
-}
 
-inline void log(const std::string& key, const std::string& msg) {
-	if (const auto it = loggers.find(key); it != loggers.end())
-		(*it->second)(msg);
+	Log("stdInfo", "Successfully deleted light");
 }
 
 int main()
@@ -139,16 +145,17 @@ int main()
 	//Load config
 	const Defaults engineDefaults = JSONManager::InitJSON("config/config.json", config, loggers);
 
-	log("stdInfo", "Hello, Info");
-	log("stdWarn", "Hello, Warning");
-	log("stdError", "Hello, Error");
-
-
 	std::string vertexShader = JSONManager::LoadShaderWithDefines("shaders/default.vert", config);
 	std::string fragmentShader = JSONManager::LoadShaderWithDefines("shaders/default.frag", config);
 
+	loggers["stdInfo"]->SetModule("MAIN");
+	loggers["stdWarn"]->SetModule("MAIN");
+	loggers["stdError"]->SetModule("MAIN");
 
+	IO::InitIO();
+	Inputs::InitInputs();
 
+	Log("stdInfo", "starting L-SIMENGINE");
 
 	//Initialize GLFW
 	glfwInit();
@@ -169,10 +176,13 @@ int main()
 	//Error check if the window fails to create
 	if (window == nullptr)
 	{
-		std::cout << "Failed to create GLFW window" << std::endl;
+		Log("stdError", "Failed to create GLFW window");
 		glfwTerminate();
 		return -1;
 	}
+
+	Log("stdInfo", "Successfully created the GLFW window");
+	
 	//Introduce the window into the current context
 	glfwMakeContextCurrent(window);
 
@@ -193,12 +203,14 @@ int main()
 	meshes.back()->name = "First Cube";
 	auto* node = new Gui::Node{ meshes.back().get(), Gui::root, {} };
 	Gui::root->children.push_back(node);
+	Log("stdInfo", "Successfully created the default \"First Cube\"");
 
 	//Enable the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
 	//Create camera object
 	Camera camera(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, glm::vec3(0.0f, 0.0f, 2.0f));
+	Log("stdInfo", "Successfully created the camera object");
 
 	std::unordered_map<int, bool> canPress;
 
@@ -212,8 +224,10 @@ int main()
 	int currentLight = 0;
 
 	Scene scene = {std::move(meshes), std::move(lights)};
+	Log("stdInfo", "Successfully moved meshes and lights into the main scene");
 
 	//Main render loop
+	Log("stdInfo", "Starting main gameplay loop");
 	while (!glfwWindowShouldClose(window))
 	{
 		//Update aspect ratio from current framebuffer size
@@ -224,6 +238,7 @@ int main()
 		//Check if the window is minimized if so skip render loop and just poll events
 		if (windowWidth <= 0 || windowHeight <= 0) {
 			glfwPollEvents();
+			Log("stdInfo", "Window minimized");
 			continue;
 		}
 
@@ -274,18 +289,25 @@ int main()
 
 		if (scene.addMeshSignal) {
 			AddMesh(scene, engineDefaults, selectedMeshType, lastClickMesh);
+			Log("stdInfo", "Adding mesh");
 		}
 
 		if (scene.deleteMeshSignal) {
 			DeleteMesh(scene, currentMeshes, lastClickMesh);
+			Log("stdInfo", "Deleting mesh");
 		}
 
 		if (scene.addLightSignal && scene.lights.size() < engineDefaults.MAX_LIGHTS) {
 			AddLight(scene, currentLight);
+			Log("stdInfo", "Adding light");
+		} else if (scene.addLightSignal) {
+			scene.addLightSignal = false;
+			Log("stdWarn", "Tried to create light but it would exceed the maximum number of lights (If you need more lights you can change MAX_LIGHTS in config.json)");
 		}
 
 		if (scene.deleteLightSignal) {
 			DeleteLight(scene, currentLight);
+			Log("stdInfo", "Deleting light");
 		}
 
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard) {
@@ -348,6 +370,7 @@ int main()
 		//Take care of all GLFW events
 		glfwPollEvents();
 	}
+	Log("stdInfo", "Exiting L-SIMENGINE");
 
 	Gui::DeleteNodeRercursively(Gui::root);
 
@@ -358,6 +381,8 @@ int main()
 	glfwDestroyWindow(window);
 	//Terminate GLFW before ending the program
 	glfwTerminate();
+
+	Log("stdInfo", "Successfully exited L-SIMENGINE");
 
 	return 0;
 }
