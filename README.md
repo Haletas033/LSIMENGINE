@@ -11,7 +11,7 @@ This is my attempt at making a game engine with opengl
 * Simple lighting
 
 ## In progress features
-- Heirarchy system
+- Hierarchy system
 - GUI improvements
 - Multiple lights, cameras, and improved lighting
 

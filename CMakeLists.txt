@@ -24,6 +24,8 @@ set(IMGUI_SOURCES
         include/scene/light.h
         include/scene/scene.h
         include/utils/defaults.h
+        include/utils/logging/log.h
+        Src/utils/logging/log.cpp
 )
 
 add_executable(LSIM

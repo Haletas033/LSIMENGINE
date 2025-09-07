@@ -3,12 +3,13 @@
 #include <memory>
 #include <unordered_map>
 
-#include "../include/scene/scene.h"
-#include "../include/geometry/terrain.h"
-#include"../include/geometry/primitives.h"
-#include "../include/inputs/gui.h"
-#include "../include/inputs/inputs.h"
-#include "../include/utils/defaults.h"
+#include <include/scene/scene.h>
+#include <include/geometry/terrain.h>
+#include <include/geometry/primitives.h>
+#include <include/inputs/gui.h>
+#include <include/inputs/inputs.h>
+#include <include/utils/defaults.h>
+#include <include/utils/logging/log.h>
 
 #include <nlohmann/json.hpp>
 
@@ -16,7 +17,9 @@ double mouseX, mouseY;
 
 using json = nlohmann::json;
 
-json engineConfig;
+json config;
+
+std::unordered_map<std::string, std::unique_ptr<Logger>> loggers;
 
 //Callback function for window resizing
 void framebuffer_size_callback(GLFWwindow* window, const int width, const int height){
@@ -26,7 +29,7 @@ void framebuffer_size_callback(GLFWwindow* window, const int width, const int he
 void LoadJSON(const std::string &path) {
 	std::ifstream file(path);
 	if (!file.is_open()) throw std::runtime_error("Failed to open config.json");
-	file >> engineConfig;
+	file >> config;
 }
 
 Defaults LoadConfigDefaults(json config) {
@@ -48,10 +51,29 @@ std::string LoadShaderWithDefines(const std::string &path) {
 	std::string defines = "#version 330 core\n";
 
 	// Inject defines into the shader
-	for (const auto&[name, value] : engineConfig["shader-constants"].items())
+	for (const auto&[name, value] : config["shader-constants"].items())
 		defines += "#define " + name + " " + std::to_string(value.get<int>()) + "\n";
 
 	return defines + buffer.str();
+}
+
+void LoadLoggers(json config) {
+	auto loggersJson = config["loggers"];
+	for (const auto &[loggerName, loggerValue] : loggersJson.items()) {
+		auto logger = std::make_unique<Logger>();
+
+		for (const auto &[fieldName, fieldValue] : loggerValue.items()) {
+			if (fieldName == "hasTimeStamp") {
+				logger->HasTimeStamp();
+			} else if (fieldName == "colour") {
+				logger->SetColour(fieldValue);
+			} else if (fieldName == "type") {
+				logger->SetType(fieldValue);
+			}
+		}
+
+		loggers[loggerName] = std::move(logger);
+	}
 }
 
 //Vertices coordinates
@@ -154,15 +176,27 @@ void DeleteLight(Scene &scene, int &currentLight) {
 	currentLight = -1;
 }
 
+inline void log(const std::string& key, const std::string& msg) {
+	if (auto it = loggers.find(key); it != loggers.end())
+		(*it->second)(msg);
+}
+
 int main()
 {
 	//Load config
 	LoadJSON("config/config.json");
 
+	LoadLoggers(config);
+
+	log("stdInfo", "Hello, Info");
+	log("stdWarn", "Hello, Warning");
+	log("stdError", "Hello, Error");
+
+
 	std::string vertexShader = LoadShaderWithDefines("shaders/default.vert");
 	std::string fragmentShader = LoadShaderWithDefines("shaders/default.frag");
 
-	const Defaults engineDefaults = LoadConfigDefaults(engineConfig);
+	const Defaults engineDefaults = LoadConfigDefaults(config);
 
 
 	//Initialize GLFW
