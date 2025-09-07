@@ -71,6 +71,7 @@ ninja
 │   │   └── camera.cpp
 │   └── utils
 │       ├── fileIO.cpp
+│       ├── json.cpp
 │       └── logging
 │           └── log.cpp
 ├── config
@@ -95,6 +96,7 @@ ninja
 │   └── utils
 │       ├── defaults.h
 │       ├── fileIO.h
+│       ├── json.h
 │       └── logging
 │           └── log.h
 ├── shaders
@@ -102,7 +104,7 @@ ninja
 │   └── default.vert
 └── tree.txt
 
-17 directories, 36 files
+17 directories, 38 files
 ```
 <!-- TREE_END -->
 ## Contributing
