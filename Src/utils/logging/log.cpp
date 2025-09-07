@@ -27,6 +27,12 @@ Logger& Logger::AddSubModules(const std::initializer_list<std::string>& sms) {
     return *this;
 }
 
+Logger& Logger::AddSubModules(const std::vector<std::string>& sms) {
+    for (const auto& sm : sms)
+        this->subModules.push_back(sm);
+    return *this;
+}
+
 std::string Logger::GetTimeStamp() {
     const time_t timestamp = time(nullptr);
     const tm datetime = *localtime(&timestamp);

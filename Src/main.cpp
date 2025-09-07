@@ -10,6 +10,7 @@
 #include <include/inputs/inputs.h>
 #include <include/utils/defaults.h>
 #include <include/utils/logging/log.h>
+#include <include/utils/json.h>
 
 #include <nlohmann/json.hpp>
 
@@ -26,55 +27,7 @@ void framebuffer_size_callback(GLFWwindow* window, const int width, const int he
 	glViewport(0, 0, width, height);
 }
 
-void LoadJSON(const std::string &path) {
-	std::ifstream file(path);
-	if (!file.is_open()) throw std::runtime_error("Failed to open config.json");
-	file >> config;
-}
 
-Defaults LoadConfigDefaults(json config) {
-	Defaults configDefaults;
-
-	configDefaults.MAX_LIGHTS = config["shader-constants"]["MAX_LIGHTS"].get<unsigned int>();
-	configDefaults.defaultWindowWidth = config["defaults"]["defaultWindowWidth"].get<unsigned int>();
-	configDefaults.defaultWindowHeight = config["defaults"]["defaultWindowHeight"].get<unsigned int>();
-	configDefaults.gridScale = config["defaults"]["gridScale"].get<float>();
-
-	return configDefaults;
-}
-
-std::string LoadShaderWithDefines(const std::string &path) {
-	std::ifstream file(path);
-	std::stringstream buffer;
-	buffer << file.rdbuf();
-
-	std::string defines = "#version 330 core\n";
-
-	// Inject defines into the shader
-	for (const auto&[name, value] : config["shader-constants"].items())
-		defines += "#define " + name + " " + std::to_string(value.get<int>()) + "\n";
-
-	return defines + buffer.str();
-}
-
-void LoadLoggers(json config) {
-	auto loggersJson = config["loggers"];
-	for (const auto &[loggerName, loggerValue] : loggersJson.items()) {
-		auto logger = std::make_unique<Logger>();
-
-		for (const auto &[fieldName, fieldValue] : loggerValue.items()) {
-			if (fieldName == "hasTimeStamp") {
-				logger->HasTimeStamp();
-			} else if (fieldName == "colour") {
-				logger->SetColour(fieldValue);
-			} else if (fieldName == "type") {
-				logger->SetType(fieldValue);
-			}
-		}
-
-		loggers[loggerName] = std::move(logger);
-	}
-}
 
 //Vertices coordinates
 std::vector<GLfloat> vertices;
@@ -177,26 +130,24 @@ void DeleteLight(Scene &scene, int &currentLight) {
 }
 
 inline void log(const std::string& key, const std::string& msg) {
-	if (auto it = loggers.find(key); it != loggers.end())
+	if (const auto it = loggers.find(key); it != loggers.end())
 		(*it->second)(msg);
 }
 
 int main()
 {
 	//Load config
-	LoadJSON("config/config.json");
-
-	LoadLoggers(config);
+	const Defaults engineDefaults = JSONManager::InitJSON("config/config.json", config, loggers);
 
 	log("stdInfo", "Hello, Info");
 	log("stdWarn", "Hello, Warning");
 	log("stdError", "Hello, Error");
 
 
-	std::string vertexShader = LoadShaderWithDefines("shaders/default.vert");
-	std::string fragmentShader = LoadShaderWithDefines("shaders/default.frag");
+	std::string vertexShader = JSONManager::LoadShaderWithDefines("shaders/default.vert", config);
+	std::string fragmentShader = JSONManager::LoadShaderWithDefines("shaders/default.frag", config);
 
-	const Defaults engineDefaults = LoadConfigDefaults(config);
+
 
 
 	//Initialize GLFW

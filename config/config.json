@@ -10,17 +10,17 @@
   "loggers": {
     "stdInfo": {
       "hasTimeStamp": true,
-      "colour": "34m",
+      "colour": "INFO_COLOUR",
       "type": "INFO"
     },
     "stdWarn": {
       "hasTimeStamp": true,
-      "colour": "33m",
+      "colour": "WARNING_COLOUR",
       "type": "WARNING"
     },
     "stdError": {
       "hasTimeStamp": true,
-      "colour": "31m",
+      "colour": "ERROR_COLOUR",
       "type": "ERROR"
     }
   }

@@ -69,6 +69,8 @@ public:
 
     Logger& AddSubModules(const std::initializer_list<std::string>& sms);
 
+    Logger& AddSubModules(const std::vector<std::string>& sms);
+
     Logger Temp() const;
 
     void operator()(const std::string &message);
