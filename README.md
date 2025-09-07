@@ -70,7 +70,9 @@ ninja
 │   ├── scene
 │   │   └── camera.cpp
 │   └── utils
-│       └── fileIO.cpp
+│       ├── fileIO.cpp
+│       └── logging
+│           └── log.cpp
 ├── config
 │   └── config.json
 ├── include
@@ -92,13 +94,15 @@ ninja
 │   │   └── scene.h
 │   └── utils
 │       ├── defaults.h
-│       └── fileIO.h
+│       ├── fileIO.h
+│       └── logging
+│           └── log.h
 ├── shaders
 │   ├── default.frag
 │   └── default.vert
 └── tree.txt
 
-15 directories, 34 files
+17 directories, 36 files
 ```
 <!-- TREE_END -->
 ## Contributing
