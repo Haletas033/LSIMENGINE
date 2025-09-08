@@ -33,17 +33,30 @@
 #include <functional>
 #include <iostream>
 
+#include "imgui.h"
+
 class Logger {
 private:
+    enum LogLevel {
+        INFO,
+        WARNING,
+        ERR
+    };
+
+    LogLevel level = INFO;
 
     using TimeFunc = std::function<std::string()>;
     TimeFunc useCustomTimeStamp;
     bool hasTimeStamp = false;
 
+    std::string timeStamp;
+
     std::string colour = BRIGHT_WHITE;
     std::string type;
     std::string module;
     std::vector<std::string> subModules;
+
+    std::string message;
 
     static std::string InsertBrackets(std::string field);
 
@@ -67,13 +80,23 @@ public:
 
     Logger& SetModule(const std::string &m);
 
+    Logger& SetLevel(const LogLevel lev) { level = lev; return *this; }
+
     Logger& AddSubModules(const std::initializer_list<std::string>& sms);
 
     Logger& AddSubModules(const std::vector<std::string>& sms);
 
     Logger Temp() const;
 
-    void operator()(const std::string &message) const;
+    std::string GetColour() { return colour; }
+
+    std::string GetType() { return type; }
+
+    LogLevel GetLevel() const { return level; }
+
+    std::string operator()() const;
+
+    void operator()(const std::string &message, std::vector<Logger> &logs);
 };
 
 #endif //LOG_H

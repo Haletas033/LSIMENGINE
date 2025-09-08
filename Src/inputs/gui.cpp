@@ -5,6 +5,18 @@ Gui::Node* Gui::root = nullptr;
 #include <memory>
 #include <algorithm>
 
+//Map ANSI codes to there RGB values
+std::unordered_map<std::string, ImColor> Gui::colourMap = {
+    {BLACK, ImColor(12, 12, 12)}, {RED, ImColor(197, 15, 31)}, {GREEN, ImColor(19, 161, 14)},
+    {YELLOW, ImColor(193, 156, 0)}, {BLUE, ImColor(0, 55, 218)}, {MAGENTA, ImColor(136, 23, 152)},
+    {CYAN, ImColor(58, 150, 221)}, {WHITE, ImColor(204, 204, 204)},
+    {BRIGHT_RED, ImColor(255, 0, 0)}, {BRIGHT_GREEN, ImColor(0, 255, 0)},
+    {BRIGHT_YELLOW, ImColor(255, 255, 0)}, {BRIGHT_BLUE, ImColor(0, 0, 255)},
+    {BRIGHT_MAGENTA, ImColor(255, 0, 255)}, {BRIGHT_CYAN, ImColor(0, 255, 255)},
+    {BRIGHT_WHITE, ImColor(255, 255, 255)}, {INFO_COLOUR, ImColor(0, 55, 218)},
+    {WARNING_COLOUR, ImColor(193, 156, 0)}, {ERROR_COLOUR, ImColor(197, 15, 31)}
+};
+
 void Gui::Initialize(GLFWwindow *window) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -158,6 +170,17 @@ void Gui::Debug(const double &mouseX, const double &mouseY) {
         ImGui::Text("FPS: %.1f (%.3f ms/frame)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
     }
 }
+
+void Gui::Console(int &selectedLogLevel, const std::vector<Logger> &logs) {
+    const char* logLevels[] = { "INFO", "WARNING", "ERROR" };
+    ImGui::Combo("Log Level", &selectedLogLevel, logLevels, IM_ARRAYSIZE(logLevels));
+
+    for (Logger log : logs) {
+        if (selectedLogLevel >= log.GetLevel())
+            ImGui::TextColored(colourMap[log.GetColour()], log().c_str());
+    }
+}
+
 
 void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_ptr<Mesh>>& meshes) {
     if (!node) return;

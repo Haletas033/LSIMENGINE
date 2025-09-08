@@ -12,9 +12,14 @@
 
 #include "../geometry/mesh.h"
 #include "../scene/light.h"
+#include <include/utils/logging/log.h>
+
+
 
 class Gui {
-    public:
+private:
+    static std::unordered_map<std::string, ImColor> colourMap;
+public:
     struct Node {
         Mesh* mesh;
         Node* parent;
@@ -36,6 +41,8 @@ class Gui {
     static void Lighting(std::vector<Light> &lights, int &currentLight);
 
     static void Debug(const double &mouseX, const double &mouseY);
+
+    static void Console(int &selectedLogLevel, const std::vector<Logger> &logs);
 
     static void DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_ptr<Mesh>>& meshes);
 

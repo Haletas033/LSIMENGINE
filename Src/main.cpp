@@ -35,9 +35,11 @@ std::vector<GLuint> indices;
 
 std::vector<std::unique_ptr<Mesh>> meshes;
 
+std::vector<Logger> logs;
+
 static void Log(const std::string& key, const std::string& msg) {
 	if (const auto it = loggers.find(key); it != loggers.end())
-		(*it->second)(msg);
+		(*it->second)(msg, logs);
 }
 
 void AddMesh(Scene &scene, Defaults defaults, const int selectedMeshType, int &lastClickMesh) {
@@ -285,6 +287,7 @@ int main()
 
 		static std::vector currentMeshes = {0};
 		static int selectedMeshType = 0;
+		static int selectedLogLevel = 0;
 
 
 		if (scene.addMeshSignal) {
@@ -341,8 +344,13 @@ int main()
 
 		Gui::Begin();
 
-		ImGui::SetNextWindowPos(ImVec2(1620, 0), ImGuiCond_Once);
-		ImGui::SetNextWindowSize(ImVec2(300, 1080), ImGuiCond_Always);
+		ImVec2 displaySize = ImGui::GetIO().DisplaySize; // (width, height)
+
+		ImVec2 mainUISize(displaySize.x * 0.2f, displaySize.y);
+		ImVec2 mainUIPos(displaySize.x - mainUISize.x, 0);
+
+		ImGui::SetNextWindowPos(mainUIPos, ImGuiCond_Always);
+		ImGui::SetNextWindowSize(mainUISize, ImGuiCond_Always);
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
@@ -354,12 +362,27 @@ int main()
 
 		ImGui::End();
 
-		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
-		ImGui::SetNextWindowSize(ImVec2(300, 1080), ImGuiCond_Always);
+		ImVec2 hierarchySize(displaySize.x * 0.2f, displaySize.y);
+		ImVec2 hierarchyPos(0, 0);
+
+		ImGui::SetNextWindowPos(hierarchyPos, ImGuiCond_Always);
+		ImGui::SetNextWindowSize(hierarchySize, ImGuiCond_Always);
 
 		ImGui::Begin("Hierarchy", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
 		if (int clickedMesh = Gui::Hierarchy(scene.meshes); clickedMesh != -1) lastClickMesh = clickedMesh;
+
+		ImGui::End();
+
+		ImVec2 consoleSize(displaySize.x * 0.6f, displaySize.y * 0.3f);
+		ImVec2 consolePos(displaySize.x * 0.2f, displaySize.y * 0.7f);
+
+		ImGui::SetNextWindowPos(consolePos, ImGuiCond_Always);
+		ImGui::SetNextWindowSize(consoleSize, ImGuiCond_Always);
+
+		ImGui::Begin("Console", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+		Gui::Console(selectedLogLevel, logs);
 
 		ImGui::End();
 

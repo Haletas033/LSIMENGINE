@@ -63,19 +63,31 @@ Logger Logger::Temp() const {
     return clone;
 }
 
-
-void Logger::operator()(const std::string &message) const {
+std::string Logger::operator()() const {
     const std::string localType = InsertBrackets(type);
     const std::string localModule = InsertBrackets(module);
 
-    std::string timeStamp;
+    return timeStamp + localModule + VectorToString(subModules) + localType + message;
+}
+
+
+void Logger::operator()(const std::string &message, std::vector<Logger> &logs) {
+    this->message = message;
+
+
+
+    const std::string localType = InsertBrackets(type);
+    const std::string localModule = InsertBrackets(module);
+
     if (hasTimeStamp) {
         if (useCustomTimeStamp)
-            timeStamp = GetTimeStamp(useCustomTimeStamp);
+                this->timeStamp = GetTimeStamp(useCustomTimeStamp);
         else
             timeStamp = GetTimeStamp();
         timeStamp = InsertBrackets(timeStamp);
     }
+
+    logs.push_back(*this);
 
     std::cout << START << colour << timeStamp << localModule << VectorToString(subModules) << localType << message << END << std::endl;
 }

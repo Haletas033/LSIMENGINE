@@ -8,11 +8,13 @@
 
 extern json config;
 
+extern std::vector<Logger> logs;
+
 static std::unordered_map<std::string, std::unique_ptr<Logger>> loggers;
 
 static void Log(const std::string& key, const std::string& msg) {
     if (const auto it = loggers.find(key); it != loggers.end())
-        (*it->second)(msg);
+        (*it->second)(msg, logs);
 }
 
 void Inputs::InitInputs() {
