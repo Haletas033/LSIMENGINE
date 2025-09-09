@@ -5,7 +5,26 @@
   "defaults": {
     "defaultWindowWidth": 1920,
     "defaultWindowHeight": 1080,
-    "gridScale": 2.0
+
+    "size": 256,
+    "gridScale": 2.0,
+    "heightScale": 80.0,
+    "scale": 15.0,
+    "octaves": 8,
+    "persistence":0.5,
+    "lacunarity": 2.0,
+
+    "sphereStacks": 20,
+    "sphereSlices": 20,
+
+    "torusRingSegments": 40,
+    "torusTubeSegments": 20,
+    "torusRingRadius": 1.0,
+    "torusTubeRadius": 0.3,
+
+    "FOVdeg": 45.0,
+    "nearPlane": 0.1,
+    "farPlane": 10000.0
   },
   "loggers": {
     "stdInfo": {

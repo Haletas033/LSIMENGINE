@@ -22,7 +22,7 @@ struct TerrainType {
 };
 
 //Generates a 2D noise map using OpenSimplex2 with multiple octaves
-std::vector<std::vector<float>> GenerateNoiseMap(int width, int height, int seed, float scale, int octaves, float persistence, float lacunarity);
+std::vector<std::vector<float>> GenerateNoiseMap(unsigned int width, unsigned int height, int seed, float scale, int octaves, float persistence, float lacunarity);
 
 //Converts a generated noise map into an RGBA opengl Texture
 GLuint noiseMapToTexture(std::vector<std::vector<float>>& noiseMap);

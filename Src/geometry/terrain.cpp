@@ -16,7 +16,7 @@ std::vector<TerrainType> regions = {
     {"Snow", 0.95f, Color(1.0f, 1.0f, 1.0f, 1.0f)}
 };
 
-std::vector<std::vector<float>> GenerateNoiseMap(int width, int height, int seed, float scale, int octaves, float persistence, float lacunarity) {
+std::vector<std::vector<float>> GenerateNoiseMap(const unsigned int width, const unsigned int height, int seed, float scale, int octaves, float persistence, float lacunarity) {
 
 
     //Initialize the noise generator with an OpenSimplex2 noise.

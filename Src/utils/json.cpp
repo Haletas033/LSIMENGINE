@@ -28,7 +28,31 @@ Defaults JSONManager::LoadConfigDefaults(json &config) {
     configDefaults.MAX_LIGHTS = config["shader-constants"]["MAX_LIGHTS"].get<unsigned int>();
     configDefaults.defaultWindowWidth = config["defaults"]["defaultWindowWidth"].get<unsigned int>();
     configDefaults.defaultWindowHeight = config["defaults"]["defaultWindowHeight"].get<unsigned int>();
-    configDefaults.gridScale = config["defaults"]["gridScale"].get<float>();
+
+    //Terrain defaults
+    configDefaults.size        = config["defaults"]["size"].get<unsigned int>();
+    configDefaults.gridScale   = config["defaults"]["gridScale"].get<float>();
+    configDefaults.heightScale = config["defaults"]["heightScale"].get<float>();
+    configDefaults.scale       = config["defaults"]["scale"].get<float>();
+    configDefaults.octaves     = config["defaults"]["octaves"].get<int>();
+    configDefaults.persistence = config["defaults"]["persistence"].get<float>();
+    configDefaults.lacunarity  = config["defaults"]["lacunarity"].get<float>();
+
+
+    //Sphere defaults
+    configDefaults.sphereSlices = config["defaults"]["sphereSlices"].get<int>();
+    configDefaults.sphereStacks = config["defaults"]["sphereStacks"].get<int>();
+
+    //Torus defaults
+    configDefaults.torusRingSegments = config["defaults"]["torusRingSegments"].get<int>();
+    configDefaults.torusTubeSegments = config["defaults"]["torusTubeSegments"].get<int>();
+    configDefaults.torusRingRadius   = config["defaults"]["torusRingRadius"].get<float>();
+    configDefaults.torusTubeRadius   = config["defaults"]["torusTubeRadius"].get<float>();
+
+    //Camera defaults
+    configDefaults.FOVdeg    = config["defaults"]["FOVdeg"].get<float>();
+    configDefaults.nearPlane = config["defaults"]["nearPlane"].get<float>();
+    configDefaults.farPlane  = config["defaults"]["farPlane"].get<float>();
 
     return configDefaults;
 }

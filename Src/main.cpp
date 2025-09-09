@@ -42,7 +42,7 @@ static void Log(const std::string& key, const std::string& msg) {
 		(*it->second)(msg, logs);
 }
 
-void AddMesh(Scene &scene, Defaults defaults, const int selectedMeshType, int &lastClickMesh) {
+void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType, int &lastClickMesh) {
 	scene.addMeshSignal = false;
 
 	std::unique_ptr<Mesh> newMesh;
@@ -61,19 +61,22 @@ void AddMesh(Scene &scene, Defaults defaults, const int selectedMeshType, int &l
 			newMesh->name = "Plane";
 			break;
 		case 3:
-			newMesh = std::make_unique<Mesh>(primitives::GenerateSphere(20, 30));
+			newMesh = std::make_unique<Mesh>(primitives::GenerateSphere(defaults.sphereStacks, defaults.sphereSlices));
 			newMesh->name = "Sphere";
 			break;
 		case 4:
-			newMesh = std::make_unique<Mesh>(primitives::GenerateTorus(40, 20, 1, 0.3));
+			newMesh = std::make_unique<Mesh>(primitives::GenerateTorus(defaults.torusRingSegments, defaults.torusTubeSegments,
+				defaults.torusRingRadius, defaults.torusTubeRadius));
+
 			newMesh->name = "Torus";
 			break;
 		case 5: {
-			std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(256, 256, static_cast<int>(time(nullptr)), 15.0f, 8, 0.5f, 2.0f);
+			std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(defaults.size, defaults.size, static_cast<int>(time(nullptr)),
+				defaults.scale, defaults.octaves, defaults.persistence, defaults.lacunarity);
 
 			const GLuint noiseMapTexture = noiseMapToTexture(noiseMap);
 
-			noiseMapToMesh(noiseMap, vertices, indices, 80, defaults.gridScale);
+			noiseMapToMesh(noiseMap, vertices, indices, defaults.heightScale, defaults.gridScale);
 
 			newMesh = std::make_unique<Mesh>(vertices, indices);
 			newMesh->name = "Terrain";
@@ -283,7 +286,7 @@ int main()
 
 		glfwGetCursorPos(window, &mouseX, &mouseY);
 
-		camera.Matrix(45.0f, 0.1f, 1000000.0f, shaderProgram, "camMatrix", aspect);
+		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, shaderProgram, "camMatrix", aspect);
 
 		static std::vector currentMeshes = {0};
 		static int selectedMeshType = 0;
