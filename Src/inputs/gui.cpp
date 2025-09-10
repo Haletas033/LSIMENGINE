@@ -2,6 +2,8 @@
 
 #include <iterator>
 
+#include "include/utils/texture.h"
+
 Gui::Node* Gui::root = nullptr;
 
 #include <memory>
@@ -110,6 +112,15 @@ void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vecto
                         for (int mesh : currentMeshes) {
                             meshes[mesh].get()->color = refMesh->color;
                         }
+                    }
+                }
+
+                if (ImGui::Button("Add Texture")) {
+                    std::string fileName = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
+                    unsigned int texture = Texture::GetTexId(fileName.c_str());
+                    for (const int mesh : currentMeshes) {
+                        meshes[mesh].get()->useTexture = true;
+                        meshes[mesh].get()->texId = texture;
                     }
                 }
             }

@@ -28,6 +28,8 @@ set(IMGUI_SOURCES
         Src/utils/logging/log.cpp
         include/utils/json.h
         Src/utils/json.cpp
+        Src/utils/texture.cpp
+        include/utils/texture.h
 )
 
 add_executable(LSIM
