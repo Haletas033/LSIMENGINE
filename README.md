@@ -72,8 +72,9 @@ ninja
 │   └── utils
 │       ├── fileIO.cpp
 │       ├── json.cpp
-│       └── logging
-│           └── log.cpp
+│       ├── logging
+│       │   └── log.cpp
+│       └── texture.cpp
 ├── config
 │   └── config.json
 ├── include
@@ -97,14 +98,15 @@ ninja
 │       ├── defaults.h
 │       ├── fileIO.h
 │       ├── json.h
-│       └── logging
-│           └── log.h
+│       ├── logging
+│       │   └── log.h
+│       └── texture.h
 ├── shaders
 │   ├── default.frag
 │   └── default.vert
 └── tree.txt
 
-17 directories, 38 files
+17 directories, 40 files
 ```
 <!-- TREE_END -->
 ## Contributing
