@@ -30,17 +30,20 @@
     "stdInfo": {
       "hasTimeStamp": true,
       "colour": "INFO_COLOUR",
-      "type": "INFO"
+      "type": "INFO",
+      "level": 0
     },
     "stdWarn": {
       "hasTimeStamp": true,
       "colour": "WARNING_COLOUR",
-      "type": "WARNING"
+      "type": "WARNING",
+      "level": 1
     },
     "stdError": {
       "hasTimeStamp": true,
       "colour": "ERROR_COLOUR",
-      "type": "ERROR"
+      "type": "ERROR",
+      "level": 2
     }
   }
 }

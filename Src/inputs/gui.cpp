@@ -1,5 +1,7 @@
 #include "../../include/inputs/gui.h"
 
+#include <iterator>
+
 Gui::Node* Gui::root = nullptr;
 
 #include <memory>
@@ -176,11 +178,43 @@ void Gui::Debug(const double &mouseX, const double &mouseY) {
 
 void Gui::Console(int &selectedLogLevel, const std::vector<Logger> &logs) {
     const char* logLevels[] = { "INFO", "WARNING", "ERROR" };
+
+    std::vector<std::string> modules;
+    for (Logger log : logs)
+        if (std::find(modules.begin(), modules.end(), log.GetModule()) == modules.end())
+            modules.push_back(log.GetModule());
+
+    std::vector<const char*> modulePtrs;
+    for (auto& m : modules)
+        modulePtrs.push_back(m.c_str());
+
     ImGui::Combo("Log Level", &selectedLogLevel, logLevels, IM_ARRAYSIZE(logLevels));
 
+    static std::vector<bool> selectedItems;
+    if (selectedItems.size() != modules.size()) {
+        selectedItems.assign(modules.size(), true);
+    }
+
+    if (ImGui::BeginCombo("Modules", "PREVIEW")) {
+        for (int n = 0; n < static_cast<int>(modulePtrs.size()); ++n) {
+            if (ImGui::Selectable(modules[n].c_str(), selectedItems[n], ImGuiSelectableFlags_DontClosePopups)) {
+                selectedItems[n] = !selectedItems[n];
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+
+
     for (Logger log : logs) {
-        if (selectedLogLevel >= log.GetLevel())
-            ImGui::TextColored(colourMap[log.GetColour()], log().c_str());
+        if (log.GetLevel() >= selectedLogLevel) {
+            auto it = std::find(modules.begin(), modules.end(), log.GetModule());
+
+            if (it != modules.end()) {
+                if (selectedItems[std::distance(modules.begin(), it)])
+                    ImGui::TextColored(colourMap[log.GetColour()], log().c_str());
+            }
+        }
     }
 }
 

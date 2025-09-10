@@ -92,6 +92,8 @@ public:
 
     std::string GetType() { return type; }
 
+    std::string GetModule() { return module; }
+
     LogLevel GetLevel() const { return level; }
 
     std::string operator()() const;

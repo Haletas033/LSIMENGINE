@@ -88,7 +88,10 @@ void JSONManager::LoadLoggers(json &config, std::unordered_map<std::string, std:
                 }
             } else if (fieldName == "type") {
                 logger->SetType(fieldValue);
-            } else if (fieldName == "module") {
+            } else if (fieldName == "level") {
+                logger->SetLevel(fieldValue);
+            }
+            else if (fieldName == "module") {
                 logger->SetModule(fieldValue);
             } else if (fieldName == "sub-modules") {
                 std::vector<std::string> sms;
