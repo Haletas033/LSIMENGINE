@@ -105,23 +105,36 @@ void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vecto
                 }
     
                 ImGui::Checkbox("Uniform Scale", &uniformScaleLock);
-    
-    
+
+                ImGui::Checkbox("Use Texture", &refMesh->useTexture);
+
+                //Show mesh colour if useTexture is enabled show the mesh colour otherwise show the add texture
                 if (!refMesh->useTexture) {
                     if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh->color))) {
                         for (int mesh : currentMeshes) {
+                            meshes[mesh].get()->useTexture = false;
                             meshes[mesh].get()->color = refMesh->color;
                         }
                     }
-                }
+                } else {
+                    static std::string fileName = "No texture";
+                    if (ImGui::Button("Add Texture")) {
+                        std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
 
-                if (ImGui::Button("Add Texture")) {
-                    std::string fileName = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
-                    unsigned int texture = Texture::GetTexId(fileName.c_str());
-                    for (const int mesh : currentMeshes) {
-                        meshes[mesh].get()->useTexture = true;
-                        meshes[mesh].get()->texId = texture;
+                        //Get just the fileName
+                        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
+
+                        //Copy the file from the file path into the project dir
+                        CopyFile(filePath.c_str(), (std::string("resources/") + fileName).c_str(), FALSE);
+
+                        unsigned int texture = Texture::GetTexId(fileName.c_str());
+                        for (const int mesh : currentMeshes) {
+                            meshes[mesh].get()->texId = texture;
+                        }
                     }
+
+
+                    ImGui::Text("Current texture file: %s", fileName.c_str());
                 }
             }
 

@@ -164,6 +164,11 @@ int main()
 
 	Log("stdInfo", "starting L-SIMENGINE");
 
+	//Create the resources dir (this is where all textures go)
+	std::filesystem::create_directory("resources");
+
+	Log("stdInfo", "Made resources directory");
+
 	//Initialize GLFW
 	glfwInit();
 
