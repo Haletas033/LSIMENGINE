@@ -12,6 +12,7 @@
 
 class Texture {
 public:
+    static void InitTextures();
     static unsigned int GetTexId(const char* path);
 };
 

@@ -18,6 +18,20 @@ static void Log(const std::string& key, const std::string& msg) {
         (*it->second)(msg, logs);
 }
 
+void Texture::InitTextures() {
+    JSONManager::LoadLoggers(config, loggers);
+
+    // Ensure logger exists
+    if (!loggers.count("stdInfo"))
+        loggers["stdInfo"] = std::make_unique<Logger>();
+
+    loggers["stdInfo"]->SetModule("TEXTURE");
+    loggers["stdWarn"]->SetModule("TEXTURE");
+    loggers["stdError"]->SetModule("TEXTURE");
+
+    Log("stdInfo", "Successfully initialized the texture loggers");
+}
+
 unsigned int Texture::GetTexId(const char* path) {
     unsigned int textureID;
 
@@ -33,8 +47,19 @@ unsigned int Texture::GetTexId(const char* path) {
     unsigned char *data = stbi_load(path, &width, &height, &nrChannels, 0);
     if (data)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        try {
+            GLenum format;
+            if (nrChannels == 1) format = GL_RED;
+            else if (nrChannels == 3) format = GL_RGB;
+            else if (nrChannels == 4) format = GL_RGBA;
+            else throw std::ios_base::failure("Unknown amount of channels");
+
+            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+        catch (std::exception &e) {
+            Log("stdError", e.what());
+        }
     }
     else
     {

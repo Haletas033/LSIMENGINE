@@ -52,8 +52,6 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 		case 0:
 			newMesh = std::make_unique<Mesh>(primitives::GenerateCube());
 			newMesh->name = "Cube";
-			newMesh->useTexture = true;
-			newMesh->texId = Texture::GetTexId("wall.jpg");
 			break;
 		case 1:
 			newMesh = std::make_unique<Mesh>(primitives::GeneratePyramid());
@@ -162,6 +160,7 @@ int main()
 
 	IO::InitIO();
 	Inputs::InitInputs();
+	Texture::InitTextures();
 
 	Log("stdInfo", "starting L-SIMENGINE");
 
