@@ -5,6 +5,7 @@
 #include <include/utils/fileIO.h>
 
 #include "include/utils/json.h"
+#include "include/utils/texture.h"
 
 OPENFILENAME ofn;                           //common dialog box structure
 char szFile[260] = {"untitled.lsim"};       //File size buffer
@@ -83,6 +84,7 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
             int nameLen = mesh->name.size();
             int verticesLen = mesh->vertices.size();
             int indicesLen = mesh->indices.size();
+            int texturePathLen = mesh->texturePath.size();
 
             safeWrite(&nameLen, sizeof(nameLen), "Failed to write name length");
 
@@ -99,6 +101,10 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
 
             //Write useTexture
             safeWrite(&mesh->useTexture, sizeof(mesh->useTexture), "Failed to write useTexture");
+
+            //Write texturePath
+            safeWrite(&texturePathLen, sizeof(texturePathLen), "Failed to write texturePathLen");
+            safeWrite(mesh->texturePath.data(), texturePathLen * sizeof(char), "Failed to write texturePath");
 
             //Write color
             safeWrite(&mesh->color, sizeof(mesh->color), "Failed to write colour");
@@ -163,6 +169,7 @@ Scene IO::loadFromFile(std::ifstream &file) {
             int nameLen;
             int verticesLen;
             int indicesLen;
+            int texturePathLen;
 
             //Get name length
             safeRead(&nameLen, sizeof(nameLen), "Failed to read name len");
@@ -194,6 +201,15 @@ Scene IO::loadFromFile(std::ifstream &file) {
 
             //Read useTexture
             safeRead(&mesh.useTexture, 1, "Failed to read useTexture");
+
+            //Read texturePath
+            safeRead(&texturePathLen, sizeof(texturePathLen), "Failed to read texturePathLen");
+
+            mesh.texturePath.resize(texturePathLen);
+
+            safeRead(mesh.texturePath.data(), texturePathLen, "Failed to read texturePathLen");
+
+            mesh.texId = Texture::GetTexId((std::string("resources/") + mesh.texturePath.data()).c_str());
 
             //Read color
             safeRead(&mesh.color[0], 4 * sizeof(float), "Failed to read colour");

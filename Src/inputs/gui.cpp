@@ -125,11 +125,13 @@ void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vecto
                         fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
 
                         //Copy the file from the file path into the project dir
+                        std::cout << fileName << std::endl;
                         CopyFile(filePath.c_str(), (std::string("resources/") + fileName).c_str(), FALSE);
 
-                        unsigned int texture = Texture::GetTexId(fileName.c_str());
+                        unsigned int texture = Texture::GetTexId((std::string("resources/") + fileName).c_str());
                         for (const int mesh : currentMeshes) {
                             meshes[mesh].get()->texId = texture;
+                            meshes[mesh].get()->texturePath = fileName;
                         }
                     }
 
