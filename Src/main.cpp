@@ -146,13 +146,28 @@ void DeleteLight(Scene &scene, int &currentLight) {
 	Log("stdInfo", "Successfully deleted light");
 }
 
-Defaults engineDefaults = JSONManager::InitJSON("config/config.json", config, loggers);
+Defaults engineDefaults;
 
-int main()
+int main(int argc, char** argv)
 {
+	std::string workingDir;
+	if (argc >= 2) {
+		for (int i = 1; i < argc; ++i) {
+			workingDir += argv[i];
+			if (i != argc - 1)
+				workingDir += " ";
+		}
+
+		Log("stdInfo", "Set working dir to " + workingDir);
+	} else {
+		Log("stdWarn", "No working directory set");
+	}
 	//Load config
-	std::string vertexShader = JSONManager::LoadShaderWithDefines("shaders/default.vert", config);
-	std::string fragmentShader = JSONManager::LoadShaderWithDefines("shaders/default.frag", config);
+	engineDefaults = JSONManager::InitJSON(workingDir + "config/config.json", config, loggers);
+
+	//Load shaders
+	std::string vertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.vert", config);
+	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.frag", config);
 
 	loggers["stdInfo"]->SetModule("MAIN");
 	loggers["stdWarn"]->SetModule("MAIN");
@@ -163,9 +178,6 @@ int main()
 	Texture::InitTextures();
 
 	Log("stdInfo", "starting L-SIMENGINE");
-
-	//Create the resources dir (this is where all textures go)
-	std::filesystem::create_directory("resources");
 
 	Log("stdInfo", "Made resources directory");
 
@@ -183,7 +195,7 @@ int main()
 	lights.push_back(light1);
 
 	//Create a GLFW window object of 800 by 800 pixels
-	GLFWwindow* window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, "L-SIM ENGINE", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, ("L-SIM ENGINE " + workingDir).c_str(), nullptr, nullptr);
 
 	//Error check if the window fails to create
 	if (window == nullptr)
@@ -330,11 +342,11 @@ int main()
 			if (currentMeshes.empty()) {
 				int falseMesh = 0;
 
-				inputs.InputHandler(window, scene, falseMesh,
+				inputs.InputHandler(window, scene, workingDir, falseMesh,
 					currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			} else {
 				for (int mesh : currentMeshes)
-					inputs.InputHandler(window, scene, mesh,
+					inputs.InputHandler(window, scene, workingDir, mesh,
 						currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			}
 		}
@@ -366,7 +378,7 @@ int main()
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(scene.meshes, currentMeshes, selectedMeshType, lastClickMesh);
+		Gui::Transform(workingDir, scene.meshes, currentMeshes, selectedMeshType, lastClickMesh);
 
 		Gui::Lighting(scene.lights, currentLight);
 

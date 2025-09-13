@@ -176,7 +176,7 @@ void Inputs::LightInputs(Scene &scene, const int &currentLight, GLFWwindow* wind
 
 }
 
-void Inputs::IOInputs(GLFWwindow *window, Scene &scene) {
+void Inputs::IOInputs(GLFWwindow *window, Scene &scene, const std::string & workingDir) {
     if (isDown(GLFW_KEY_O, true, window)) {
         std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetSaveFileNameA);
         if (std::ofstream file(fileName, std::ios::out | std::ios::binary); file.is_open()) {
@@ -187,12 +187,12 @@ void Inputs::IOInputs(GLFWwindow *window, Scene &scene) {
     if (isDown(GLFW_KEY_I, true, window)) {
         std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetOpenFileNameA);
         if (std::ifstream file(fileName, std::ios::in | std::ios::binary); file.is_open()) {
-            scene = IO::loadFromFile(file);
+            scene = IO::loadFromFile(file, workingDir);
         }
     }
 }
 
-void Inputs::InputHandler(GLFWwindow* window, Scene &scene,
+void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::string &workingDir,
     const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
     if (isDown(GLFW_KEY_M, true, window)) {
         currentMode = meshMode;
@@ -200,7 +200,7 @@ void Inputs::InputHandler(GLFWwindow* window, Scene &scene,
     }
     if (isDown(GLFW_KEY_L, true, window)) {
         currentMode = lightMode;
-        Log("stdInfo", "swithced to light mode");
+        Log("stdInfo", "Switched to light mode");
     }
 
     if (currentMode == meshMode) {
@@ -232,7 +232,7 @@ void Inputs::InputHandler(GLFWwindow* window, Scene &scene,
         }
     }
 
-    IOInputs(window, scene);
+    IOInputs(window, scene, workingDir);
 }
 
 

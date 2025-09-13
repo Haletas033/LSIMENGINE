@@ -20,7 +20,7 @@ private:
 
     void LightInputs(Scene &scene, const int &currentLight, GLFWwindow* window);
 
-    void IOInputs(GLFWwindow* window, Scene &scene);
+    void IOInputs(GLFWwindow* window, Scene &scene, const std::string &workingDir);
 public:
     std::unordered_map<int, bool> canPress;
 
@@ -37,7 +37,7 @@ public:
 
     static void InitInputs();
 
-    void InputHandler(GLFWwindow* window, Scene &scene,
+    void InputHandler(GLFWwindow* window, Scene &scene, const std::string &workingDir,
     const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
 };
 

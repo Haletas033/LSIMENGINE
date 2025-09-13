@@ -146,7 +146,7 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
     std::cout << std::endl;
 }
 
-Scene IO::loadFromFile(std::ifstream &file) {
+Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
     std::cout << std::endl;
     Log("stdInfo", "beginning to read from file");
 
@@ -209,7 +209,7 @@ Scene IO::loadFromFile(std::ifstream &file) {
 
             safeRead(mesh.texturePath.data(), texturePathLen, "Failed to read texturePathLen");
 
-            mesh.texId = Texture::GetTexId((std::string("resources/") + mesh.texturePath.data()).c_str());
+            mesh.texId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.texturePath.data()).c_str());
 
             //Read color
             safeRead(&mesh.color[0], 4 * sizeof(float), "Failed to read colour");

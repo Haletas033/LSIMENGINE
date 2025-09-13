@@ -37,7 +37,7 @@ public:
 
     static void CleanUp();
 
-    static void Transform(const std::vector<std::unique_ptr<Mesh>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
+    static void Transform(const std::string &workingDir, const std::vector<std::unique_ptr<Mesh>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
 
     static void Lighting(std::vector<Light> &lights, int &currentLight);
 

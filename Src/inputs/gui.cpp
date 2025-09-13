@@ -51,7 +51,7 @@ void Gui::CleanUp() {
     ImGui::DestroyContext();
 }
 
-void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
+void Gui::Transform(const std::string &workingDir, const std::vector<std::unique_ptr<Mesh>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
 
@@ -126,9 +126,9 @@ void Gui::Transform(const std::vector<std::unique_ptr<Mesh>>& meshes, std::vecto
 
                         //Copy the file from the file path into the project dir
                         std::cout << fileName << std::endl;
-                        CopyFile(filePath.c_str(), (std::string("resources/") + fileName).c_str(), FALSE);
+                        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
 
-                        unsigned int texture = Texture::GetTexId((std::string("resources/") + fileName).c_str());
+                        unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
                         for (const int mesh : currentMeshes) {
                             meshes[mesh].get()->texId = texture;
                             meshes[mesh].get()->texturePath = fileName;

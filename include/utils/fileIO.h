@@ -25,7 +25,7 @@ public:
     static void InitIO();
     static std::string Dialog(const char* filter, FileDialogFunc func);
     static void saveToFile(std::ofstream &file, const Scene &scene);
-    static Scene loadFromFile(std::ifstream &file);
+    static Scene loadFromFile(std::ifstream &file, const std::string &workingDir);
 };
 
 #endif //FILEIO_CLASS_H
