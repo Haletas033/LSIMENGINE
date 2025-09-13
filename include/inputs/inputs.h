@@ -10,6 +10,8 @@
 #include<GLFW/glfw3.h>
 #include<vector>
 
+#include "include/utils/defaults.h"
+
 class Inputs {
 private:
     bool isDown(int key, bool onlyOnPress, GLFWwindow* window);
@@ -23,6 +25,8 @@ public:
     std::unordered_map<int, bool> canPress;
 
     glm::vec3 Mesh::*currentTransform = &Mesh::position;
+
+    Defaults defaults;
 
     enum CurrentMode {
         meshMode,

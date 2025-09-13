@@ -146,11 +146,11 @@ void DeleteLight(Scene &scene, int &currentLight) {
 	Log("stdInfo", "Successfully deleted light");
 }
 
+Defaults engineDefaults = JSONManager::InitJSON("config/config.json", config, loggers);
+
 int main()
 {
 	//Load config
-	const Defaults engineDefaults = JSONManager::InitJSON("config/config.json", config, loggers);
-
 	std::string vertexShader = JSONManager::LoadShaderWithDefines("shaders/default.vert", config);
 	std::string fragmentShader = JSONManager::LoadShaderWithDefines("shaders/default.frag", config);
 
@@ -222,11 +222,13 @@ int main()
 
 	//Create camera object
 	Camera camera(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, glm::vec3(0.0f, 0.0f, 2.0f));
+
 	Log("stdInfo", "Successfully created the camera object");
 
 	std::unordered_map<int, bool> canPress;
 
 	Inputs inputs;
+	inputs.defaults = engineDefaults;
 
 	inputs.canPress = canPress;
 

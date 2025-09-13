@@ -108,22 +108,22 @@ void Inputs::MeshInputs(GLFWwindow* window, const Scene &scene,
     float &cameraUp = (scene.meshes[currentMesh].get()->*currentTransform).y;
 
     if (isDown(GLFW_KEY_UP, false, window)) {
-        *cameraForward -= positive ? 0.1 : -0.1;
+        *cameraForward -= positive ? defaults.transformSpeed : -defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_DOWN, false, window)) {
-        *cameraForward += positive ? 0.1 : -0.1;
+        *cameraForward += positive ? defaults.transformSpeed : -defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_RIGHT, false, window)) {
-         *cameraSide += positive ? 0.1 : -0.1;
+         *cameraSide += positive ? defaults.transformSpeed : -defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_LEFT, false, window)) {
-        *cameraSide -= positive ? 0.1 : -0.1;
+        *cameraSide -= positive ? defaults.transformSpeed : -defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_PAGE_UP, false, window)) {
-         cameraUp += 0.1;
+         cameraUp += defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_PAGE_DOWN, false, window)) {
-        cameraUp -= 0.1;
+        cameraUp -= defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_RIGHT_BRACKET, true, window)) {
         selectedMesh++;
@@ -156,22 +156,22 @@ void Inputs::MeshInputs(GLFWwindow* window, const Scene &scene,
 
 void Inputs::LightInputs(Scene &scene, const int &currentLight, GLFWwindow* window) {
     if (isDown(GLFW_KEY_UP, false, window)) {
-        scene.lights[currentLight].lightPos.z -= 0.1;
+        scene.lights[currentLight].lightPos.z -= defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_DOWN, false, window)) {
-        scene.lights[currentLight].lightPos.z += 0.1;
+        scene.lights[currentLight].lightPos.z += defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_RIGHT, false, window)) {
-        scene.lights[currentLight].lightPos.x += 0.1;
+        scene.lights[currentLight].lightPos.x += defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_LEFT, false, window)) {
-        scene.lights[currentLight].lightPos.x -= 0.1;
+        scene.lights[currentLight].lightPos.x -= defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_PAGE_UP, false, window)) {
-        scene.lights[currentLight].lightPos.y += 0.1;
+        scene.lights[currentLight].lightPos.y += defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_PAGE_DOWN, false, window)) {
-        scene.lights[currentLight].lightPos.y -= 0.1;
+        scene.lights[currentLight].lightPos.y -= defaults.transformSpeed;
     }
 
 }

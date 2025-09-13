@@ -11,6 +11,7 @@
 #include<glm/gtx/vector_angle.hpp>
 
 #include "../gl/shaderClass.h"
+#include "include/utils/defaults.h"
 
 class Camera
 {
@@ -27,16 +28,14 @@ public:
     int width;
     int height;
 
-    //Adjust the speed of the camera and its sensitivity when looking around
-    float speed = 1.0f;
-    float sensitivity = 100.0f;
-
     //Variables to store mouse position for delta calculation
     double lastMouseX = 0.0;
     double lastMouseY = 0.0;
 
     //Camera constructor to set up initial values
     Camera(int width, int height, glm::vec3 position);
+
+    static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 
     //Updates and exports the camera matrix to the Vertex Shader
     void Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float aspect) const;

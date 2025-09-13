@@ -1,5 +1,7 @@
 #include "../../include/scene/camera.h"
 
+extern Defaults engineDefaults;
+
 Camera::Camera(int width, int height, glm::vec3 position)
 {
 	this->width = width;
@@ -17,20 +19,19 @@ void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shade
 
 float pitch = 0.0f;
 float yaw = -90.0f;
+float speed = 1.0f;
 
-float speedMultiplier = 50.0f;
-
-void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
+void Camera::scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
 {
     if (yOffset > 0) {
-        speedMultiplier += 1.0f;
+        engineDefaults.speedMultiplier += 1.0f;
     }
     else if (yOffset < 0) {
-        speedMultiplier -= 1.0f;
+        engineDefaults.speedMultiplier -= 1.0f;
     }
 
-    if (speedMultiplier < 0) {
-        speedMultiplier = 0.01;
+    if (engineDefaults.speedMultiplier < 0) {
+        engineDefaults.speedMultiplier = 0.01;
     }
 }
 
@@ -52,9 +53,9 @@ void Camera::Inputs(GLFWwindow* window, float deltaTime)
 
     //Fast mode
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        speed = 0.8f * speedMultiplier;
+        speed = 0.8f * engineDefaults.speedMultiplier;
     else
-        speed = 0.4f * speedMultiplier;
+        speed = 0.4f * engineDefaults.speedMultiplier;
 
     //Handle mouse input for looking around
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -79,8 +80,8 @@ void Camera::Inputs(GLFWwindow* window, float deltaTime)
         lastMouseY = mouseY;
 
         //Apply sensitivity to the delta values
-        pitch -= sensitivity * static_cast<float>(deltaY) / static_cast<float>(height); //Vertical (pitch) rotation
-        yaw += sensitivity * static_cast<float>(deltaX) / static_cast<float>(width);  //Horizontal (yaw) rotation
+        pitch -= engineDefaults.sensitivity * static_cast<float>(deltaY) / static_cast<float>(height); //Vertical (pitch) rotation
+        yaw += engineDefaults.sensitivity * static_cast<float>(deltaX) / static_cast<float>(width);  //Horizontal (yaw) rotation
 
         //Clamps pitch to avoid flipping
         if (pitch > 89.0f) pitch = 89.0f;

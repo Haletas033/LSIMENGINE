@@ -33,6 +33,11 @@ struct Defaults {
     float FOVdeg = 45.0f;
     float nearPlane = 0.1f;
     float farPlane = 10000.0f;
+    float sensitivity = 100.0f;
+    float speedMultiplier = 50.0f;
+
+    //Input defaults
+    float transformSpeed = 0.1f;
 };
 
 #endif //DEFAULTS_H

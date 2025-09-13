@@ -53,6 +53,11 @@ Defaults JSONManager::LoadConfigDefaults(json &config) {
     configDefaults.FOVdeg    = config["defaults"]["FOVdeg"].get<float>();
     configDefaults.nearPlane = config["defaults"]["nearPlane"].get<float>();
     configDefaults.farPlane  = config["defaults"]["farPlane"].get<float>();
+    configDefaults.sensitivity = config["defaults"]["sensitivity"].get<float>();
+    configDefaults.speedMultiplier = config["defaults"]["speedMultiplier"].get<float>();
+
+    //Input defaults
+    configDefaults.transformSpeed = config["defaults"]["transformSpeed"].get<float>();
 
     return configDefaults;
 }
