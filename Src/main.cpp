@@ -252,6 +252,14 @@ int main(int argc, char** argv)
 	Scene scene = {std::move(meshes), std::move(lights)};
 	Log("stdInfo", "Successfully moved meshes and lights into the main scene");
 
+	for (const auto &file : std::filesystem::recursive_directory_iterator(workingDir)) {
+		if (file.path().extension().string() == ".lsim") {
+			Log("stdInfo", file.path().string());
+			std::ifstream LSIMfile(file.path().string());
+			scene = IO::loadFromFile(LSIMfile, workingDir);
+		}
+	}
+
 	//Main render loop
 	Log("stdInfo", "Starting main gameplay loop");
 	while (!glfwWindowShouldClose(window))
