@@ -255,7 +255,7 @@ int main(int argc, char** argv)
 	for (const auto &file : std::filesystem::recursive_directory_iterator(workingDir)) {
 		if (file.path().extension().string() == ".lsim") {
 			Log("stdInfo", file.path().string());
-			std::ifstream LSIMfile(file.path().string());
+			std::ifstream LSIMfile(file.path().string(), std::ios::binary);
 			scene = IO::loadFromFile(LSIMfile, workingDir);
 		}
 	}
