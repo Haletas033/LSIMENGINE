@@ -163,11 +163,11 @@ int main(int argc, char** argv)
 		Log("stdWarn", "No working directory set");
 	}
 	//Load config
-	engineDefaults = JSONManager::InitJSON(workingDir + "config/config.json", config, loggers);
+	engineDefaults = JSONManager::InitJSON(workingDir + "/config/config.json", config, loggers);
 
 	//Load shaders
-	std::string vertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.vert", config);
-	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.frag", config);
+	std::string vertexShader = JSONManager::LoadShaderWithDefines(workingDir + "/shaders/default.vert", config);
+	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "/shaders/default.frag", config);
 
 	loggers["stdInfo"]->SetModule("MAIN");
 	loggers["stdWarn"]->SetModule("MAIN");
