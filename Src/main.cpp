@@ -157,17 +157,18 @@ int main(int argc, char** argv)
 			if (i != argc - 1)
 				workingDir += " ";
 		}
+		workingDir += "/";
 
 		Log("stdInfo", "Set working dir to " + workingDir);
 	} else {
 		Log("stdWarn", "No working directory set");
 	}
 	//Load config
-	engineDefaults = JSONManager::InitJSON(workingDir + "/config/config.json", config, loggers);
+	engineDefaults = JSONManager::InitJSON(workingDir + "config/config.json", config, loggers);
 
 	//Load shaders
-	std::string vertexShader = JSONManager::LoadShaderWithDefines(workingDir + "/shaders/default.vert", config);
-	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "/shaders/default.frag", config);
+	std::string vertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.vert", config);
+	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.frag", config);
 
 	loggers["stdInfo"]->SetModule("MAIN");
 	loggers["stdWarn"]->SetModule("MAIN");
@@ -252,11 +253,13 @@ int main(int argc, char** argv)
 	Scene scene = {std::move(meshes), std::move(lights)};
 	Log("stdInfo", "Successfully moved meshes and lights into the main scene");
 
-	for (const auto &file : std::filesystem::recursive_directory_iterator(workingDir)) {
-		if (file.path().extension().string() == ".lsim") {
-			Log("stdInfo", file.path().string());
-			std::ifstream LSIMfile(file.path().string(), std::ios::binary);
-			scene = IO::loadFromFile(LSIMfile, workingDir);
+	if (!workingDir.empty()) {
+		for (const auto &file : std::filesystem::recursive_directory_iterator(workingDir)) {
+			if (file.path().extension().string() == ".lsim") {
+				Log("stdInfo", file.path().string());
+				std::ifstream LSIMfile(file.path().string(), std::ios::binary);
+				scene = IO::loadFromFile(LSIMfile, workingDir);
+			}
 		}
 	}
 
