@@ -135,6 +135,23 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
                         }
                     }
 
+                    if (ImGui::Button("Add Specular Map")) {
+                        std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
+
+                        //Get just the fileName
+                        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
+
+                        //Copy the file from the file path into the project dir
+                        std::cout << fileName << std::endl;
+                        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
+
+                        unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
+                        for (const int mesh : currentMeshes) {
+                            meshes[mesh].get()->specMapId = texture;
+                            meshes[mesh].get()->specMapPath = fileName;
+                        }
+                    }
+
 
                     ImGui::Text("Current texture file: %s", fileName.c_str());
                 }

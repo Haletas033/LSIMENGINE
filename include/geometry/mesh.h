@@ -21,6 +21,10 @@ public:
     glm::vec4 color = glm::vec4(1.0f);
     GLuint texId{};
     std::string texturePath;
+
+    GLuint specMapId{};
+    std::string specMapPath;
+
     uint16_t meshID = 0;
 
     VAO vao;
