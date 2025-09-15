@@ -9,6 +9,9 @@ This is my attempt at making a game engine with opengl
 * Procedural terrain generation (Perlin noise)
 * Creating geometric primitives
 * Simple lighting
+* File I/O for scene loading and saving
+* Config system
+* A launcher [here](https://github.com/Haletas033/LSIMLAUNCHER)
 
 ## In progress features
 - Hierarchy system
@@ -17,7 +20,6 @@ This is my attempt at making a game engine with opengl
 
 ## Upcoming Features
 - Importing models
-- File I/O for scene loading and saving
 - Basic physics and collision detection
 
 ## Prerequisites (Windows)
