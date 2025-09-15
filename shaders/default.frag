@@ -33,14 +33,20 @@ void main() {
         vec4 baseColor = useTexture ? texture(tex0, texCoord) : meshColor;
 
         // Specular
-        float specularLight = 0.050f;
         vec3 viewDir = normalize(viewPos - crntPos);
         vec3 reflectDir = reflect(-lightDir, normal);
-        float specAmount = pow(max(dot(viewDir, reflectDir), 0.0), 0);
-        float specular = specAmount * specularLight;
+        float shininess = 16.0;
+        float specAmount = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+        specAmount *= max(dot(normal, lightDir), 0.0);
+        float specMap = texture(tex1, texCoord).r;
+        vec3 specularColor = lights[i].lightColor.rgb * specAmount * specMap;
 
-        result += (baseColor * lights[i].lightColor * (ambient + diffuse) + texture(tex1, texCoord) * specular) * attenuation;
+        vec3 lightContribution = (baseColor.rgb * lights[i].lightColor.rgb * (ambient + diffuse) + specularColor) * attenuation;
+        result.rgb += lightContribution;
     }
+
+    FragColor = vec4(result.rgb, 1.0);
+
 
     FragColor = result;
 }
