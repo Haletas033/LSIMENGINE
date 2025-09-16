@@ -85,6 +85,7 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
             int verticesLen = mesh->vertices.size();
             int indicesLen = mesh->indices.size();
             int texturePathLen = mesh->texturePath.size();
+            int specMapPathLen = mesh->specMapPath.size();
 
             safeWrite(&nameLen, sizeof(nameLen), "Failed to write name length");
 
@@ -105,6 +106,10 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
             //Write texturePath
             safeWrite(&texturePathLen, sizeof(texturePathLen), "Failed to write texturePathLen");
             safeWrite(mesh->texturePath.data(), texturePathLen * sizeof(char), "Failed to write texturePath");
+
+            //Write specMapPath
+            safeWrite(&specMapPathLen, sizeof(specMapPathLen), "Failed to write specMapPathLen");
+            safeWrite(mesh->specMapPath.data(), specMapPathLen * sizeof(char), "Failed to write specMapPath");
 
             //Write color
             safeWrite(&mesh->color, sizeof(mesh->color), "Failed to write colour");
@@ -170,6 +175,7 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
             int verticesLen;
             int indicesLen;
             int texturePathLen;
+            int specMapPathLen;
 
             //Get name length
             safeRead(&nameLen, sizeof(nameLen), "Failed to read name len");
@@ -204,12 +210,17 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
 
             //Read texturePath
             safeRead(&texturePathLen, sizeof(texturePathLen), "Failed to read texturePathLen");
-
             mesh.texturePath.resize(texturePathLen);
-
             safeRead(mesh.texturePath.data(), texturePathLen, "Failed to read texturePathLen");
 
+            //Read specMapPath
+            safeRead(&specMapPathLen, sizeof(specMapPathLen), "Failed to read specMapPathLen");
+            mesh.specMapPath.resize(specMapPathLen);
+            safeRead(mesh.specMapPath.data(), specMapPathLen, "Failed to read specMapPathLen");
+
+            //Load tex IDs
             mesh.texId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.texturePath.data()).c_str());
+            mesh.specMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.specMapPath.data()).c_str());
 
             //Read color
             safeRead(&mesh.color[0], 4 * sizeof(float), "Failed to read colour");
