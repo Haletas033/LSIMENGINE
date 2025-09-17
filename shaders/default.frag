@@ -3,6 +3,7 @@ out vec4 FragColor;
 in vec3 Normal;
 in vec3 crntPos;
 in vec2 texCoord;
+in mat3 TBN_out;
 
 struct Light{
     vec4 lightColor;
@@ -15,11 +16,12 @@ uniform Light lights[MAX_LIGHTS];
 uniform vec4 meshColor;
 uniform sampler2D tex0; // diffuse map
 uniform sampler2D tex1; // specular map
+uniform sampler2D normal0; // normal map
 uniform bool useTexture;
 uniform vec3 viewPos; // camera position
 
 void main() {
-    vec3 normal = normalize(Normal);
+    vec3 normal = normalize(TBN_out * (texture(normal0, texCoord).rgb * 2.0 - 1.0));
     vec4 result = vec4(0.0);
 
     for (int i = 0; i < MAX_LIGHTS; ++i) {

@@ -9,6 +9,7 @@ out DATA{
     vec3 crntPos;
     vec2 texCoord;
     mat4 projection;
+    mat4 model;
 } data_out;
 
 uniform mat4 camMatrix;
@@ -23,4 +24,5 @@ void main()
     data_out.Normal = normalMatrix * aNormal;
     data_out.texCoord = aTex;
     data_out.projection = camMatrix;
+    data_out.model = model;
 }

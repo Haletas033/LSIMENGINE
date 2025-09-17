@@ -19,11 +19,15 @@ public:
     std::vector<GLuint> indices;
     bool useTexture = false;
     glm::vec4 color = glm::vec4(1.0f);
+
     GLuint texId{};
     std::string texturePath;
 
     GLuint specMapId{};
     std::string specMapPath;
+
+    GLuint normalMapId{};
+    std::string normalMapPath;
 
     uint16_t meshID = 0;
 
