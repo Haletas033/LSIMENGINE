@@ -169,6 +169,7 @@ int main(int argc, char** argv)
 	//Load shaders
 	std::string vertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.vert", config);
 	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.frag", config);
+	std::string geometryShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.geom", config);
 
 	loggers["stdInfo"]->SetModule("MAIN");
 	loggers["stdWarn"]->SetModule("MAIN");
@@ -220,7 +221,7 @@ int main(int argc, char** argv)
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	//Generate Shader object using shaders default.vert and default.frag
-	Shader shaderProgram(vertexShader.c_str(), fragmentShader.c_str(), true);
+	Shader shaderProgram(vertexShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
 
 	Gui::Initialize(window);
 
@@ -374,8 +375,6 @@ int main(int argc, char** argv)
 				mesh.Draw(shaderProgram, camera);
 			}
 		}
-
-
 
 		Gui::Begin();
 

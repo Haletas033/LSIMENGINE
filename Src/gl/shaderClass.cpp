@@ -17,43 +17,54 @@ std::string getFileContent(const char *filename) {
 }
 
 //Constructor that builds the shader program from to different arrays
-Shader::Shader(const char *vertexFile, const char *fragmentFile, bool useRawString) {
+Shader::Shader(const char *vertexFile, const char *fragmentFile, const char* geometryFile, bool useRawString) {
 
     //Creates strings of the vertex and fragment shaders and stores them
     const std::string vertexCode = useRawString ? vertexFile : getFileContent(vertexFile);
     const std::string fragmentCode = useRawString ? fragmentFile : getFileContent(fragmentFile);
+    const std::string geometryCode = useRawString ? geometryFile : getFileContent(geometryFile);
 
     //turns the shader strings into character arrays
     const char* vertexSource= vertexCode.c_str();
     const char* fragmentSource = fragmentCode.c_str();
+    const char* geometrySource = geometryCode.c_str();
 
-    //Creates a vertexShader and gets it's reference
+    //Create a vertexShader and gets it's reference
     const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    //Attaches vertexShader source to the Vertex Shader object
+    //Attach vertexShader source to the Vertex Shader object
     glShaderSource(vertexShader, 1, &vertexSource, nullptr);
-    //Compiles the vertexShader into machine code
+    //Compile the vertexShader into machine code
     glCompileShader(vertexShader);
 
 
-    //Creates a fragmentShader and gets it's reference
+    //Create a fragmentShader and gets it's reference
     const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    //Attaches fragmentShader source to the Fragment shader object
+    //Attach fragmentShader source to the Fragment shader object
     glShaderSource(fragmentShader, 1, &fragmentSource, nullptr);
-    //Compiles the fragmentShader into machine code
+    //Compile the fragmentShader into machine code
     glCompileShader(fragmentShader);
+
+    //Create a geometryShader and gets it's reference
+    const GLuint geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+    //Attach geometryShader source to the Geometry shader object
+    glShaderSource(geometryShader, 1, &geometrySource, nullptr);
+    //Compile the geometryShader into machine code
+    glCompileShader(geometryShader);
 
     //Creates a shaderProgram object and get its reference
     ID = glCreateProgram();
 
-    //Attaches the vertex and fragment shaders to the shader program
+    //Attaches the vertex, fragment and geometry shaders to the shader program
     glAttachShader(ID, vertexShader);
     glAttachShader(ID, fragmentShader);
+    glAttachShader(ID, geometryShader);
     //Links all the shaders together into the shader program
     glLinkProgram(ID);
 
-    //Deletes the now useless fragment and vertex shaders
+    //Deletes the now useless geometry, fragment and vertex shaders
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+    glDeleteShader(geometryShader);
 }
 
 //Activates the shader program
