@@ -105,10 +105,11 @@ ninja
 │       └── texture.h
 ├── shaders
 │   ├── default.frag
+│   ├── default.geom
 │   └── default.vert
 └── tree.txt
 
-17 directories, 40 files
+17 directories, 41 files
 ```
 <!-- TREE_END -->
 ## Contributing
