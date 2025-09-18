@@ -86,6 +86,7 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
             int indicesLen = mesh->indices.size();
             int texturePathLen = mesh->texturePath.size();
             int specMapPathLen = mesh->specMapPath.size();
+            int normalMapPathLen = mesh->normalMapPath.size();
 
             safeWrite(&nameLen, sizeof(nameLen), "Failed to write name length");
 
@@ -103,6 +104,9 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
             //Write useTexture
             safeWrite(&mesh->useTexture, sizeof(mesh->useTexture), "Failed to write useTexture");
 
+            //Write useNormalMap
+            safeWrite(&mesh->useNormalMap, sizeof(mesh->useNormalMap), "Failed to write useNormalMap");
+
             //Write texturePath
             safeWrite(&texturePathLen, sizeof(texturePathLen), "Failed to write texturePathLen");
             safeWrite(mesh->texturePath.data(), texturePathLen * sizeof(char), "Failed to write texturePath");
@@ -110,6 +114,10 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
             //Write specMapPath
             safeWrite(&specMapPathLen, sizeof(specMapPathLen), "Failed to write specMapPathLen");
             safeWrite(mesh->specMapPath.data(), specMapPathLen * sizeof(char), "Failed to write specMapPath");
+
+            //Write normalMapPath
+            safeWrite(&normalMapPathLen, sizeof(normalMapPathLen), "Failed to write normalMapPathLen");
+            safeWrite(mesh->normalMapPath.data(), normalMapPathLen * sizeof(char), "Failed to write normalMapPath");
 
             //Write color
             safeWrite(&mesh->color, sizeof(mesh->color), "Failed to write colour");
@@ -176,6 +184,7 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
             int indicesLen;
             int texturePathLen;
             int specMapPathLen;
+            int normalMapPathLen;
 
             //Get name length
             safeRead(&nameLen, sizeof(nameLen), "Failed to read name len");
@@ -208,6 +217,9 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
             //Read useTexture
             safeRead(&mesh.useTexture, 1, "Failed to read useTexture");
 
+            //Read useNormalMap
+            safeRead(&mesh.useNormalMap, 1, "Failed to read useNormalMap");
+
             //Read texturePath
             safeRead(&texturePathLen, sizeof(texturePathLen), "Failed to read texturePathLen");
             mesh.texturePath.resize(texturePathLen);
@@ -218,9 +230,15 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
             mesh.specMapPath.resize(specMapPathLen);
             safeRead(mesh.specMapPath.data(), specMapPathLen, "Failed to read specMapPathLen");
 
+            //Read normalMapPath
+            safeRead(&normalMapPathLen, sizeof(normalMapPathLen), "Failed to read normalMapPathLen");
+            mesh.normalMapPath.resize(normalMapPathLen);
+            safeRead(mesh.normalMapPath.data(), normalMapPathLen, "Failed to read normalMapPathLen");
+
             //Load tex IDs
             mesh.texId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.texturePath.data()).c_str());
             mesh.specMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.specMapPath.data()).c_str());
+            mesh.normalMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.normalMapPath.data()).c_str());
 
             //Read color
             safeRead(&mesh.color[0], 4 * sizeof(float), "Failed to read colour");
