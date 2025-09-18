@@ -63,7 +63,9 @@ void Inputs::MeshInputs(GLFWwindow* window, const Scene &scene,
 
     float *cameraForward = nullptr;
     float *cameraSide = nullptr;
-    bool positive;
+
+    bool positiveX;
+    bool positiveZ;
 
     const glm::vec2 flatForward(Orientation.x, Orientation.z);
     const double yaw = atan2(flatForward.y, flatForward.x);
@@ -84,40 +86,53 @@ void Inputs::MeshInputs(GLFWwindow* window, const Scene &scene,
         // Facing left relative to word view
         cameraForward = &(scene.meshes[currentMesh].get()->*currentTransform).x;
         cameraSide = &(scene.meshes[currentMesh].get()->*currentTransform).z;
-        positive = false;
+        positiveX = true;
+        positiveZ = false;
     }
     else if (yawDeg > 45 && yawDeg <= 135) {
         // Facing backwards relative to world view
         cameraForward = &(scene.meshes[currentMesh].get()->*currentTransform).z;
         cameraSide = &(scene.meshes[currentMesh].get()->*currentTransform).x;
-        positive = false;
+        positiveX = false;
+        positiveZ = false;
     }
     else if (yawDeg > 135 || yawDeg <= -135) {
         // Facing right relative to world view
         cameraForward = &(scene.meshes[currentMesh].get()->*currentTransform).x;
         cameraSide = &(scene.meshes[currentMesh].get()->*currentTransform).z;
-        positive = true;
+        positiveX = false;
+        positiveZ = true;
     }
     else {
         // Facing forward relative to world view
         cameraForward = &(scene.meshes[currentMesh].get()->*currentTransform).z;
         cameraSide = &(scene.meshes[currentMesh].get()->*currentTransform).x;
-        positive = true;
+        positiveX = true;
+        positiveZ = true;
     }
 
     float &cameraUp = (scene.meshes[currentMesh].get()->*currentTransform).y;
 
+    if (currentTransform == &Mesh::scale) {positiveX = !positiveX; positiveZ = !positiveZ;} // Flip for scale
+    if (currentTransform == &Mesh::rotation) {
+        const auto tmp = cameraSide; cameraSide = cameraForward; cameraForward = tmp; // Flip for rotation
+        if (cameraForward == &(scene.meshes[currentMesh].get()->*currentTransform).z)
+            positiveZ = !positiveZ;
+        if (cameraSide == &(scene.meshes[currentMesh].get()->*currentTransform).z)
+            positiveX = !positiveX;
+    }
+
     if (isDown(GLFW_KEY_UP, false, window)) {
-        *cameraForward -= positive ? defaults.transformSpeed : -defaults.transformSpeed;
+        *cameraForward -= positiveZ ? defaults.transformSpeed : -defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_DOWN, false, window)) {
-        *cameraForward += positive ? defaults.transformSpeed : -defaults.transformSpeed;
+        *cameraForward += positiveZ ? defaults.transformSpeed : -defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_RIGHT, false, window)) {
-         *cameraSide += positive ? defaults.transformSpeed : -defaults.transformSpeed;
+         *cameraSide += positiveX ? defaults.transformSpeed : -defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_LEFT, false, window)) {
-        *cameraSide -= positive ? defaults.transformSpeed : -defaults.transformSpeed;
+        *cameraSide -= positiveX ? defaults.transformSpeed : -defaults.transformSpeed;
     }
     if (isDown(GLFW_KEY_PAGE_UP, false, window)) {
          cameraUp += defaults.transformSpeed;
