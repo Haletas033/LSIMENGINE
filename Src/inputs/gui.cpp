@@ -152,6 +152,15 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
                         }
                     }
 
+                    ImGui::SameLine();
+
+                    if (ImGui::Button("Remove Specular Map")) {
+                        for (const int mesh : currentMeshes) {
+                            meshes[mesh].get()->specMapId = NULL;
+                            meshes[mesh].get()->specMapPath = "";
+                        }
+                    }
+
                     if (ImGui::Button("Add Normal Map")) {
                         std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
 
@@ -167,6 +176,16 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
                             meshes[mesh].get()->useNormalMap = true;
                             meshes[mesh].get()->normalMapId = texture;
                             meshes[mesh].get()->normalMapPath = fileName;
+                        }
+                    }
+
+                    ImGui::SameLine();
+
+                    if (ImGui::Button("Remove Normal Map")) {
+                        for (const int mesh : currentMeshes) {
+                            meshes[mesh].get()->useNormalMap = false;
+                            meshes[mesh].get()->normalMapId = NULL;
+                            meshes[mesh].get()->normalMapPath = "";
                         }
                     }
 

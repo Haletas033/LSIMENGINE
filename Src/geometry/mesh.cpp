@@ -57,11 +57,11 @@ void Mesh::Draw(Shader& shader, Camera& camera) {
         GLint specMapLoc = glGetUniformLocation(shader.ID, "tex1");
         glUniform1i(specMapLoc, 1);
 
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, normalMapId);
         //Set the sampler uniform to use texture unit 2
         GLint normalMapLoc = glGetUniformLocation(shader.ID, "normal0");
-        glUniform1i(normalMapLoc, 1);
+        glUniform1i(normalMapLoc, 2);
     }
 
     vao.Bind();
