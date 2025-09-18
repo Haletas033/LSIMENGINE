@@ -37,10 +37,9 @@ void main() {
 
         // Specular
         vec3 viewDir = normalize(viewPos - crntPos);
-        vec3 reflectDir = reflect(-lightDir, normal);
+        vec3 halfwayDir = normalize(lightDir + viewDir);
         float shininess = 16.0;
-        float specAmount = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-        specAmount *= max(dot(normal, lightDir), 0.0);
+        float specAmount = pow(max(dot(normal, halfwayDir), 0.0), shininess);
         float specMap = texture(tex1, texCoord).r;
         vec3 specularColor = lights[i].lightColor.rgb * specAmount * specMap;
 
