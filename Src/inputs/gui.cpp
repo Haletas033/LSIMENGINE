@@ -164,6 +164,7 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
 
                         unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
                         for (const int mesh : currentMeshes) {
+                            meshes[mesh].get()->useNormalMap = true;
                             meshes[mesh].get()->normalMapId = texture;
                             meshes[mesh].get()->normalMapPath = fileName;
                         }

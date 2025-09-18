@@ -18,10 +18,11 @@ uniform sampler2D tex0; // diffuse map
 uniform sampler2D tex1; // specular map
 uniform sampler2D normal0; // normal map
 uniform bool useTexture;
+uniform bool useNormalMap;
 uniform vec3 viewPos; // camera position
 
 void main() {
-    vec3 normal = normalize(TBN_out * (texture(normal0, texCoord).rgb * 2.0 - 1.0));
+    vec3 normal = useNormalMap ? normalize(TBN_out * (texture(normal0, texCoord).rgb * 2.0 - 1.0)) : Normal;
     vec4 result = vec4(0.0);
 
     for (int i = 0; i < MAX_LIGHTS; ++i) {

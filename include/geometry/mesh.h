@@ -17,7 +17,10 @@ public:
 
     std::vector<GLfloat> vertices;
     std::vector<GLuint> indices;
+
     bool useTexture = false;
+    bool useNormalMap = false;
+
     glm::vec4 color = glm::vec4(1.0f);
 
     GLuint texId{};

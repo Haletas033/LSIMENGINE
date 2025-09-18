@@ -368,7 +368,9 @@ int main(int argc, char** argv)
 				Mesh& mesh = *meshPtr;
 
 				GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
+				GLint useNormalMapLoc = glGetUniformLocation(shaderProgram.ID, "useNormalMap");
 				glUniform1i(useTexLoc, mesh.useTexture);
+				glUniform1i(useNormalMapLoc, mesh.useNormalMap);
 
 				glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
 
