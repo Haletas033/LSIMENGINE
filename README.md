@@ -2,6 +2,8 @@
 
 This is my attempt at making a game engine with opengl
 
+<img width="1147" height="727" alt="image" src="https://github.com/user-attachments/assets/9a74fad5-4774-465f-92ae-2d08e109c814" />
+
 ## Current Features
 * OpenGL rendering pipeline with GLFW windowing
 * Support for basic 3D transformations via GLM
