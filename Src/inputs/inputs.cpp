@@ -161,12 +161,6 @@ void Inputs::MeshInputs(GLFWwindow* window, const Scene &scene,
         currentTransform = &Mesh::scale;
         Log("stdInfo", "Set scale as the current transform");
     }
-
-    for (int i = 0 + GLFW_KEY_0; i < 10 + GLFW_KEY_0; i++) {
-        if (isDown(i, true, window)) {
-            selectedMeshType = i - 48;
-        }
-    }
 }
 
 void Inputs::LightInputs(Scene &scene, const int &currentLight, GLFWwindow* window) {
@@ -221,6 +215,13 @@ void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::string &w
     if (currentMode == meshMode) {
         if (!scene.meshes.empty() && currentMesh >= 0 && currentMesh < scene.meshes.size()) {
             MeshInputs(window, scene, currentMesh, selectedMeshType, selectedMesh, Orientation);
+        }
+
+        // Handle changing mesh type with 0-5
+        for (int i = 0 + GLFW_KEY_0; i < 10 + GLFW_KEY_0; i++) {
+            if (isDown(i, true, window)) {
+                selectedMeshType = i - 48;
+            }
         }
 
         // Handle adding and deleting meshes
