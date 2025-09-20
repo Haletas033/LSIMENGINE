@@ -1,6 +1,7 @@
 # LSIMENGINE
 
 This is my attempt at making a game engine with opengl
+Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdocs.html)
 
 <img width="1147" height="727" alt="image" src="https://github.com/user-attachments/assets/9a74fad5-4774-465f-92ae-2d08e109c814" />
 
