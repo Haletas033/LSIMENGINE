@@ -22,42 +22,53 @@ void JSONManager::LoadJSON(const std::string &path, json &config) {
     file >> config;
 }
 
+template <typename T>
+void safeLoad(nlohmann::json json, const std::string field, T &target) {
+    if (json.contains(field)) {
+        try {
+            target = json[field].get<T>();
+        } catch (const std::exception e) {
+            std::cerr << "Failed to load " << field << "using standard" << std::endl;
+        }
+    }
+}
+
 Defaults JSONManager::LoadConfigDefaults(json &config) {
     Defaults configDefaults;
 
     configDefaults.MAX_LIGHTS = config["shader-constants"]["MAX_LIGHTS"].get<unsigned int>();
-    configDefaults.defaultWindowWidth = config["defaults"]["defaultWindowWidth"].get<unsigned int>();
-    configDefaults.defaultWindowHeight = config["defaults"]["defaultWindowHeight"].get<unsigned int>();
+    safeLoad(config["defaults"], "defaultWindowWidth", configDefaults.defaultWindowWidth);
+    safeLoad(config["defaults"], "defaultWindowHeight", configDefaults.defaultWindowHeight);
 
-    //Terrain defaults
-    configDefaults.size        = config["defaults"]["size"].get<unsigned int>();
-    configDefaults.gridScale   = config["defaults"]["gridScale"].get<float>();
-    configDefaults.heightScale = config["defaults"]["heightScale"].get<float>();
-    configDefaults.scale       = config["defaults"]["scale"].get<float>();
-    configDefaults.octaves     = config["defaults"]["octaves"].get<int>();
-    configDefaults.persistence = config["defaults"]["persistence"].get<float>();
-    configDefaults.lacunarity  = config["defaults"]["lacunarity"].get<float>();
+    // Terrain defaults
+    safeLoad(config["defaults"], "size",        configDefaults.size);
+    safeLoad(config["defaults"], "gridScale",   configDefaults.gridScale);
+    safeLoad(config["defaults"], "heightScale", configDefaults.heightScale);
+    safeLoad(config["defaults"], "scale",       configDefaults.scale);
+    safeLoad(config["defaults"], "octaves",     configDefaults.octaves);
+    safeLoad(config["defaults"], "persistence", configDefaults.persistence);
+    safeLoad(config["defaults"], "lacunarity",  configDefaults.lacunarity);
 
+    // Sphere defaults
+    safeLoad(config["defaults"], "sphereSlices", configDefaults.sphereSlices);
+    safeLoad(config["defaults"], "sphereStacks", configDefaults.sphereStacks);
 
-    //Sphere defaults
-    configDefaults.sphereSlices = config["defaults"]["sphereSlices"].get<int>();
-    configDefaults.sphereStacks = config["defaults"]["sphereStacks"].get<int>();
+    // Torus defaults
+    safeLoad(config["defaults"], "torusRingSegments", configDefaults.torusRingSegments);
+    safeLoad(config["defaults"], "torusTubeSegments", configDefaults.torusTubeSegments);
+    safeLoad(config["defaults"], "torusRingRadius",   configDefaults.torusRingRadius);
+    safeLoad(config["defaults"], "torusTubeRadius",   configDefaults.torusTubeRadius);
 
-    //Torus defaults
-    configDefaults.torusRingSegments = config["defaults"]["torusRingSegments"].get<int>();
-    configDefaults.torusTubeSegments = config["defaults"]["torusTubeSegments"].get<int>();
-    configDefaults.torusRingRadius   = config["defaults"]["torusRingRadius"].get<float>();
-    configDefaults.torusTubeRadius   = config["defaults"]["torusTubeRadius"].get<float>();
+    // Camera defaults
+    safeLoad(config["defaults"], "FOVdeg",          configDefaults.FOVdeg);
+    safeLoad(config["defaults"], "nearPlane",       configDefaults.nearPlane);
+    safeLoad(config["defaults"], "farPlane",        configDefaults.farPlane);
+    safeLoad(config["defaults"], "sensitivity",     configDefaults.sensitivity);
+    safeLoad(config["defaults"], "speedMultiplier", configDefaults.speedMultiplier);
 
-    //Camera defaults
-    configDefaults.FOVdeg    = config["defaults"]["FOVdeg"].get<float>();
-    configDefaults.nearPlane = config["defaults"]["nearPlane"].get<float>();
-    configDefaults.farPlane  = config["defaults"]["farPlane"].get<float>();
-    configDefaults.sensitivity = config["defaults"]["sensitivity"].get<float>();
-    configDefaults.speedMultiplier = config["defaults"]["speedMultiplier"].get<float>();
+    // Input defaults
+    safeLoad(config["defaults"], "transformSpeed", configDefaults.transformSpeed);
 
-    //Input defaults
-    configDefaults.transformSpeed = config["defaults"]["transformSpeed"].get<float>();
 
     return configDefaults;
 }
