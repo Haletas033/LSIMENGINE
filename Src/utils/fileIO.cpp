@@ -6,6 +6,7 @@
 
 #include "include/utils/json.h"
 #include "include/utils/texture.h"
+#include "include/utils/defaults.h"
 
 OPENFILENAME ofn;                           //common dialog box structure
 char szFile[260] = {"untitled.lsim"};       //File size buffer
@@ -14,6 +15,8 @@ HWND hwnd;                                  //owner window
 extern json config;
 
 extern std::vector<Logger> logs;
+
+extern Defaults engineDefaults;
 
 static std::unordered_map<std::string, std::unique_ptr<Logger>> loggers;
 
@@ -70,6 +73,11 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
     };
 
     try {
+        const int versionLen = engineDefaults.version.length();
+        safeWrite(&versionLen, sizeof(versionLen), "Failed to read versionLen");
+
+        safeWrite(engineDefaults.version.data(), versionLen * sizeof(char), "Failed to read version");
+
         const int meshCount = scene.meshes.size();
         safeWrite(&meshCount, sizeof(meshCount), "Failed to write mesh count");
 
@@ -168,6 +176,8 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
     std::vector<std::unique_ptr<Mesh>> meshes;
     std::vector<Light> lights;
 
+
+
     auto safeRead = [&](auto* data, const std::streamsize size, const char* errorMsg) {
         if (!file.read(reinterpret_cast<char*>(data), size)) {
             throw std::ios_base::failure(errorMsg);
@@ -175,6 +185,15 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
     };
 
     try {
+        int versionLen;
+        safeRead(&versionLen, sizeof(versionLen), "Failed to read versionLen");
+
+        std::string version(versionLen, '\0');
+        safeRead(version.data(), versionLen * sizeof(char), "Failed to read version");
+
+        if (version != engineDefaults.version)
+            throw std::ios_base::failure("Version mismatch");
+
         int meshCount;
         safeRead(&meshCount, sizeof(meshCount), "Failed to read mesh count");
 

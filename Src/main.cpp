@@ -197,7 +197,7 @@ int main(int argc, char** argv)
 	lights.push_back(light1);
 
 	//Create a GLFW window object of 800 by 800 pixels
-	GLFWwindow* window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, ("L-SIM ENGINE " + workingDir).c_str(), nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, ("L-SIM ENGINE " + engineDefaults.version + " "+ workingDir).c_str(), nullptr, nullptr);
 
 	//Error check if the window fails to create
 	if (window == nullptr)

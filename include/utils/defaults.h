@@ -7,6 +7,7 @@
 
 struct Defaults {
     unsigned int MAX_LIGHTS = 8;
+    std::string version = "v1.0";
     unsigned int defaultWindowWidth = 1920;
     unsigned int defaultWindowHeight = 1080;
 

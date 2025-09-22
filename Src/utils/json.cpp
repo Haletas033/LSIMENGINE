@@ -37,6 +37,7 @@ Defaults JSONManager::LoadConfigDefaults(json &config) {
     Defaults configDefaults;
 
     configDefaults.MAX_LIGHTS = config["shader-constants"]["MAX_LIGHTS"].get<unsigned int>();
+    safeLoad(config["defaults"], "version", configDefaults.version);
     safeLoad(config["defaults"], "defaultWindowWidth", configDefaults.defaultWindowWidth);
     safeLoad(config["defaults"], "defaultWindowHeight", configDefaults.defaultWindowHeight);
 

@@ -3,6 +3,7 @@
     "MAX_LIGHTS": 8
   },
   "defaults": {
+    "version": "v1.0",
     "defaultWindowWidth": 1920,
     "defaultWindowHeight": 1080,
 
