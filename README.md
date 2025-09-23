@@ -1,11 +1,10 @@
-# LSIMENGINE
-
-This is my attempt at making a game engine with opengl
+# LSIM ENGINE
+**v1.0**\
 Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdocs.html)
 
 <img width="1147" height="727" alt="image" src="https://github.com/user-attachments/assets/9a74fad5-4774-465f-92ae-2d08e109c814" />
 
-## Current Features
+## Current Features:
 * OpenGL rendering pipeline with GLFW windowing
 * Support for basic 3D transformations via GLM
 * Controllable camera (WASD + mouse)
@@ -16,14 +15,12 @@ Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdo
 * Config system
 * A launcher [here](https://github.com/Haletas033/LSIMLAUNCHER)
 
-## In progress features
-- Hierarchy system
-- GUI improvements
-- Multiple lights, cameras, and improved lighting
-
-## Upcoming Features
-- Importing models
-- Basic physics and collision detection
+## v1.1 Projected Features:
+* Way to build games into `.exe` files
+* More light types (directional, spotlight)
+* Lights in Hierarchy
+* A lot of bug fixes
+* Some optimizations
 
 ## Prerequisites (Windows)
 This project requires Git, Cmake, Ninja(or another build system)
