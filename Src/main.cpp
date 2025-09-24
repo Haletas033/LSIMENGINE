@@ -394,6 +394,20 @@ int main(int argc, char** argv)
 			script->Update();
 		}
 
+		//Update every mesh
+		for (const int mesh : currentMeshes) {
+			scene.meshes[mesh].get()->ApplyTransformations();
+		}
+
+		//Update every light
+		for (auto light : scene.lights) {
+			// Recalculate dependent values even if the GUI is closed
+			light.invScale  = 1.0f / (light.attenuationScale + 0.001f);
+			light.linear    = 0.09f  * light.invScale;
+			light.quadratic = 0.032f * light.invScale;
+		}
+
+
 		#ifndef GAME
 		Gui::Begin();
 
