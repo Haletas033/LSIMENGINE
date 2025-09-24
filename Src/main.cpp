@@ -13,6 +13,8 @@
 #include <include/utils/json.h>
 
 #include <nlohmann/json.hpp>
+
+#include "include/scene/script.h"
 #include "include/utils/texture.h"
 
 double mouseX, mouseY;
@@ -148,6 +150,8 @@ void DeleteLight(Scene &scene, int &currentLight) {
 
 Defaults engineDefaults;
 
+Scene scene {};
+
 int main(int argc, char** argv)
 {
 	std::string workingDir;
@@ -181,8 +185,6 @@ int main(int argc, char** argv)
 
 	Log("stdInfo", "starting L-SIMENGINE");
 
-	Log("stdInfo", "Made resources directory");
-
 	//Initialize GLFW
 	glfwInit();
 
@@ -198,6 +200,14 @@ int main(int argc, char** argv)
 
 	//Create a GLFW window object of 800 by 800 pixels
 	GLFWwindow* window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, ("L-SIM ENGINE " + engineDefaults.version + " "+ workingDir).c_str(), nullptr, nullptr);
+
+	Script::InstantiateAll();
+
+
+	//Run Start() for all scripts
+	for (auto script : Script::GetAllScripts()) {
+		script->Start();
+	}
 
 	//Error check if the window fails to create
 	if (window == nullptr)
@@ -251,7 +261,7 @@ int main(int argc, char** argv)
 	int lastClickMesh = -1;
 	int currentLight = 0;
 
-	Scene scene = {std::move(meshes), std::move(lights)};
+	scene = {std::move(meshes), std::move(lights)};
 	Log("stdInfo", "Successfully moved meshes and lights into the main scene");
 
 	if (!workingDir.empty()) {
@@ -307,13 +317,13 @@ int main(int argc, char** argv)
 			}
 		}
 
-
-
 		//Handle camera inputs
 
 		// Only process camera movement if ImGui is not using the mouse
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureMouse && !io.WantCaptureKeyboard) {
+			#ifndef GAME
 			camera.Inputs(window, deltaTime);
+			#endif
 		}
 
 
@@ -350,7 +360,7 @@ int main(int argc, char** argv)
 		}
 
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard) {
-
+			#ifndef GAME
 			if (currentMeshes.empty()) {
 				int falseMesh = 0;
 
@@ -361,6 +371,7 @@ int main(int argc, char** argv)
 					inputs.InputHandler(window, scene, workingDir, mesh,
 						currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			}
+			#endif
 		}
 
 		if (!scene.meshes.empty()) {
@@ -378,6 +389,12 @@ int main(int argc, char** argv)
 			}
 		}
 
+		//Run Update() function for all scripts
+		for (auto script : Script::GetAllScripts()) {
+			script->Update();
+		}
+
+		#ifndef GAME
 		Gui::Begin();
 
 		ImVec2 displaySize = ImGui::GetIO().DisplaySize; // (width, height)
@@ -423,6 +440,7 @@ int main(int argc, char** argv)
 		ImGui::End();
 
 		Gui::End();
+		#endif
 
 		//Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);

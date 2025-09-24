@@ -22,6 +22,8 @@ struct Scene {
     mutable bool addLightSignal = false;
     mutable bool deleteLightSignal = false;
 
+    Scene() = default;
+
     // Move constructor
     Scene(std::vector<std::unique_ptr<Mesh>>&& m, std::vector<Light>&& l)
         : meshes(std::move(m)), lights(std::move(l)) {}
