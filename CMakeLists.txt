@@ -1,9 +1,19 @@
 cmake_minimum_required(VERSION 3.10)
 project(LSIM)
+
 set(CMAKE_CXX_STANDARD 17)
+
 add_subdirectory(external/glad)
 add_subdirectory(external/glm)
 add_subdirectory(external/glfw)
+
+if(DEFINED SCRIPTS)
+    message(STATUS "Including extra scripts from: ${SCRIPTS}")
+    file(GLOB_RECURSE SCRIPTS_SOURCES "${SCRIPTS}/*.cpp")
+else()
+    set(SCRIPTS_SOURCES "")
+endif()
+
 set(IMGUI_SOURCES
         external/imgui/imgui.cpp
         external/imgui/imgui_draw.cpp
@@ -40,6 +50,7 @@ add_executable(LSIM
         include/geometry/primitives.h
         Src/geometry/primitives.cpp
         ${IMGUI_SOURCES}
+        ${SCRIPTS_SOURCES}
         include/utils/fileIO.h
         Src/utils/fileIO.cpp
 )
@@ -48,6 +59,7 @@ target_include_directories(LSIM
         external/glfw/include external/
         external/imgui
         external/imgui/backends
+        include
 )
 file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
