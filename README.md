@@ -95,7 +95,8 @@ ninja
 │   ├── scene
 │   │   ├── camera.h
 │   │   ├── light.h
-│   │   └── scene.h
+│   │   ├── scene.h
+│   │   └── script.h
 │   └── utils
 │       ├── defaults.h
 │       ├── fileIO.h
@@ -109,7 +110,7 @@ ninja
 │   └── default.vert
 └── tree.txt
 
-17 directories, 41 files
+17 directories, 42 files
 ```
 <!-- TREE_END -->
 ## Contributing
