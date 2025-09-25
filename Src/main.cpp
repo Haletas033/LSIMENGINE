@@ -394,8 +394,8 @@ int main(int argc, char** argv)
 		}
 
 		//Update every mesh
-		for (const int mesh : currentMeshes) {
-			scene.meshes[mesh].get()->ApplyTransformations();
+		for (const auto &mesh : scene.meshes) {
+			mesh.get()->ApplyTransformations();
 		}
 
 		//Update every light
