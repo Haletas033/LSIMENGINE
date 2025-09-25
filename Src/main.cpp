@@ -203,12 +203,6 @@ int main(int argc, char** argv)
 
 	Script::InstantiateAll();
 
-
-	//Run Start() for all scripts
-	for (auto script : Script::GetAllScripts()) {
-		script->Start();
-	}
-
 	//Error check if the window fails to create
 	if (window == nullptr)
 	{
@@ -272,6 +266,11 @@ int main(int argc, char** argv)
 				scene = IO::loadFromFile(LSIMfile, workingDir);
 			}
 		}
+	}
+
+	//Run Start() for all scripts
+	for (auto script : Script::GetAllScripts()) {
+		script->Start();
 	}
 
 	//Main render loop
@@ -400,7 +399,7 @@ int main(int argc, char** argv)
 		}
 
 		//Update every light
-		for (auto light : scene.lights) {
+		for (auto &light : scene.lights) {
 			// Recalculate dependent values even if the GUI is closed
 			light.invScale  = 1.0f / (light.attenuationScale + 0.001f);
 			light.linear    = 0.09f  * light.invScale;
