@@ -32,6 +32,9 @@ public:
     double lastMouseX = 0.0;
     double lastMouseY = 0.0;
 
+    //Default constructor
+    Camera() = default;
+
     //Camera constructor to set up initial values
     Camera(int width, int height, glm::vec3 position);
 

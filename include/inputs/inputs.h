@@ -14,8 +14,6 @@
 
 class Inputs {
 private:
-    bool isDown(int key, bool onlyOnPress, GLFWwindow* window);
-
     void MeshInputs(GLFWwindow* window, const Scene &scene, const int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
 
     void LightInputs(Scene &scene, const int &currentLight, GLFWwindow* window);
@@ -34,6 +32,8 @@ public:
     };
 
     CurrentMode currentMode = meshMode;
+
+    bool isDown(int key, bool onlyOnPress, GLFWwindow* window);
 
     static void InitInputs();
 

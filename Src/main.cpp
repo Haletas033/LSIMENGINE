@@ -151,10 +151,13 @@ void DeleteLight(Scene &scene, int &currentLight) {
 Defaults engineDefaults;
 
 Scene scene {};
+Camera camera {};
+GLFWwindow* window;
+std::string workingDir;
 
 int main(int argc, char** argv)
 {
-	std::string workingDir;
+
 	if (argc >= 2) {
 		for (int i = 1; i < argc; ++i) {
 			workingDir += argv[i];
@@ -199,7 +202,7 @@ int main(int argc, char** argv)
 	lights.push_back(light1);
 
 	//Create a GLFW window object of 800 by 800 pixels
-	GLFWwindow* window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, ("L-SIM ENGINE " + engineDefaults.version + " "+ workingDir).c_str(), nullptr, nullptr);
+	window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, ("L-SIM ENGINE " + engineDefaults.version + " "+ workingDir).c_str(), nullptr, nullptr);
 
 	Script::InstantiateAll();
 
@@ -239,7 +242,7 @@ int main(int argc, char** argv)
 	glEnable(GL_DEPTH_TEST);
 
 	//Create camera object
-	Camera camera(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, glm::vec3(0.0f, 0.0f, 2.0f));
+	camera = Camera(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, glm::vec3(0.0f, 0.0f, 2.0f));
 
 	Log("stdInfo", "Successfully created the camera object");
 
@@ -390,7 +393,7 @@ int main(int argc, char** argv)
 
 		//Run Update() function for all scripts
 		for (auto script : Script::GetAllScripts()) {
-			script->Update();
+			script->Update(deltaTime);
 		}
 
 		//Update every mesh

@@ -23,7 +23,7 @@ public:
 
     virtual void Start() {};
 
-    virtual void Update() {};
+    virtual void Update(const float deltaTime) {};
 
     using Creator = std::function<Script*()>;
 
