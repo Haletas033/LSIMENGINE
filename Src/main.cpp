@@ -52,24 +52,24 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 
 	switch (selectedMeshType) {
 		case 0:
-			newMesh = std::make_unique<Mesh>(primitives::GenerateCube());
+			newMesh = std::make_unique<Mesh>(primitives::GenerateCube(1));
 			newMesh->name = "Cube";
 			break;
 		case 1:
-			newMesh = std::make_unique<Mesh>(primitives::GeneratePyramid());
+			newMesh = std::make_unique<Mesh>(primitives::GeneratePyramid(1));
 			newMesh->name = "Pyramid";
 			break;
 		case 2:
-			newMesh = std::make_unique<Mesh>(primitives::GeneratePlane());
+			newMesh = std::make_unique<Mesh>(primitives::GeneratePlane(1));
 			newMesh->name = "Plane";
 			break;
 		case 3:
-			newMesh = std::make_unique<Mesh>(primitives::GenerateSphere(defaults.sphereStacks, defaults.sphereSlices));
+			newMesh = std::make_unique<Mesh>(primitives::GenerateSphere(defaults.sphereStacks, defaults.sphereSlices, 1));
 			newMesh->name = "Sphere";
 			break;
 		case 4:
 			newMesh = std::make_unique<Mesh>(primitives::GenerateTorus(defaults.torusRingSegments, defaults.torusTubeSegments,
-				defaults.torusRingRadius, defaults.torusTubeRadius));
+			                                                           defaults.torusRingRadius, defaults.torusTubeRadius, 1));
 
 			newMesh->name = "Torus";
 			break;
@@ -232,7 +232,7 @@ int main(int argc, char** argv)
 
 	Gui::Initialize(window);
 
-	meshes.push_back(std::make_unique<Mesh>(primitives::GenerateCube()));
+	meshes.push_back(std::make_unique<Mesh>(primitives::GenerateCube(1)));
 	meshes.back()->name = "First Cube";
 	auto* node = new Gui::Node{ meshes.back().get(), Gui::root, {} };
 	Gui::root->children.push_back(node);
