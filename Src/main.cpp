@@ -382,6 +382,7 @@ int main(int argc, char** argv)
 			#endif
 		}
 
+		//Draw meshes
 		if (!scene.meshes.empty()) {
 			for (auto& meshPtr : scene.meshes) {
 				Mesh& mesh = *meshPtr;
@@ -397,16 +398,7 @@ int main(int argc, char** argv)
 			}
 		}
 
-		//Run Update() function for all scripts
-		for (auto script : Script::GetAllScripts()) {
-			script->Update(deltaTime);
-		}
-
-		//Update every mesh
-		for (const auto &mesh : scene.meshes) {
-			mesh.get()->ApplyTransformations();
-		}
-
+		//Switch to instanceShaderProgram to draw instances
 		instanceShaderProgram.Activate();
 
 		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, instanceShaderProgram, "camMatrix", aspect);
@@ -414,7 +406,6 @@ int main(int argc, char** argv)
 		DrawLights(instanceShaderProgram, engineDefaults, scene);
 
 		//Draw all instanced meshes
-
 		for (auto& instance : scene.instancedMeshes) {
 			Mesh& mesh = *instance->mesh;
 
@@ -433,6 +424,16 @@ int main(int argc, char** argv)
 			glBindTexture(GL_TEXTURE_2D, mesh.normalMapId);
 
 			instance->DrawInstances(instanceShaderProgram, camera);
+		}
+
+		//Run Update() function for all scripts
+		for (auto script : Script::GetAllScripts()) {
+			script->Update(deltaTime);
+		}
+
+		//Update every mesh
+		for (const auto &mesh : scene.meshes) {
+			mesh.get()->ApplyTransformations();
 		}
 
 
