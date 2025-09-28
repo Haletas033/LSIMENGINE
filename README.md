@@ -107,10 +107,11 @@ ninja
 ├── shaders
 │   ├── default.frag
 │   ├── default.geom
-│   └── default.vert
+│   ├── default.vert
+│   └── instance.vert
 └── tree.txt
 
-17 directories, 42 files
+17 directories, 43 files
 ```
 <!-- TREE_END -->
 ## Contributing
