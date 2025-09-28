@@ -11,7 +11,37 @@
 #include "light.h"
 
 struct Scene {
+
+    struct InstancedMesh {
+        std::unique_ptr<Mesh> mesh;
+        std::vector<glm::mat4> instances;
+        GLuint instanceVBO = 0;
+
+        void UploadInstances() {
+            if (instanceVBO == 0)
+                glGenBuffers(1, &instanceVBO);
+
+            glBindVertexArray(mesh->vao.ID);
+            glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+            glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4), instances.data(), GL_STATIC_DRAW);
+
+            for (int i = 0; i < 4; ++i) {
+                glEnableVertexAttribArray(3 + i);
+                glVertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                    reinterpret_cast<void *>(i * sizeof(glm::vec4)));
+                glVertexAttribDivisor(3 + i, 1);
+            }
+            glBindVertexArray(0);
+        }
+
+        void DrawInstances(const Shader &shader, const Camera &camera) {
+            glBindVertexArray(mesh->vao.ID);
+            glDrawElementsInstanced(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, nullptr, instances.size());
+        }
+    };
+
     std::vector<std::unique_ptr<Mesh>> meshes;
+    std::vector<std::unique_ptr<InstancedMesh>> instancedMeshes;
     std::vector<Light> lights;
 
     // Signals for meshes

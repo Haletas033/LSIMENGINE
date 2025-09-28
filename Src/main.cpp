@@ -148,6 +148,24 @@ void DeleteLight(Scene &scene, int &currentLight) {
 	Log("stdInfo", "Successfully deleted light");
 }
 
+void DrawLights(Shader &shader, Defaults defaults, Scene &scene) {
+	for (int i = 0; i < defaults.MAX_LIGHTS; ++i) {
+		std::string prefix = "lights[" + std::to_string(i) + "].";
+		if (i < scene.lights.size()) {
+			glUniform4fv(glGetUniformLocation(shader.ID, (prefix + "lightColor").c_str()), 1, &scene.lights[i].lightColor[0]);
+			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, &scene.lights[i].lightPos[0]);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "linear").c_str()), scene.lights[i].linear);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "quadratic").c_str()), scene.lights[i].quadratic);
+		} else {
+			// Clear unused lights
+			glUniform4fv(glGetUniformLocation(shader.ID, (prefix + "lightColor").c_str()), 1, glm::value_ptr(glm::vec4(0.0f)));
+			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "linear").c_str()), 0.0f);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "quadratic").c_str()), 0.0f);
+		}
+	}
+}
+
 Defaults engineDefaults;
 
 Scene scene {};
@@ -175,6 +193,7 @@ int main(int argc, char** argv)
 
 	//Load shaders
 	std::string vertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.vert", config);
+	std::string instanceShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/instance.vert", config);
 	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.frag", config);
 	std::string geometryShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.geom", config);
 
@@ -215,7 +234,7 @@ int main(int argc, char** argv)
 	}
 
 	Log("stdInfo", "Successfully created the GLFW window");
-	
+
 	//Introduce the window into the current context
 	glfwMakeContextCurrent(window);
 
@@ -229,6 +248,7 @@ int main(int argc, char** argv)
 
 	//Generate Shader object using shaders default.vert and default.frag
 	Shader shaderProgram(vertexShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
+	Shader instanceShaderProgram(instanceShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
 
 	Gui::Initialize(window);
 
@@ -303,21 +323,7 @@ int main(int argc, char** argv)
 		//Tells OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 
-		for (int i = 0; i < engineDefaults.MAX_LIGHTS; ++i) {
-			std::string prefix = "lights[" + std::to_string(i) + "].";
-			if (i < scene.lights.size()) {
-				glUniform4fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightColor").c_str()), 1, &scene.lights[i].lightColor[0]);
-				glUniform3fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightPos").c_str()), 1, &scene.lights[i].lightPos[0]);
-				glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "linear").c_str()), scene.lights[i].linear);
-				glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "quadratic").c_str()), scene.lights[i].quadratic);
-			} else {
-				// Clear unused lights
-				glUniform4fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightColor").c_str()), 1, glm::value_ptr(glm::vec4(0.0f)));
-				glUniform3fv(glGetUniformLocation(shaderProgram.ID, (prefix + "lightPos").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
-				glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "linear").c_str()), 0.0f);
-				glUniform1f(glGetUniformLocation(shaderProgram.ID, (prefix + "quadratic").c_str()), 0.0f);
-			}
-		}
+		DrawLights(shaderProgram, engineDefaults, scene);
 
 		//Handle camera inputs
 
@@ -401,6 +407,35 @@ int main(int argc, char** argv)
 			mesh.get()->ApplyTransformations();
 		}
 
+		instanceShaderProgram.Activate();
+
+		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, instanceShaderProgram, "camMatrix", aspect);
+
+		DrawLights(instanceShaderProgram, engineDefaults, scene);
+
+		//Draw all instanced meshes
+
+		for (auto& instance : scene.instancedMeshes) {
+			Mesh& mesh = *instance->mesh;
+
+			glUniform1i(glGetUniformLocation(instanceShaderProgram.ID, "tex0"), 0);
+			glUniform1i(glGetUniformLocation(instanceShaderProgram.ID, "normal0"), 1);
+
+			GLint useTexLoc = glGetUniformLocation(instanceShaderProgram.ID, "useTexture");
+			GLint useNormalMapLoc = glGetUniformLocation(instanceShaderProgram.ID, "useNormalMap");
+			glUniform1i(useTexLoc, mesh.useTexture);
+			glUniform1i(useNormalMapLoc, mesh.useNormalMap);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, mesh.texId);
+
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, mesh.normalMapId);
+
+			instance->DrawInstances(instanceShaderProgram, camera);
+		}
+
+
 		//Update every light
 		for (auto &light : scene.lights) {
 			// Recalculate dependent values even if the GUI is closed
@@ -470,6 +505,7 @@ int main(int argc, char** argv)
 	Gui::CleanUp();
 
 	shaderProgram.Delete();
+	instanceShaderProgram.Delete();
 	//Delete window before ending the program
 	glfwDestroyWindow(window);
 	//Terminate GLFW before ending the program
