@@ -2,7 +2,7 @@
 **v1.0**\
 Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdocs.html)
 
-<img width="1147" height="727" alt="image" src="https://github.com/user-attachments/assets/9a74fad5-4774-465f-92ae-2d08e109c814" />
+<img width="1908" height="981" alt="Maze Photo" src="https://github.com/user-attachments/assets/16993191-a488-4359-8955-9331246de6be" />
 
 ## Current Features:
 * OpenGL rendering pipeline with GLFW windowing
@@ -14,10 +14,12 @@ Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdo
 * File I/O for scene loading and saving
 * Config system
 * A launcher [here](https://github.com/Haletas033/LSIMLAUNCHER)
-
-## v1.1 Projected Features:
 * Way to build games into `.exe` files
+
+## v1.1 (light update) Projected Features:
+* Sky boxes
 * More light types (directional, spotlight)
+* Shadows
 * Lights in Hierarchy
 * A lot of bug fixes
 * Some optimizations
