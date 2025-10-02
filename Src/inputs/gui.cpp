@@ -221,7 +221,7 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
             }
         }
 
-        const char* meshTypes[] = { "Cube", "Pyramid", "Plane", "Sphere", "Torus", "Terrain" };
+        const char* meshTypes[] = { "Cube", "Pyramid", "Plane", "Sphere", "Torus", "Terrain", "Model" };
         ImGui::Combo("Mesh Type", &selectedMeshType, meshTypes, IM_ARRAYSIZE(meshTypes));
     }
 }

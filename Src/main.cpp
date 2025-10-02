@@ -11,6 +11,7 @@
 #include <include/utils/defaults.h>
 #include <include/utils/logging/log.h>
 #include <include/utils/json.h>
+#include <include/geometry/model.h>
 
 #include <nlohmann/json.hpp>
 
@@ -86,6 +87,11 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 			newMesh->useTexture = true;
 			newMesh->texId = noiseMapTexture;
 			break;
+		}
+		case 6: {
+			const auto filePath = IO::Dialog("Model Files\0*.gltf\0All Files\0*.*\0", GetOpenFileNameA);
+			Log("stdInfo", filePath);
+			Model model{(filePath.c_str())};
 		}
 		default:
 			break;
@@ -295,6 +301,7 @@ int main(int argc, char** argv)
 	for (auto script : Script::GetAllScripts()) {
 		script->Start();
 	}
+
 
 	//Main render loop
 	Log("stdInfo", "Starting main gameplay loop");

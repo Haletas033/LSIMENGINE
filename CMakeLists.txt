@@ -49,6 +49,8 @@ add_executable(LSIM
         Src/geometry/mesh.cpp
         include/geometry/primitives.h
         Src/geometry/primitives.cpp
+        include/geometry/model.h
+        Src/geometry/model.cpp
         ${IMGUI_SOURCES}
         ${SCRIPTS_SOURCES}
         include/utils/fileIO.h
