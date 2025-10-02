@@ -33,7 +33,7 @@ std::vector<unsigned char> Model::getData() {
 std::vector<float> Model::getFloats(json accessor) {
     std::vector<float> floatVec;
 
-    const unsigned int buffViewInd = accessor.value("bufferView", 1);
+    const unsigned int buffViewInd = accessor.value("bufferView", 0);
     const unsigned int count = accessor["count"];
     const unsigned int accByteOffset = accessor.value("byteOffset", 0);
     std::string type = accessor["type"];
@@ -218,20 +218,20 @@ void Model::TraverseNode(const unsigned int nextNode, const glm::mat4 &matrix) {
 
     if (node.find("mesh") != node.end())
     {
-        auto model = std::make_unique<Mesh>(loadMesh(node["mesh"]));
-        model->position = translation;
+        auto model = loadMesh(node["mesh"]);
+        model.position = translation;
 
         const auto euler = glm::degrees(glm::eulerAngles(rotation));
-        model->rotation = glm::vec3(euler.z, euler.y, euler.x); //Flip rotation
-        model->scale = scale;
-        scene.meshes.push_back(std::move(model));
+        model.rotation = glm::vec3(euler.z, euler.y, euler.x); //Flip rotation
+        model.scale = scale;
+        meshes.push_back(model);
 
     }
 
     if (node.find("children") != node.end())
     {
-        for (unsigned int i = 0; i < node["children"].size(); i++)
-            TraverseNode(node["children"][i], matNextNode);
+        for (const auto & i : node["children"])
+            TraverseNode(i, matNextNode);
     }
 }
 

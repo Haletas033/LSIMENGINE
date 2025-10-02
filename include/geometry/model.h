@@ -16,8 +16,6 @@ private:
     std::vector<unsigned char> data;
     json JSON;
 
-    std::vector<Mesh> meshes;
-
     std::vector<unsigned char> getData();
     std::vector<float> getFloats(json accessor);
     std::vector<GLuint> getIndices(json accessor);
@@ -34,6 +32,8 @@ private:
 
 
 public:
+    std::vector<Mesh> meshes;
+
     explicit Model(const char* file);
 
     Mesh loadMesh(unsigned int indMesh);

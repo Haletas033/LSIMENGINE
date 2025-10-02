@@ -91,7 +91,11 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 		case 6: {
 			const auto filePath = IO::Dialog("Model Files\0*.gltf\0All Files\0*.*\0", GetOpenFileNameA);
 			Log("stdInfo", filePath);
-			Model model{(filePath.c_str())};
+			const Model model{(filePath.c_str())};
+			for (const auto &mesh : model.meshes) {
+				auto uniqueMesh = std::make_unique<Mesh>(mesh);
+				scene.meshes.push_back(std::move(uniqueMesh));
+			}
 		}
 		default:
 			break;
