@@ -8,7 +8,7 @@
 #include <external/nlohmann/json.hpp>
 #include <include/geometry/mesh.h>
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 
 class Model {
 private:

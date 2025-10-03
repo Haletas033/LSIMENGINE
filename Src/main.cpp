@@ -20,7 +20,7 @@
 
 double mouseX, mouseY;
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 
 json config;
 
