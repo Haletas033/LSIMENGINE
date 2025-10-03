@@ -15,7 +15,12 @@ Model::Model(const char *file) {
     Model::file = file;
     data = getData();
 
-    TraverseNode(0, glm::mat4(1.0f));
+    //Traverse all nodes in the root and their children recursively
+    const unsigned int sceneIndex = JSON.value("scene", 0);
+    json sceneNodes = JSON["scenes"][sceneIndex]["nodes"];
+    for (const auto &nodeIndex : sceneNodes) {
+        TraverseNode(nodeIndex, glm::mat4(1.0f));
+    }
 }
 
 std::vector<unsigned char> Model::getData() {
@@ -122,39 +127,44 @@ std::vector<glm::vec4> Model::groupFloatsVec4(const std::vector<float> &floatVec
     return vectors;
 }
 
-Mesh Model::loadMesh(const unsigned int indMesh) {
-    const unsigned int posAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["POSITION"];
-    const unsigned int normalAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["NORMAL"];
-    const unsigned int texAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["TEXCOORD_0"];
-    const unsigned int indAccInd = JSON["meshes"][indMesh]["primitives"][0]["indices"];
+std::vector<Mesh> Model::loadMesh(const unsigned int indMesh) {
+    std::vector<Mesh> models;
+    json primitives = JSON["meshes"][indMesh]["primitives"];
+    for (unsigned int i = 0; i < primitives.size(); i++) {
+        const unsigned int posAccInd = primitives[i]["attributes"]["POSITION"];
+        const unsigned int normalAccInd = primitives[i]["attributes"]["NORMAL"];
+        const unsigned int texAccInd = primitives[i]["attributes"]["TEXCOORD_0"];
+        const unsigned int indAccInd = primitives[i]["indices"];
 
-    const std::vector<float> posVec = getFloats(JSON["accessors"][posAccInd]);
-    const std::vector<glm::vec3> positions = groupFloatsVec3(posVec);
-    const std::vector<float> normalVec = getFloats(JSON["accessors"][normalAccInd]);
-    const std::vector<glm::vec3> normals = groupFloatsVec3(normalVec);
-    const std::vector<float> texVec = getFloats(JSON["accessors"][texAccInd]);
-    const std::vector<glm::vec2> texUVs = groupFloatsVec2(texVec);
+        const std::vector<float> posVec = getFloats(JSON["accessors"][posAccInd]);
+        const std::vector<glm::vec3> positions = groupFloatsVec3(posVec);
+        const std::vector<float> normalVec = getFloats(JSON["accessors"][normalAccInd]);
+        const std::vector<glm::vec3> normals = groupFloatsVec3(normalVec);
+        const std::vector<float> texVec = getFloats(JSON["accessors"][texAccInd]);
+        const std::vector<glm::vec2> texUVs = groupFloatsVec2(texVec);
 
-    std::vector<float> vertices;
-    std::vector<GLuint> indices = getIndices(JSON["accessors"][indAccInd]);
+        std::vector<float> vertices;
+        std::vector<GLuint> indices = getIndices(JSON["accessors"][indAccInd]);
 
-    for (int i = 0; i < positions.size(); ++i) {
-        vertices.push_back(positions[i].x);
-        vertices.push_back(positions[i].y);
-        vertices.push_back(positions[i].z);
+        for (int j = 0; j < positions.size(); ++j) {
+            vertices.push_back(positions[j].x);
+            vertices.push_back(positions[j].y);
+            vertices.push_back(positions[j].z);
 
-        vertices.push_back(normals[i].x);
-        vertices.push_back(normals[i].y);
-        vertices.push_back(normals[i].z);
+            vertices.push_back(normals[j].x);
+            vertices.push_back(normals[j].y);
+            vertices.push_back(normals[j].z);
 
-        vertices.push_back(texUVs[i].x);
-        vertices.push_back(texUVs[i].y);
+            vertices.push_back(texUVs[j].x);
+            vertices.push_back(texUVs[j].y);
+        }
+
+        Mesh model{vertices, indices};
+        model.name = "Model_" + std::to_string(i);
+        getTextures(model);
+        models.push_back(model);
     }
-
-    Mesh model{vertices, indices};
-    model.name = "Model";
-    getTextures(model);
-    return model;
+    return models;
 }
 
 void Model::TraverseNode(const unsigned int nextNode, const glm::mat4 &matrix) {
@@ -218,14 +228,15 @@ void Model::TraverseNode(const unsigned int nextNode, const glm::mat4 &matrix) {
 
     if (node.find("mesh") != node.end())
     {
-        auto model = loadMesh(node["mesh"]);
-        model.position = translation;
+        auto models = loadMesh(node["mesh"]);
+        for (auto &model : models) {
+            model.position = translation;
 
-        const auto euler = glm::degrees(glm::eulerAngles(rotation));
-        model.rotation = glm::vec3(euler.z, euler.y, euler.x); //Flip rotation
-        model.scale = scale;
-        meshes.push_back(model);
-
+            const auto euler = glm::degrees(glm::eulerAngles(rotation));
+            model.rotation = glm::vec3(euler.z, euler.y, euler.x); //Flip rotation
+            model.scale = scale;
+            meshes.push_back(model);
+        }
     }
 
     if (node.find("children") != node.end())

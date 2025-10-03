@@ -36,7 +36,7 @@ public:
 
     explicit Model(const char* file);
 
-    Mesh loadMesh(unsigned int indMesh);
+    std::vector<Mesh> loadMesh(unsigned int indMesh);
 
 
 };
