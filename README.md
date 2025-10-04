@@ -16,11 +16,15 @@ Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdo
 * A launcher [here](https://github.com/Haletas033/LSIMLAUNCHER)
 
 ## v1.1 Projected Features:
-* Way to build games into `.exe` files
 * More light types (directional, spotlight)
 * Lights in Hierarchy
 * A lot of bug fixes
 * Some optimizations
+* Skyboxes
+* Better Gui
+
+## v1.1 Implemented Features:
+* Model loading
 
 ## Prerequisites (Windows)
 This project requires Git, Cmake, Ninja(or another build system)

@@ -32,6 +32,9 @@ public:
     double lastMouseX = 0.0;
     double lastMouseY = 0.0;
 
+    glm::mat4 view;
+    glm::mat4 projection;
+
     //Default constructor
     Camera() = default;
 
@@ -41,7 +44,7 @@ public:
     static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 
     //Updates and exports the camera matrix to the Vertex Shader
-    void Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float aspect) const;
+    void Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float aspect);
 
     //Handles camera inputs (keyboard and mouse)
     void Inputs(GLFWwindow* window, float deltaTime);
