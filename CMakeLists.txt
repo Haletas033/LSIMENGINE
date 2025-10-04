@@ -30,6 +30,7 @@ set(IMGUI_SOURCES
         include/utils/json.h Src/utils/json.cpp Src/utils/texture.cpp
         include/utils/texture.h
         include/scene/script.h
+        include/utils/meshPicking.h
 )
 add_executable(LSIM
         Src/main.cpp
