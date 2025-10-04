@@ -17,6 +17,7 @@
 
 #include "include/scene/script.h"
 #include "include/utils/texture.h"
+#include "utils/meshPicking.h"
 
 double mouseX, mouseY;
 
@@ -353,6 +354,18 @@ int main(int argc, char** argv)
 		static std::vector currentMeshes = {0};
 		static int selectedMeshType = 0;
 		static int selectedLogLevel = 0;
+
+		static int index = -1;
+
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+			auto viewport = glm::vec4(0.0f, 0.0f, windowWidth, windowHeight);
+			auto rayDir = meshPicking::GetMouseRay(mouseX, mouseY, camera.projection, camera.view, viewport);
+			index = meshPicking::pickMesh(scene.meshes, camera.Position, rayDir);
+		}
+
+		if (index != -1) {
+			currentMeshes = {index};
+		}
 
 
 		if (scene.addMeshSignal) {
