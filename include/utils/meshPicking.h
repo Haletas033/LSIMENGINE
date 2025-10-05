@@ -41,21 +41,38 @@ public:
     }
 
 
-    static bool RayIntersectsSphere(const glm::vec3 &rayOrigin,
+    static bool RayIntersectsBoundingBox(const glm::vec3 &rayOrigin,
                                     const glm::vec3 &rayDir,
-                                    const glm::vec3 &sphereCenter,
-                                    const float sphereRadius,
+                                    const glm::vec3 &center,
+                                    const glm::vec3 &size,
                                     float &outDistance) {
-        const glm::vec3 oc = rayOrigin - sphereCenter;
-        const float b = glm::dot(oc, rayDir);
-        const float c = glm::dot(oc, oc) - sphereRadius * sphereRadius;
-        const float discriminant = b * b - c;
+        const glm::vec3 halfSize(size.x / 2.0f, size.y / 2.0f, size.z / 2.0f);
+        const glm::vec3 min = center - halfSize;
+        const glm::vec3 max = center + halfSize;
 
-        if (discriminant < 0.0f) return false;
+        float tMin = (min.x - rayOrigin.x) / rayDir.x;
+        float tMax = (max.x - rayOrigin.x) / rayDir.x;
+        if (tMin > tMax) std::swap(tMin, tMax);
 
-        outDistance = -b - sqrt(discriminant);
-        if (outDistance < 0.0f) outDistance = -b + sqrt(discriminant);
+        float tyMin = (min.y - rayOrigin.y) / rayDir.y;
+        float tyMax = (max.y - rayOrigin.y) / rayDir.y;
+        if (tyMin > tyMax) std::swap(tyMin, tyMax);
 
+        if ((tMin > tyMax) || (tyMin > tMax)) return false;
+
+        tMin = std::max(tMin, tyMin);
+        tMax = std::min(tMax, tyMax);
+
+        float tzMin = (min.z - rayOrigin.z) / rayDir.z;
+        float tzMax = (max.z - rayOrigin.z) / rayDir.z;
+        if (tzMin > tzMax) std::swap(tzMin, tzMax);
+
+        if ((tMin > tzMax) || (tzMin > tMax)) return false;
+
+        tMin = std::max(tMin, tzMin);
+        tMax = std::min(tMax, tzMax);
+
+        outDistance = tMin >= 0.0f ? tMin : tMax;
         return outDistance >= 0.0f;
     }
 
@@ -69,7 +86,7 @@ public:
          for (int i = 0; i < meshes.size(); ++i) {
              float distance;
 
-             if (RayIntersectsSphere(rayOrigin, rayDir, meshes[i]->position, 1.f, distance)) {
+             if (RayIntersectsBoundingBox(rayOrigin, rayDir, meshes[i]->position, meshes[i]->scale, distance)) {
 
                  if (distance < closetDistance) {
                      selectedIndex = i;
