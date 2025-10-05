@@ -80,15 +80,15 @@ public:
     static int pickMesh(const std::vector<std::unique_ptr<Mesh>> &meshes,
                         const glm::vec3 &rayOrigin,
                         const glm::vec3 &rayDir,
-                        const bool useSetSize = false,
-                        const glm::vec3 &size = glm::vec3(0.0f)) {
+                        const bool useSizeFunc = false,
+                        const std::function<glm::vec3(Mesh*)> &sizeFunc = nullptr) {
         int selectedIndex = -1;
         float closetDistance = std::numeric_limits<float>::max();
 
          for (int i = 0; i < meshes.size(); ++i) {
              float distance;
 
-             if (RayIntersectsBoundingBox(rayOrigin, rayDir, meshes[i]->position, useSetSize ? size : meshes[i]->scale, distance)) {
+             if (RayIntersectsBoundingBox(rayOrigin, rayDir, meshes[i]->position, useSizeFunc ? sizeFunc(meshes[i].get()) : meshes[i]->scale, distance)) {
 
                  if (distance < closetDistance) {
                      selectedIndex = i;
