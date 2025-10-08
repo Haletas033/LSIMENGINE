@@ -355,16 +355,10 @@ int main(int argc, char** argv)
 		static int selectedMeshType = 0;
 		static int selectedLogLevel = 0;
 
-		static int index = -1;
-
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
 			auto viewport = glm::vec4(0.0f, 0.0f, windowWidth, windowHeight);
 			auto rayDir = meshPicking::GetMouseRay(mouseX, mouseY, camera.projection, camera.view, viewport);
-			index = meshPicking::pickMesh(scene.meshes, camera.Position, rayDir);
-		}
-
-		if (index != -1) {
-			currentMeshes = {index};
+			lastClickMesh = meshPicking::pickMesh(scene.meshes, camera.Position, rayDir);
 		}
 
 
