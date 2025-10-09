@@ -77,7 +77,7 @@ public:
     }
 
 
-    static int pickMesh(const std::vector<std::unique_ptr<Mesh>> &meshes,
+    static int pickMesh(const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes,
                         const glm::vec3 &rayOrigin,
                         const glm::vec3 &rayDir,
                         const bool useSizeFunc = false,
@@ -88,7 +88,7 @@ public:
          for (int i = 0; i < meshes.size(); ++i) {
              float distance;
 
-             if (RayIntersectsBoundingBox(rayOrigin, rayDir, meshes[i]->position, useSizeFunc ? sizeFunc(meshes[i].get()) : meshes[i]->scale, distance)) {
+             if (RayIntersectsBoundingBox(rayOrigin, rayDir, meshes[i][0]->position, useSizeFunc ? sizeFunc(meshes[i][0].get()) : meshes[i][0]->scale, distance)) {
 
                  if (distance < closetDistance) {
                      selectedIndex = i;

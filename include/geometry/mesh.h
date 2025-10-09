@@ -48,7 +48,7 @@ public:
     Mesh(std::vector<GLfloat>& vertices, std::vector<GLuint>& indices);
     Mesh() = default;
 
-    void Draw(Shader& shader, Camera& camera);
+    void Draw(::Shader &shader, ::Camera &camera, const glm::mat4 &finalMatrix);
 
     void setupBuffers();
 

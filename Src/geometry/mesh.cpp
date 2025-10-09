@@ -1,5 +1,8 @@
 #include "../../include/geometry/mesh.h"
 
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+
 
 // Constructor
 Mesh::Mesh(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices) {
@@ -34,11 +37,11 @@ void Mesh::ApplyTransformations() {
     modelMatrix = glm::scale(modelMatrix, scale);
 }
 
-void Mesh::Draw(Shader& shader, Camera& camera) {
+void Mesh::Draw(Shader& shader, Camera& camera, const glm::mat4 &finalMatrix) {
     GLuint modelLoc = glGetUniformLocation(shader.ID, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(finalMatrix));
     GLuint normalLoc = glGetUniformLocation(shader.ID, "normalMatrix");
-    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(finalMatrix)));
     glUniformMatrix3fv(normalLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
 

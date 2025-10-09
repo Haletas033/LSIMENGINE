@@ -24,7 +24,7 @@ public:
 
     static void InitIO();
     static std::string Dialog(const char* filter, FileDialogFunc func);
-    static void saveToFile(std::ofstream &file, const Scene &scene);
+    static void saveToFile(std::ofstream &file, const std::vector<std::unique_ptr<Mesh>> &meshes, const Scene &scene);
     static Scene loadFromFile(std::ifstream &file, const std::string &workingDir);
 };
 

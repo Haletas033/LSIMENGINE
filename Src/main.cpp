@@ -38,7 +38,7 @@ std::vector<GLfloat> vertices;
 //Indices for vertices order
 std::vector<GLuint> indices;
 
-std::vector<std::unique_ptr<Mesh>> meshes;
+std::vector<std::vector<std::unique_ptr<Mesh>>> meshes;
 
 std::vector<Logger> logs;
 
@@ -93,10 +93,15 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 			const auto filePath = IO::Dialog("Model Files\0*.gltf\0All Files\0*.*\0", GetOpenFileNameA);
 			Log("stdInfo", filePath);
 			const Model model{(filePath.c_str())};
+
+			std::vector<std::unique_ptr<Mesh>> meshes;
+
 			for (const auto &mesh : model.meshes) {
 				auto uniqueMesh = std::make_unique<Mesh>(mesh);
-				scene.meshes.push_back(std::move(uniqueMesh));
+				meshes.push_back(std::move(uniqueMesh));
 			}
+
+			scene.meshes.push_back(std::move(meshes));
 		}
 		default:
 			break;
@@ -106,7 +111,7 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 		auto* node = new Gui::Node{ newMesh.get(), Gui::root, {} };
 		Gui::root->children.push_back(node);
 
-		scene.meshes.push_back(std::move(newMesh));
+		scene.meshes.push_back({std::move(newMesh)});
 
 		lastClickMesh = scene.meshes.size() - 1;
 	}
@@ -119,14 +124,16 @@ void DeleteMesh(Scene &scene, std::vector<int>& currentMeshes, int &lastClickMes
 
 	std::sort(currentMeshes.begin(), currentMeshes.end());
 	std::reverse(currentMeshes.begin(), currentMeshes.end());
-	for (const int mesh : currentMeshes) {
-		const Mesh* meshToDelete = scene.meshes[mesh].get();
+	for (const int object : currentMeshes) {
+		for (const auto &mesh : scene.meshes[object]) {
+			const Mesh* meshToDelete = mesh.get();
 
-		if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete)) {
-			Gui::DeleteNode(nodeToDelete); // This handles reparenting children
+			if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete)) {
+				Gui::DeleteNode(nodeToDelete); // This handles reparenting children
+			}
 		}
 
-		scene.meshes.erase(scene.meshes.begin() + mesh);
+		scene.meshes.erase(scene.meshes.begin() + object);
 	}
 	currentMeshes.clear();
 	if (lastClickMesh > scene.meshes.size() -1)
@@ -263,9 +270,9 @@ int main(int argc, char** argv)
 
 	Gui::Initialize(window);
 
-	meshes.push_back(std::make_unique<Mesh>(primitives::GenerateCube(1)));
-	meshes.back()->name = "First Cube";
-	auto* node = new Gui::Node{ meshes.back().get(), Gui::root, {} };
+	meshes.push_back({std::make_unique<Mesh>(primitives::GenerateCube(1))});
+	meshes.back()[0]->name = "First Cube";
+	auto* node = new Gui::Node{ meshes.back()[0].get(), Gui::root, {} };
 	Gui::root->children.push_back(node);
 	Log("stdInfo", "Successfully created the default \"First Cube\"");
 
@@ -400,19 +407,23 @@ int main(int argc, char** argv)
 			#endif
 		}
 
-		//Draw meshes
+		//Draw all meshes
 		if (!scene.meshes.empty()) {
-			for (auto& meshPtr : scene.meshes) {
-				Mesh& mesh = *meshPtr;
+			for (auto& objectPtr : scene.meshes) {
+				glm::mat4 finalMatrix = objectPtr[0]->modelMatrix;
 
-				GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
-				GLint useNormalMapLoc = glGetUniformLocation(shaderProgram.ID, "useNormalMap");
-				glUniform1i(useTexLoc, mesh.useTexture);
-				glUniform1i(useNormalMapLoc, mesh.useNormalMap);
+				for (auto& meshPtr : objectPtr) {
+					Mesh& mesh = *meshPtr;
 
-				glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
+					GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
+					GLint useNormalMapLoc = glGetUniformLocation(shaderProgram.ID, "useNormalMap");
+					glUniform1i(useTexLoc, mesh.useTexture);
+					glUniform1i(useNormalMapLoc, mesh.useNormalMap);
 
-				mesh.Draw(shaderProgram, camera);
+					glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
+
+					mesh.Draw(shaderProgram, camera, finalMatrix * meshPtr->modelMatrix);
+				}
 			}
 		}
 
@@ -450,10 +461,10 @@ int main(int argc, char** argv)
 		}
 
 		//Update every mesh
-		for (const auto &mesh : scene.meshes) {
-			mesh.get()->ApplyTransformations();
+		for (const auto &object : scene.meshes) {
+			for (const auto &mesh : object)
+				mesh.get()->ApplyTransformations();
 		}
-
 
 		//Update every light
 		for (auto &light : scene.lights) {

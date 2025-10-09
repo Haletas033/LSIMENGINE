@@ -40,7 +40,8 @@ struct Scene {
         }
     };
 
-    std::vector<std::unique_ptr<Mesh>> meshes;
+
+    std::vector<std::vector<std::unique_ptr<Mesh>>> meshes;
     std::vector<std::unique_ptr<InstancedMesh>> instancedMeshes;
     std::vector<Light> lights;
 
@@ -55,8 +56,8 @@ struct Scene {
     Scene() = default;
 
     // Move constructor
-    Scene(std::vector<std::unique_ptr<Mesh>>&& m, std::vector<Light>&& l)
-        : meshes(std::move(m)), lights(std::move(l)) {}
+    Scene(std::vector<std::vector<std::unique_ptr<Mesh>>>&& m, std::vector<Light>&& l)
+    : meshes(std::move(m)), lights(std::move(l)) {}
 
     // Move assignment
     Scene& operator=(Scene&& other) noexcept {

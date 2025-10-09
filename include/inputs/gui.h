@@ -37,7 +37,7 @@ public:
 
     static void CleanUp();
 
-    static void Transform(const std::string &workingDir, const std::vector<std::unique_ptr<Mesh>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
+    static void Transform(const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
 
     static void Lighting(std::vector<Light> &lights, int &currentLight);
 
@@ -45,7 +45,7 @@ public:
 
     static void Console(int &selectedLogLevel, const std::vector<Logger> &logs);
 
-    static void DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_ptr<Mesh>>& meshes);
+    static void DrawNode(Node *node, int &clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes);
 
     static void DeleteNode(Node *node);
 
@@ -57,7 +57,7 @@ public:
 
     static Node *FindNodeByMeshID(Node *node, uint16_t meshID);
 
-    static int Hierarchy(const std::vector<std::unique_ptr<Mesh>>& meshes);
+    static int Hierarchy(const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes);
 
 
 };

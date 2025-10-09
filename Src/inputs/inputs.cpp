@@ -84,41 +84,41 @@ void Inputs::MeshInputs(GLFWwindow* window, const Scene &scene,
 
     if (yawDeg >= -45 && yawDeg <= 45) {
         // Facing left relative to word view
-        cameraForward = &(scene.meshes[currentMesh].get()->*currentTransform).x;
-        cameraSide = &(scene.meshes[currentMesh].get()->*currentTransform).z;
+        cameraForward = &(scene.meshes[currentMesh][0].get()->*currentTransform).x;
+        cameraSide = &(scene.meshes[currentMesh][0].get()->*currentTransform).z;
         positiveX = true;
         positiveZ = false;
     }
     else if (yawDeg > 45 && yawDeg <= 135) {
         // Facing backwards relative to world view
-        cameraForward = &(scene.meshes[currentMesh].get()->*currentTransform).z;
-        cameraSide = &(scene.meshes[currentMesh].get()->*currentTransform).x;
+        cameraForward = &(scene.meshes[currentMesh][0].get()->*currentTransform).z;
+        cameraSide = &(scene.meshes[currentMesh][0].get()->*currentTransform).x;
         positiveX = false;
         positiveZ = false;
     }
     else if (yawDeg > 135 || yawDeg <= -135) {
         // Facing right relative to world view
-        cameraForward = &(scene.meshes[currentMesh].get()->*currentTransform).x;
-        cameraSide = &(scene.meshes[currentMesh].get()->*currentTransform).z;
+        cameraForward = &(scene.meshes[currentMesh][0].get()->*currentTransform).x;
+        cameraSide = &(scene.meshes[currentMesh][0].get()->*currentTransform).z;
         positiveX = false;
         positiveZ = true;
     }
     else {
         // Facing forward relative to world view
-        cameraForward = &(scene.meshes[currentMesh].get()->*currentTransform).z;
-        cameraSide = &(scene.meshes[currentMesh].get()->*currentTransform).x;
+        cameraForward = &(scene.meshes[currentMesh][0].get()->*currentTransform).z;
+        cameraSide = &(scene.meshes[currentMesh][0].get()->*currentTransform).x;
         positiveX = true;
         positiveZ = true;
     }
 
-    float &cameraUp = (scene.meshes[currentMesh].get()->*currentTransform).y;
+    float &cameraUp = (scene.meshes[currentMesh][0].get()->*currentTransform).y;
 
     if (currentTransform == &Mesh::scale) {positiveX = !positiveX; positiveZ = !positiveZ;} // Flip for scale
     if (currentTransform == &Mesh::rotation) {
         const auto tmp = cameraSide; cameraSide = cameraForward; cameraForward = tmp; // Flip for rotation
-        if (cameraForward == &(scene.meshes[currentMesh].get()->*currentTransform).z)
+        if (cameraForward == &(scene.meshes[currentMesh][0].get()->*currentTransform).z)
             positiveZ = !positiveZ;
-        if (cameraSide == &(scene.meshes[currentMesh].get()->*currentTransform).z)
+        if (cameraSide == &(scene.meshes[currentMesh][0].get()->*currentTransform).z)
             positiveX = !positiveX;
     }
 
@@ -189,7 +189,7 @@ void Inputs::IOInputs(GLFWwindow *window, Scene &scene, const std::string & work
     if (isDown(GLFW_KEY_O, true, window)) {
         std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetSaveFileNameA);
         if (std::ofstream file(fileName, std::ios::out | std::ios::binary); file.is_open()) {
-            IO::saveToFile(file, scene);
+            IO::saveToFile(file, meshes, scene);
         }
     }
 
@@ -201,7 +201,7 @@ void Inputs::IOInputs(GLFWwindow *window, Scene &scene, const std::string & work
     }
 }
 
-void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::string &workingDir,
+void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::vector<std::unique_ptr<Mesh>> &meshes, const std::string &workingDir,
     const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
     if (isDown(GLFW_KEY_M, true, window)) {
         currentMode = meshMode;
@@ -248,7 +248,7 @@ void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::string &w
         }
     }
 
-    IOInputs(window, scene, workingDir);
+    IOInputs(window, scene, workingDir, meshes);
 }
 
 

@@ -51,13 +51,13 @@ void Gui::CleanUp() {
     ImGui::DestroyContext();
 }
 
-void Gui::Transform(const std::string &workingDir, const std::vector<std::unique_ptr<Mesh>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
+void Gui::Transform(const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
 
             Mesh* refMesh = nullptr;
             if (!currentMeshes.empty()){
-                refMesh = meshes[currentMeshes[0]].get();
+                refMesh = meshes[currentMeshes[0]][0].get();
             }
 
             if (refMesh){
@@ -76,30 +76,30 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
                 }
     
                 if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
-                    for (const int mesh : currentMeshes) meshes[mesh].get()->name = nameBuffer;
+                    for (const int mesh : currentMeshes) meshes[mesh][0].get()->name = nameBuffer;
                 }
     
                 if (ImGui::InputFloat3("Position", glm::value_ptr(position))) {
                     for (int idx : currentMeshes) {
-                        meshes[idx]->position = position;
+                        meshes[idx][0]->position = position;
                     }
                 }
                 if (ImGui::InputFloat3("Rotation", glm::value_ptr(rotation))) {
                     for (int idx : currentMeshes) {
-                        meshes[idx]->rotation = rotation;
+                        meshes[idx][0]->rotation = rotation;
                     }
                 }
     
                 if (uniformScaleLock) {
                     if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
                         for (int idx : currentMeshes) {
-                            meshes[idx]->scale = glm::vec3(uniformScale);
+                            meshes[idx][0]->scale = glm::vec3(uniformScale);
                         }
                     }
                 } else {
                     if (ImGui::InputFloat3("Scale", glm::value_ptr(scale))) {
                         for (int idx : currentMeshes) {
-                            meshes[idx]->scale = scale;
+                            meshes[idx][0]->scale = scale;
                         }
                     }
                 }
@@ -112,8 +112,8 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
                 if (!refMesh->useTexture) {
                     if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh->color))) {
                         for (int mesh : currentMeshes) {
-                            meshes[mesh].get()->useTexture = false;
-                            meshes[mesh].get()->color = refMesh->color;
+                            meshes[mesh][0].get()->useTexture = false;
+                            meshes[mesh][0].get()->color = refMesh->color;
                         }
                     }
                 } else {
@@ -130,8 +130,8 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
 
                         unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
                         for (const int mesh : currentMeshes) {
-                            meshes[mesh].get()->texId = texture;
-                            meshes[mesh].get()->texturePath = fileName;
+                            meshes[mesh][0].get()->texId = texture;
+                            meshes[mesh][0].get()->texturePath = fileName;
                         }
                     }
 
@@ -147,8 +147,8 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
 
                         unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
                         for (const int mesh : currentMeshes) {
-                            meshes[mesh].get()->specMapId = texture;
-                            meshes[mesh].get()->specMapPath = fileName;
+                            meshes[mesh][0].get()->specMapId = texture;
+                            meshes[mesh][0].get()->specMapPath = fileName;
                         }
                     }
 
@@ -156,8 +156,8 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
 
                     if (ImGui::Button("Remove Specular Map")) {
                         for (const int mesh : currentMeshes) {
-                            meshes[mesh].get()->specMapId = NULL;
-                            meshes[mesh].get()->specMapPath = "";
+                            meshes[mesh][0].get()->specMapId = NULL;
+                            meshes[mesh][0].get()->specMapPath = "";
                         }
                     }
 
@@ -173,9 +173,9 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
 
                         unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
                         for (const int mesh : currentMeshes) {
-                            meshes[mesh].get()->useNormalMap = true;
-                            meshes[mesh].get()->normalMapId = texture;
-                            meshes[mesh].get()->normalMapPath = fileName;
+                            meshes[mesh][0].get()->useNormalMap = true;
+                            meshes[mesh][0].get()->normalMapId = texture;
+                            meshes[mesh][0].get()->normalMapPath = fileName;
                         }
                     }
 
@@ -183,9 +183,9 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
 
                     if (ImGui::Button("Remove Normal Map")) {
                         for (const int mesh : currentMeshes) {
-                            meshes[mesh].get()->useNormalMap = false;
-                            meshes[mesh].get()->normalMapId = NULL;
-                            meshes[mesh].get()->normalMapPath = "";
+                            meshes[mesh][0].get()->useNormalMap = false;
+                            meshes[mesh][0].get()->normalMapId = NULL;
+                            meshes[mesh][0].get()->normalMapPath = "";
                         }
                     }
 
@@ -294,7 +294,7 @@ void Gui::Console(int &selectedLogLevel, const std::vector<Logger> &logs) {
 }
 
 
-void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_ptr<Mesh>>& meshes) {
+void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes) {
     if (!node) return;
 
     auto nodeName = "Game";
@@ -307,7 +307,7 @@ void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_p
         if (node->mesh) {
             int index = -1;
             for (int i = 0; i < meshes.size(); i++) {
-                if (meshes[i].get() == node->mesh) {
+                if (meshes[i][0].get() == node->mesh) {
                     index = i;
                     break;
                 }
@@ -404,7 +404,7 @@ Gui::Node *Gui::FindNodeByMeshID(Node *node, const uint16_t meshID) {
 }
 
 
-int Gui::Hierarchy(const std::vector<std::unique_ptr<Mesh>>& meshes) {
+int Gui::Hierarchy(const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes) {
     int clickedMesh = -1;
     if (root) {
         DrawNode(root, clickedMesh, meshes);
