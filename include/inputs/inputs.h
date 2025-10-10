@@ -18,7 +18,7 @@ private:
 
     void LightInputs(Scene &scene, const int &currentLight, GLFWwindow* window);
 
-    void IOInputs(GLFWwindow *window, Scene &scene, const std::string &workingDir, const std::vector<std::unique_ptr<Mesh>> &meshes);
+    void IOInputs(GLFWwindow *window, Scene &scene, const std::string &workingDir);
 public:
     std::unordered_map<int, bool> canPress;
 
@@ -37,8 +37,8 @@ public:
 
     static void InitInputs();
 
-    void InputHandler(GLFWwindow* window, Scene &scene, const std::vector<std::unique_ptr<Mesh>> &meshes, const std::string &workingDir,
-    const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
+    void InputHandler(struct ::GLFWwindow *window, ::Scene &scene, const ::std::string &workingDir,
+                      const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
 };
 
 #endif //INPUTS_CLASS_H

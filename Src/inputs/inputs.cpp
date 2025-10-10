@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include "gl/VAO.h"
+#include "gl/VAO.h"
 #include "include/utils/json.h"
 
 extern json config;
@@ -189,7 +191,7 @@ void Inputs::IOInputs(GLFWwindow *window, Scene &scene, const std::string & work
     if (isDown(GLFW_KEY_O, true, window)) {
         std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetSaveFileNameA);
         if (std::ofstream file(fileName, std::ios::out | std::ios::binary); file.is_open()) {
-            IO::saveToFile(file, meshes, scene);
+            IO::saveToFile(file, scene);
         }
     }
 
@@ -201,7 +203,7 @@ void Inputs::IOInputs(GLFWwindow *window, Scene &scene, const std::string & work
     }
 }
 
-void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::vector<std::unique_ptr<Mesh>> &meshes, const std::string &workingDir,
+void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::string &workingDir,
     const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
     if (isDown(GLFW_KEY_M, true, window)) {
         currentMode = meshMode;
@@ -248,7 +250,7 @@ void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::vector<st
         }
     }
 
-    IOInputs(window, scene, workingDir, meshes);
+    IOInputs(window, scene, workingDir);
 }
 
 

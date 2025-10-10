@@ -82,82 +82,83 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
         safeWrite(&meshCount, sizeof(meshCount), "Failed to write mesh count");
 
         uint16_t NextMeshID = 0;
-
-        for (auto& mesh : scene.meshes) {
-            mesh->meshID = NextMeshID;
-            NextMeshID++;
-        }
-
-        for (const auto& mesh : scene.meshes) {
-            int nameLen = mesh->name.size();
-            int verticesLen = mesh->vertices.size();
-            int indicesLen = mesh->indices.size();
-            int texturePathLen = mesh->texturePath.size();
-            int specMapPathLen = mesh->specMapPath.size();
-            int normalMapPathLen = mesh->normalMapPath.size();
-
-            safeWrite(&nameLen, sizeof(nameLen), "Failed to write name length");
-
-            //Write name
-            safeWrite(mesh->name.c_str(), mesh->name.size() * sizeof(char), "Failed to write namee");
-
-            //Write vertices
-            safeWrite(&verticesLen, sizeof(verticesLen), "Failed to write verticesLen");
-            safeWrite(mesh->vertices.data(), verticesLen * sizeof(mesh->vertices[0]), "Failed to write vertices");
-
-            //Write indices
-            safeWrite(&indicesLen, sizeof(indicesLen), "Failed to write indicesLen");
-            safeWrite(mesh->indices.data(), indicesLen * sizeof(mesh->indices[0]), "Failed to write indices");
-
-            //Write useTexture
-            safeWrite(&mesh->useTexture, sizeof(mesh->useTexture), "Failed to write useTexture");
-
-            //Write useNormalMap
-            safeWrite(&mesh->useNormalMap, sizeof(mesh->useNormalMap), "Failed to write useNormalMap");
-
-            //Write texturePath
-            safeWrite(&texturePathLen, sizeof(texturePathLen), "Failed to write texturePathLen");
-            safeWrite(mesh->texturePath.data(), texturePathLen * sizeof(char), "Failed to write texturePath");
-
-            //Write specMapPath
-            safeWrite(&specMapPathLen, sizeof(specMapPathLen), "Failed to write specMapPathLen");
-            safeWrite(mesh->specMapPath.data(), specMapPathLen * sizeof(char), "Failed to write specMapPath");
-
-            //Write normalMapPath
-            safeWrite(&normalMapPathLen, sizeof(normalMapPathLen), "Failed to write normalMapPathLen");
-            safeWrite(mesh->normalMapPath.data(), normalMapPathLen * sizeof(char), "Failed to write normalMapPath");
-
-            //Write color
-            safeWrite(&mesh->color, sizeof(mesh->color), "Failed to write colour");
-
-            //Write meshID
-            safeWrite(&mesh->meshID, sizeof(mesh->meshID), "Failed to write meshID");
-
-            //Write the meshID of the parent node
-            uint16_t parentID = -1;
-            if (const Gui::Node* node = Gui::FindNodeByMesh(Gui::root, mesh.get());
-                node->parent && node->parent != Gui::root) {
-                parentID = node->parent->mesh->meshID;
+        for (auto &object : scene.meshes) {
+            for (auto& mesh : object) {
+                mesh->meshID = NextMeshID;
+                NextMeshID++;
             }
 
-            safeWrite(&parentID, sizeof(parentID), "Failed to write parentID");
+            for (const auto& mesh : object) {
+                int nameLen = mesh->name.size();
+                int verticesLen = mesh->vertices.size();
+                int indicesLen = mesh->indices.size();
+                int texturePathLen = mesh->texturePath.size();
+                int specMapPathLen = mesh->specMapPath.size();
+                int normalMapPathLen = mesh->normalMapPath.size();
 
-            //Write the transformation matrix
-            safeWrite(&mesh->position, sizeof(mesh->position), "Failed to write position");
-            safeWrite(&mesh->rotation, sizeof(mesh->rotation), "Failed to write rotation");
-            safeWrite(&mesh->scale, sizeof(mesh->scale), "Failed to write scale");
+                safeWrite(&nameLen, sizeof(nameLen), "Failed to write name length");
 
-            //Write the model matrix
-            safeWrite(&mesh->modelMatrix, sizeof(mesh->modelMatrix), "Failed to write model matrix");
-        }
+                //Write name
+                safeWrite(mesh->name.c_str(), mesh->name.size() * sizeof(char), "Failed to write namee");
 
-        const int lightCount = scene.lights.size();
-        safeWrite(&lightCount, sizeof(lightCount), "Failed to write lightCount");
+                //Write vertices
+                safeWrite(&verticesLen, sizeof(verticesLen), "Failed to write verticesLen");
+                safeWrite(mesh->vertices.data(), verticesLen * sizeof(mesh->vertices[0]), "Failed to write vertices");
 
-        for (Light light : scene.lights) {
-            safeWrite(&light.lightPos, sizeof(light.lightPos), "Failed to write light position");
-            safeWrite(&light.lightColor, sizeof(light.lightColor), "Failed to write light colour");
-            safeWrite(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to write attenuation scale");
+                //Write indices
+                safeWrite(&indicesLen, sizeof(indicesLen), "Failed to write indicesLen");
+                safeWrite(mesh->indices.data(), indicesLen * sizeof(mesh->indices[0]), "Failed to write indices");
+
+                //Write useTexture
+                safeWrite(&mesh->useTexture, sizeof(mesh->useTexture), "Failed to write useTexture");
+
+                //Write useNormalMap
+                safeWrite(&mesh->useNormalMap, sizeof(mesh->useNormalMap), "Failed to write useNormalMap");
+
+                //Write texturePath
+                safeWrite(&texturePathLen, sizeof(texturePathLen), "Failed to write texturePathLen");
+                safeWrite(mesh->texturePath.data(), texturePathLen * sizeof(char), "Failed to write texturePath");
+
+                //Write specMapPath
+                safeWrite(&specMapPathLen, sizeof(specMapPathLen), "Failed to write specMapPathLen");
+                safeWrite(mesh->specMapPath.data(), specMapPathLen * sizeof(char), "Failed to write specMapPath");
+
+                //Write normalMapPath
+                safeWrite(&normalMapPathLen, sizeof(normalMapPathLen), "Failed to write normalMapPathLen");
+                safeWrite(mesh->normalMapPath.data(), normalMapPathLen * sizeof(char), "Failed to write normalMapPath");
+
+                //Write color
+                safeWrite(&mesh->color, sizeof(mesh->color), "Failed to write colour");
+
+                //Write meshID
+                safeWrite(&mesh->meshID, sizeof(mesh->meshID), "Failed to write meshID");
+
+                //Write the meshID of the parent node
+                uint16_t parentID = -1;
+                if (const Gui::Node* node = Gui::FindNodeByMesh(Gui::root, mesh.get());
+                    node->parent && node->parent != Gui::root) {
+                    parentID = node->parent->mesh->meshID;
+                    }
+
+                safeWrite(&parentID, sizeof(parentID), "Failed to write parentID");
+
+                //Write the transformation matrix
+                safeWrite(&mesh->position, sizeof(mesh->position), "Failed to write position");
+                safeWrite(&mesh->rotation, sizeof(mesh->rotation), "Failed to write rotation");
+                safeWrite(&mesh->scale, sizeof(mesh->scale), "Failed to write scale");
+
+                //Write the model matrix
+                safeWrite(&mesh->modelMatrix, sizeof(mesh->modelMatrix), "Failed to write model matrix");
+            }
+
+            const int lightCount = scene.lights.size();
+            safeWrite(&lightCount, sizeof(lightCount), "Failed to write lightCount");
+
+            for (Light light : scene.lights) {
+                safeWrite(&light.lightPos, sizeof(light.lightPos), "Failed to write light position");
+                safeWrite(&light.lightColor, sizeof(light.lightColor), "Failed to write light colour");
+                safeWrite(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to write attenuation scale");
+            }
         }
     } catch (std::ios_base::failure &e) {
         Log("stdError", e.what());
@@ -193,6 +194,7 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
 
         if (version != engineDefaults.version)
             throw std::ios_base::failure("Version mismatch");
+
 
         int meshCount;
         safeRead(&meshCount, sizeof(meshCount), "Failed to read mesh count");
@@ -306,13 +308,20 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
         }
     } catch (std::ios_base::failure &e) {
         Log("stdError", e.what());
-        return Scene{std::vector<std::unique_ptr<Mesh>>{}, std::vector<Light>{}};
+        return Scene{
+            std::vector<std::vector<std::unique_ptr<Mesh>>>{},
+            std::vector<Light>{}
+        };
+
     }
 
     Log("stdInfo", "Successfully read file");
     std::cout << std::endl;
 
-    return Scene {std::move(meshes), std::move(lights)};
+    std::vector<std::vector<std::unique_ptr<Mesh>>> objects;
+    objects.push_back(std::move(meshes));
+    return Scene{ std::move(objects), std::move(lights) };
+
 }
 
 

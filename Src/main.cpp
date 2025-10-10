@@ -111,7 +111,8 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 		auto* node = new Gui::Node{ newMesh.get(), Gui::root, {} };
 		Gui::root->children.push_back(node);
 
-		scene.meshes.push_back({std::move(newMesh)});
+		scene.meshes.push_back(std::vector<std::unique_ptr<Mesh>>());
+		scene.meshes.back().push_back(std::move(newMesh));
 
 		lastClickMesh = scene.meshes.size() - 1;
 	}
@@ -270,7 +271,9 @@ int main(int argc, char** argv)
 
 	Gui::Initialize(window);
 
-	meshes.push_back({std::make_unique<Mesh>(primitives::GenerateCube(1))});
+	meshes.emplace_back();
+	meshes.back().push_back(std::make_unique<Mesh>(primitives::GenerateCube(1)));
+
 	meshes.back()[0]->name = "First Cube";
 	auto* node = new Gui::Node{ meshes.back()[0].get(), Gui::root, {} };
 	Gui::root->children.push_back(node);
@@ -296,7 +299,7 @@ int main(int argc, char** argv)
 	int lastClickMesh = -1;
 	int currentLight = 0;
 
-	scene = {std::move(meshes), std::move(lights)};
+	scene = Scene{ std::move(meshes), std::move(lights) };
 	Log("stdInfo", "Successfully moved meshes and lights into the main scene");
 
 	if (!workingDir.empty()) {
@@ -421,8 +424,8 @@ int main(int argc, char** argv)
 					glUniform1i(useNormalMapLoc, mesh.useNormalMap);
 
 					glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
-
-					mesh.Draw(shaderProgram, camera, finalMatrix * meshPtr->modelMatrix);
+					auto updatedMatrix = meshPtr->modelMatrix == finalMatrix ? finalMatrix : finalMatrix * meshPtr->modelMatrix;
+					mesh.Draw(shaderProgram, camera, finalMatrix + updatedMatrix);
 				}
 			}
 		}
