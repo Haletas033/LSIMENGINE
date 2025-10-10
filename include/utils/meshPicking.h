@@ -85,7 +85,7 @@ public:
         int selectedIndex = -1;
         float closetDistance = std::numeric_limits<float>::max();
 
-         for (int i = 0; i < meshes.size(); ++i) {
+         for (int i = 1; i < meshes.size(); ++i) {
              float distance;
 
              if (RayIntersectsBoundingBox(rayOrigin, rayDir, meshes[i][0]->position, useSizeFunc ? sizeFunc(meshes[i][0].get()) : meshes[i][0]->scale, distance)) {
