@@ -425,7 +425,7 @@ int main(int argc, char** argv)
 
 					glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
 					auto updatedMatrix = meshPtr->modelMatrix == finalMatrix ? finalMatrix : finalMatrix * meshPtr->modelMatrix;
-					mesh.Draw(shaderProgram, camera, finalMatrix + updatedMatrix);
+					mesh.Draw(shaderProgram, camera, updatedMatrix);
 				}
 			}
 		}
