@@ -73,10 +73,9 @@ void main()
 
     vec3 F0_local = F0;
     if(useTexture) {
-        float F0_r = pow(texture(tex1, texCoord).r, 2.2);
-        F0_local = vec3(F0_r);
+        float specMap = pow(texture(tex1, texCoord).r, 2.2);
+        F0_local = mix(F0, vec3(specMap), 1.0);
     }
-
 
 
     vec3 V = normalize(viewPos - crntPos);
@@ -94,7 +93,7 @@ void main()
         float NdotL = max(dot(FragNormal,L),0.0);
 
         //Cook-Torrance
-        vec3 F = fresnelSchlick(max(dot(H,V),0.0), F0);
+        vec3 F = fresnelSchlick(max(dot(H,V),0.0), F0_local);
         float D = DistributionGGX(FragNormal,H,roughness);
         float k = (roughness+1.0)*(roughness+1.0)/8.0;
         float G = GeometrySmith(FragNormal,V,L,k);

@@ -192,7 +192,11 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::vector
 
                     ImGui::Text("Current texture file: %s", fileName.c_str());
                 }
+
+                ImGui::SliderFloat("Roughness", &refMesh->roughness, 0, 1);
+                ImGui::SliderFloat("F0", &refMesh->F0, 0, 1);
             }
+
 
 
             static char meshSelectionBuffer[128] = "";
