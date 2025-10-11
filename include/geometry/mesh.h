@@ -26,6 +26,8 @@ public:
     float roughness = 0.5f;
     float F0 = 0.03;
 
+    //Textures
+
     GLuint texId{};
     std::string texturePath;
 
@@ -34,6 +36,11 @@ public:
 
     GLuint normalMapId{};
     std::string normalMapPath;
+
+    GLuint emissiveMapId{};
+    std::string emissiveMapPath;
+
+    float emissiveIntensity = 1.f;
 
     uint16_t meshID = 0;
 

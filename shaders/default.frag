@@ -14,9 +14,14 @@ struct Light {
 #define MAX_LIGHTS 8
 uniform Light lights[MAX_LIGHTS];
 uniform vec4 meshColor;
-uniform sampler2D tex0;
-uniform sampler2D normal0;
-uniform sampler2D tex1;
+
+uniform sampler2D albedo;
+uniform sampler2D normal;
+uniform sampler2D specular;
+uniform sampler2D emissive;
+
+uniform float emissiveIntensity;
+
 uniform bool useTexture;
 uniform bool useNormalMap;
 uniform vec3 viewPos;
@@ -66,16 +71,21 @@ void main()
     mat3 TBNn = mat3(T,B,N);
 
     //Get Normal information
-    vec3 nMap = useNormalMap ? texture(normal0, texCoord).rgb * 2.0 - 1.0 : vec3(0.0,0.0,1.0);
+    vec3 nMap = useNormalMap ? texture(normal, texCoord).rgb * 2.0 - 1.0 : vec3(0.0,0.0,1.0);
     vec3 FragNormal = normalize(TBNn * nMap);
 
-    vec3 albedo = useTexture ? texture(tex0, texCoord).rgb : meshColor.rgb;
+    vec3 albedo = useTexture ? texture(albedo, texCoord).rgb : meshColor.rgb;
 
     vec3 F0_local = F0;
+    vec3 emissiveMap = vec3(0.0);
     if(useTexture) {
-        float specMap = pow(texture(tex1, texCoord).r, 2.2);
+        float specMap = pow(texture(specular, texCoord).r, 2.2);
         F0_local = mix(F0, vec3(specMap), 1.0);
+
+        emissiveMap = pow(texture(emissive, texCoord).rgb, vec3(2.2)) * emissiveIntensity;
     }
+
+
 
 
     vec3 V = normalize(viewPos - crntPos);
@@ -110,5 +120,5 @@ void main()
         Lo += (diffuse + specular) * radiance * NdotL;
     }
 
-    FragColor = vec4(Lo,1.0);
+    FragColor = vec4(Lo + emissiveMap, 1.0);
 }

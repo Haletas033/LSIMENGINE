@@ -48,23 +48,36 @@ void Mesh::Draw(Shader& shader, Camera& camera, const glm::mat4 &finalMatrix) {
     shader.Activate();
 
     if (useTexture) {
+        //Albedo
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texId);
         //Set the sampler uniform to use texture unit 0
-        GLint texLoc = glGetUniformLocation(shader.ID, "tex0");
+        GLint texLoc = glGetUniformLocation(shader.ID, "albedo");
         glUniform1i(texLoc, 0);
 
+        //Specular
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specMapId);
         //Set the sampler uniform to use texture unit 1
-        GLint specMapLoc = glGetUniformLocation(shader.ID, "tex1");
+        GLint specMapLoc = glGetUniformLocation(shader.ID, "specular");
         glUniform1i(specMapLoc, 1);
 
+        //Normal
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, normalMapId);
         //Set the sampler uniform to use texture unit 2
-        GLint normalMapLoc = glGetUniformLocation(shader.ID, "normal0");
+        GLint normalMapLoc = glGetUniformLocation(shader.ID, "normal");
         glUniform1i(normalMapLoc, 2);
+
+        //Emissive
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, emissiveMapId);
+        //Set the sampler uniform to use texture unit 3
+        GLint emissiveMapLoc = glGetUniformLocation(shader.ID, "emissive");
+        glUniform1i(emissiveMapLoc, 3);
+
+        //Emissive Intensity
+        glUniform1f(glGetUniformLocation(shader.ID, "emissiveIntensity"), emissiveIntensity);
     }
 
     vao.Bind();

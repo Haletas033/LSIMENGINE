@@ -189,9 +189,34 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::vector
                         }
                     }
 
+                    if (ImGui::Button("Add Emissive Map")) {
+                        std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
 
-                    ImGui::Text("Current texture file: %s", fileName.c_str());
+                        //Get just the fileName
+                        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
+
+                        //Copy the file from the file path into the project dir
+                        std::cout << fileName << std::endl;
+                        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
+
+                        unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
+                        for (const int mesh : currentMeshes) {
+                            meshes[mesh][0].get()->emissiveMapId = texture;
+                            meshes[mesh][0].get()->emissiveMapPath = fileName;
+                        }
+                    }
+
+                    ImGui::SameLine();
+
+                    if (ImGui::Button("Remove Emissive Map")) {
+                        for (const int mesh : currentMeshes) {
+                            meshes[mesh][0].get()->emissiveMapId = NULL;
+                            meshes[mesh][0].get()->emissiveMapPath = "";
+                        }
+                    }
                 }
+
+                ImGui::InputFloat("Emissive Intensity", &refMesh->emissiveIntensity);
 
                 ImGui::SliderFloat("Roughness", &refMesh->roughness, 0, 1);
                 ImGui::SliderFloat("F0", &refMesh->F0, 0, 1);
