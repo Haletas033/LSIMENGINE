@@ -175,12 +175,14 @@ void DrawLights(Shader &shader, Defaults defaults, Scene &scene) {
 			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, &scene.lights[i].lightPos[0]);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "linear").c_str()), scene.lights[i].linear);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "quadratic").c_str()), scene.lights[i].quadratic);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "intensity").c_str()), scene.lights[i].intensity);
 		} else {
 			// Clear unused lights
 			glUniform4fv(glGetUniformLocation(shader.ID, (prefix + "lightColor").c_str()), 1, glm::value_ptr(glm::vec4(0.0f)));
 			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "linear").c_str()), 0.0f);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "quadratic").c_str()), 0.0f);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "intensity").c_str()), 0.0f);
 		}
 	}
 }
@@ -424,6 +426,10 @@ int main(int argc, char** argv)
 					glUniform1i(useNormalMapLoc, mesh.useNormalMap);
 
 					glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
+
+					glUniform1f(glGetUniformLocation(shaderProgram.ID, "roughness"), mesh.roughness);
+					glUniform3f(glGetUniformLocation(shaderProgram.ID, "F0"), mesh.F0.x, mesh.F0.y, mesh.F0.z);
+
 					auto updatedMatrix = meshPtr->modelMatrix == finalMatrix ? finalMatrix : finalMatrix * meshPtr->modelMatrix;
 					mesh.Draw(shaderProgram, camera, updatedMatrix);
 				}

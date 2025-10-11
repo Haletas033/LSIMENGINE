@@ -194,6 +194,7 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::vector
                 }
             }
 
+
             static char meshSelectionBuffer[128] = "";
             static int lastClickedMesh = -1;
 
@@ -234,6 +235,8 @@ void Gui::Lighting(std::vector<Light> &lights, int &currentLight) {
             ImGui::InputFloat3("Light Position", glm::value_ptr(lights[currentLight].lightPos));
 
             ImGui::InputFloat("Light Attenuation", &lights[currentLight].attenuationScale);
+
+            ImGui::InputFloat("Light Intensity", &lights[currentLight].intensity);
 
             if (ImGui::InputInt("Current Light", &currentLight))
                 currentLight = std::clamp(currentLight, 0, static_cast<int>(lights.size() - 1));

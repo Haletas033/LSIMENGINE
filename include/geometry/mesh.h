@@ -23,6 +23,9 @@ public:
 
     glm::vec4 color = glm::vec4(1.0f);
 
+    float roughness = 0.5f;
+    glm::vec3 F0 = glm::vec3(0.03);
+
     GLuint texId{};
     std::string texturePath;
 

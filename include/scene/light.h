@@ -15,6 +15,7 @@ public:
     float invScale = 1.0f / (attenuationScale + 0.001f); // Avoid division by zero
     float linear     = 0.09f * invScale;
     float quadratic  = 0.032f * invScale;
+    float intensity = 1.0f;
 };
 
 #endif //LIGHT_H
