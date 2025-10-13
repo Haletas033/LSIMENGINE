@@ -258,7 +258,7 @@ void Model::getTextures(Mesh &model)
         std::string texPath = JSON["images"][i]["uri"];
 
         //Load diffuse texture
-        if (texPath.find("baseColor") != std::string::npos)
+        if (texPath.find("Color") != std::string::npos)
         {
             model.useTexture = true;
             std::cout << fileDirectory + texPath.c_str();
@@ -266,10 +266,17 @@ void Model::getTextures(Mesh &model)
             model.texId = Texture::GetTexId(model.texturePath.c_str());
         }
         //Load specular texture
-        else if (texPath.find("metallicRoughness") != std::string::npos)
+        else if (texPath.find("Roughness") != std::string::npos)
         {
             model.specMapPath = fileDirectory + texPath.c_str();
             model.specMapId = Texture::GetTexId(model.specMapPath.c_str());
+        }
+        //Load normal map
+        else if (texPath.find("Normal") != std::string::npos)
+        {
+            model.normalMapPath = fileDirectory + texPath.c_str();
+            model.normalMapId = Texture::GetTexId(model.normalMapPath.c_str());
+            model.useNormalMap = true;
         }
 
     }

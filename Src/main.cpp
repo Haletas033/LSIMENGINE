@@ -194,6 +194,7 @@ Camera camera {};
 GLFWwindow* window;
 std::string workingDir;
 
+
 int main(int argc, char** argv)
 {
 
@@ -217,6 +218,9 @@ int main(int argc, char** argv)
 	std::string instanceShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/instance.vert", config);
 	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.frag", config);
 	std::string geometryShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.geom", config);
+
+	std::string skyboxVert = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.vert", config);
+	std::string skyboxFrag = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.frag", config);
 
 	loggers["stdInfo"]->SetModule("MAIN");
 	loggers["stdWarn"]->SetModule("MAIN");
@@ -270,6 +274,7 @@ int main(int argc, char** argv)
 	//Generate Shader object using shaders default.vert and default.frag
 	Shader shaderProgram(vertexShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
 	Shader instanceShaderProgram(instanceShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
+	Shader exampleShaderProgram(skyboxVert.c_str(), skyboxFrag.c_str(), true);
 
 	Gui::Initialize(window);
 
@@ -279,6 +284,8 @@ int main(int argc, char** argv)
 	meshes.back()[0]->name = "First Cube";
 	auto* node = new Gui::Node{ meshes.back()[0].get(), Gui::root, {} };
 	Gui::root->children.push_back(node);
+	Log("stdInfo", "Successfully created the default \"First Cube\"");
+
 	Log("stdInfo", "Successfully created the default \"First Cube\"");
 
 	//Enable the Depth Buffer
@@ -411,6 +418,13 @@ int main(int argc, char** argv)
 			}
 			#endif
 		}
+
+		exampleShaderProgram.Activate();
+		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, exampleShaderProgram, "camMatrix", aspect);
+
+		DrawLights(exampleShaderProgram, engineDefaults, scene);
+
+		shaderProgram.Activate();
 
 		//Draw all meshes
 		if (!scene.meshes.empty()) {

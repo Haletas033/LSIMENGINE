@@ -17,10 +17,15 @@ class Shader {
 
         //Constructor that builds the shaderProgram from 3 different shaders
         Shader(const char *vertexFile, const char *fragmentFile, const char *geometryFile, bool useRawString);
+
+        Shader(const char *vertexFile, const char *fragmentFile, bool useRawString);
+
         //Activates the shaderProgram
         void Activate();
         //Deletes the shaderProgram
         void Delete();
+    private:
+        static GLuint CreateShader(const char *shaderSource, int type);
 };
 
 #endif //SHADER_CLASS_H
