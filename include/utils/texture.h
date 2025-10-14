@@ -14,6 +14,7 @@ class Texture {
 public:
     static void InitTextures();
     static unsigned int GetTexId(const char* path);
+    static unsigned int GetCubemapId(std::string faces[6]);
 };
 
 #endif //TEXTURE_H

@@ -321,6 +321,22 @@ int main(int argc, char** argv)
 		}
 	}
 
+	//Create skybox
+	std::unique_ptr<Mesh> skybox = std::make_unique<Mesh>(primitives::GenerateCube(1));
+
+	//Skybox faces
+	std::string faces[6] = {
+		"skybox/right.jpg",
+		"skybox/left.jpg",
+		"skybox/top.jpg",
+		"skybox/bottom.jpg",
+		"skybox/front.jpg",
+		"skybox/back.jpg",
+	};
+
+	//Get skybox texture id
+	const unsigned int skyboxTexId = Texture::GetCubemapId(faces);
+
 	//Run Start() for all scripts
 	for (auto script : Script::GetAllScripts()) {
 		script->Start();
@@ -419,11 +435,6 @@ int main(int argc, char** argv)
 			#endif
 		}
 
-		exampleShaderProgram.Activate();
-		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, exampleShaderProgram, "camMatrix", aspect);
-
-		DrawLights(exampleShaderProgram, engineDefaults, scene);
-
 		shaderProgram.Activate();
 
 		//Draw all meshes
@@ -477,6 +488,28 @@ int main(int argc, char** argv)
 
 			instance->DrawInstances(instanceShaderProgram, camera);
 		}
+
+		//Draw skybox
+		glDepthFunc(GL_LEQUAL);
+
+		exampleShaderProgram.Activate();
+		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, exampleShaderProgram, "camMatrix", aspect);
+
+		DrawLights(exampleShaderProgram, engineDefaults, scene);
+
+		auto view = glm::mat4(1.0f);
+		auto projection = glm::mat4(1.0f);
+		view = glm::mat4(glm::mat3(glm::lookAt(camera.Position, camera.Position + camera.Orientation, camera.Up)));
+		projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
+		glUniformMatrix4fv(glGetUniformLocation(exampleShaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(exampleShaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexId);
+		glUniform1i(glGetUniformLocation(exampleShaderProgram.ID, "skybox"), 0);
+
+		skybox->Draw(exampleShaderProgram, camera, skybox->modelMatrix);
+
+		glDepthFunc(GL_LESS);
 
 		//Run Update() function for all scripts
 		for (auto script : Script::GetAllScripts()) {
