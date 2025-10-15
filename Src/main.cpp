@@ -274,7 +274,7 @@ int main(int argc, char** argv)
 	//Generate Shader object using shaders default.vert and default.frag
 	Shader shaderProgram(vertexShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
 	Shader instanceShaderProgram(instanceShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
-	Shader exampleShaderProgram(skyboxVert.c_str(), skyboxFrag.c_str(), true);
+	Shader skyboxShaderProgram(skyboxVert.c_str(), skyboxFrag.c_str(), true);
 
 	Gui::Initialize(window);
 
@@ -492,22 +492,22 @@ int main(int argc, char** argv)
 		//Draw skybox
 		glDepthFunc(GL_LEQUAL);
 
-		exampleShaderProgram.Activate();
-		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, exampleShaderProgram, "camMatrix", aspect);
+		skyboxShaderProgram.Activate();
+		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, skyboxShaderProgram, "camMatrix", aspect);
 
-		DrawLights(exampleShaderProgram, engineDefaults, scene);
+		DrawLights(skyboxShaderProgram, engineDefaults, scene);
 
 		auto view = glm::mat4(1.0f);
 		auto projection = glm::mat4(1.0f);
 		view = glm::mat4(glm::mat3(glm::lookAt(camera.Position, camera.Position + camera.Orientation, camera.Up)));
 		projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
-		glUniformMatrix4fv(glGetUniformLocation(exampleShaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(exampleShaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(skyboxShaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(skyboxShaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexId);
-		glUniform1i(glGetUniformLocation(exampleShaderProgram.ID, "skybox"), 0);
+		glUniform1i(glGetUniformLocation(skyboxShaderProgram.ID, "skybox"), 0);
 
-		skybox->Draw(exampleShaderProgram, camera, skybox->modelMatrix);
+		skybox->Draw(skyboxShaderProgram, camera, skybox->modelMatrix);
 
 		glDepthFunc(GL_LESS);
 
