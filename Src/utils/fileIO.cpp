@@ -61,6 +61,27 @@ std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
     return {};
 }
 
+//For directory
+std::string IO::DirectoryDialog() {
+    Log("stdInfo", "Initializing directory dialog");
+    //Initialize OPENFILENAME
+    BROWSEINFOA bi = {nullptr};
+    bi.lpszTitle = "Select Directory";
+    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+
+    LPITEMIDLIST pidl = SHBrowseForFolderA(&bi);
+    if (pidl) {
+        char path[MAX_PATH];
+        if (SHGetPathFromIDListA(pidl, path)) {
+            CoTaskMemFree(pidl);
+            return std::string(path);
+        }
+        CoTaskMemFree(pidl);
+    }
+    Log("stdInfo", "Directory dialog closed without selecting a directory");
+    return {};
+}
+
 
 void IO::saveToFile(std::ofstream &file, const Scene& scene) {
     std::cout << std::endl;

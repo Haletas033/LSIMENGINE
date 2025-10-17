@@ -335,7 +335,7 @@ int main(int argc, char** argv)
 	};
 
 	//Get skybox texture id
-	const unsigned int skyboxTexId = Texture::GetCubemapId(faces);
+	unsigned int skyboxTexId = Texture::GetCubemapId(faces);
 
 	//Run Start() for all scripts
 	for (auto script : Script::GetAllScripts()) {
@@ -547,6 +547,8 @@ int main(int argc, char** argv)
 		Gui::Transform(workingDir, scene.meshes, currentMeshes, selectedMeshType, lastClickMesh);
 
 		Gui::Lighting(scene.lights, currentLight);
+
+		Gui::Scene(skyboxTexId);
 
 		Gui::Debug(mouseX, mouseY);
 

@@ -9,6 +9,7 @@
 #include <utility>
 #include <memory>
 #include <windows.h>
+#include <shlobj.h>
 #include <commdlg.h>
 
 #include <include/utils/logging/log.h>
@@ -24,6 +25,7 @@ public:
 
     static void InitIO();
     static std::string Dialog(const char* filter, FileDialogFunc func);
+    static std::string DirectoryDialog();
     static void saveToFile(std::ofstream &file, const Scene &scene);
     static Scene loadFromFile(std::ifstream &file, const std::string &workingDir);
 };

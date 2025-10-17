@@ -325,6 +325,27 @@ void Gui::Console(int &selectedLogLevel, const std::vector<Logger> &logs) {
     }
 }
 
+void Gui::Scene(unsigned int &skyboxTexId) {
+    if (ImGui::CollapsingHeader("Scene")) {
+        if (ImGui::Button("Set Skybox")) {
+            std::string faces[6];
+
+            const std::string skyBoxDir = IO::DirectoryDialog();
+            std::cout << skyBoxDir;
+
+            //Load faces
+            faces[0] = skyBoxDir + "/right.jpg";
+            faces[1] = skyBoxDir + "/left.jpg";
+            faces[2] = skyBoxDir + "/top.jpg";
+            faces[3] = skyBoxDir + "/bottom.jpg";
+            faces[4] = skyBoxDir + "/front.jpg";
+            faces[5] = skyBoxDir + "/back.jpg";
+
+            skyboxTexId = Texture::GetCubemapId(faces);
+        }
+    }
+}
+
 
 void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes) {
     if (!node) return;
@@ -414,7 +435,6 @@ void Gui::ClearRoot() {
     root->children.clear();
 }
 
-
 Gui::Node* Gui::FindNodeByMesh(Node* node, const Mesh* mesh) {
     if (!node) return nullptr;
     if (node->mesh == mesh) return node;
@@ -435,7 +455,6 @@ Gui::Node *Gui::FindNodeByMeshID(Node *node, const uint16_t meshID) {
     return nullptr;
 }
 
-
 int Gui::Hierarchy(const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes) {
     int clickedMesh = -1;
     if (root) {
@@ -443,5 +462,3 @@ int Gui::Hierarchy(const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes
     }
     return clickedMesh;
 }
-
-
