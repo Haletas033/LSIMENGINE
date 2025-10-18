@@ -4,14 +4,20 @@ in vec2 texCoord;
 in mat3 TBN_out;
 
 struct Light {
+    int lightType;
     vec4 lightColor;
     vec3 lightPos;
+    vec3 lightDir;
     float linear;
     float quadratic;
     float intensity;
+    float spotAngle;
 };
 
-#define MAX_LIGHTS 8
+#define POINT_LIGHT 0
+#define DIRECTIONAL_LIGHT 1
+#define SPOT_LIGHT 2
+
 uniform Light lights[MAX_LIGHTS];
 uniform vec4 meshColor;
 
@@ -85,40 +91,59 @@ void main()
         emissiveMap = pow(texture(emissive, texCoord).rgb, vec3(2.2)) * emissiveIntensity;
     }
 
-
-
-
     vec3 V = normalize(viewPos - crntPos);
 
     vec3 Lo = vec3(0.0);
 
-    for(int i = 0; i < MAX_LIGHTS; ++i)
-    {
-        vec3 L = normalize(lights[i].lightPos - crntPos);
+    for (int i = 0; i < MAX_LIGHTS; ++i){
+        Light light = lights[i];
+
+        if (light.intensity <= 0.0) continue;
+
+        vec3 L;
+        float attenuation = 1.0;
+
+        if (light.lightType == DIRECTIONAL_LIGHT){
+            L = normalize(-light.lightDir);
+        }
+        else {
+            vec3 lightDir = light.lightPos - crntPos;
+            float distance = length(lightDir);
+            L = normalize(lightDir);
+
+            attenuation = 1.0 / (1.0 + light.linear * distance + light.quadratic * (distance * distance));
+
+            if (light.lightType == SPOT_LIGHT){
+                float theta = dot(L, normalize(-light.lightDir));
+                float outerCutoff = cos(light.spotAngle);
+                float innerCutoff = cos(light.spotAngle * 0.9);
+                float intensity = clamp((theta - outerCutoff) / (innerCutoff - outerCutoff), 0.0, 1.0);
+                attenuation *= intensity;
+            }
+        }
+
         vec3 H = normalize(V + L);
-
-        float distance = length(lights[i].lightPos - crntPos);
-        float attenuation = 1.0 / max(1.0 + lights[i].linear * distance + lights[i].quadratic * (distance*distance), 1e-6);
-
-        float NdotL = max(dot(FragNormal,L),0.0);
+        float NdotL = max(dot(FragNormal, L), 0.0);
 
         //Cook-Torrance
-        vec3 F = fresnelSchlick(max(dot(H,V),0.0), F0_local);
-        float D = DistributionGGX(FragNormal,H,roughness);
-        float k = (roughness+1.0)*(roughness+1.0)/8.0;
-        float G = GeometrySmith(FragNormal,V,L,k);
+        vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0_local);
+        float D = DistributionGGX(FragNormal, H, roughness);
+        float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
+        float G = GeometrySmith(FragNormal, V, L, k);
 
         vec3 numerator = D * G * F;
-        float denominator = max(4.0 * max(dot(FragNormal,V),0.0) * NdotL, 1e-6);
+        float denominator = max(4.0 * max(dot(FragNormal, V), 0.0) * NdotL, 1e-6);
         vec3 specular = numerator / denominator;
 
         vec3 kS = F;
         vec3 kD = vec3(1.0) - kS;
         vec3 diffuse = kD * albedo / PI;
 
-        vec3 radiance = (lights[i].lightColor.rgb * attenuation) * lights[i].intensity;
+        vec3 radiance = light.lightColor.rgb * light.intensity * attenuation;
+
         Lo += (diffuse + specular) * radiance * NdotL;
     }
+
 
     FragColor = vec4(Lo + emissiveMap, 1.0);
 }

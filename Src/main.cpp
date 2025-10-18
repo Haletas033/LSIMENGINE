@@ -171,18 +171,25 @@ void DrawLights(Shader &shader, Defaults defaults, Scene &scene) {
 	for (int i = 0; i < defaults.MAX_LIGHTS; ++i) {
 		std::string prefix = "lights[" + std::to_string(i) + "].";
 		if (i < scene.lights.size()) {
+			glUniform1i(glGetUniformLocation(shader.ID, (prefix + "lightType").c_str()), scene.lights[i].lightType);
 			glUniform4fv(glGetUniformLocation(shader.ID, (prefix + "lightColor").c_str()), 1, &scene.lights[i].lightColor[0]);
 			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, &scene.lights[i].lightPos[0]);
+			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightDir").c_str()), 1, &scene.lights[i].lightDir[0]);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "linear").c_str()), scene.lights[i].linear);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "quadratic").c_str()), scene.lights[i].quadratic);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "intensity").c_str()), scene.lights[i].intensity);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "spotAngle").c_str()), scene.lights[i].spotAngle);
 		} else {
 			// Clear unused lights
+			glUniform1i(glGetUniformLocation(shader.ID, (prefix + "lightType").c_str()), 0);
 			glUniform4fv(glGetUniformLocation(shader.ID, (prefix + "lightColor").c_str()), 1, glm::value_ptr(glm::vec4(0.0f)));
 			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
+			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
+			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightDir").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "linear").c_str()), 0.0f);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "quadratic").c_str()), 0.0f);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "intensity").c_str()), 0.0f);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "spotAngle").c_str()), 0.0f);
 		}
 	}
 }
