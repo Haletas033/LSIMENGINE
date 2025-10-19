@@ -99,11 +99,15 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
 
         safeWrite(engineDefaults.version.data(), versionLen * sizeof(char), "Failed to read version");
 
-        const int meshCount = scene.meshes.size();
-        safeWrite(&meshCount, sizeof(meshCount), "Failed to write mesh count");
+        const int objectCount = scene.meshes.size();
+        safeWrite(&objectCount, sizeof(objectCount), "Failed to write object count");
 
         uint16_t NextMeshID = 0;
         for (auto &object : scene.meshes) {
+            //Write meshCount
+            const int meshCount = object.size();
+            safeWrite(&meshCount, sizeof(meshCount), "Failed to write mesh count");
+
             for (auto& mesh : object) {
                 mesh->meshID = NextMeshID;
                 NextMeshID++;
@@ -157,8 +161,8 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
                 //Write the meshID of the parent node
                 uint16_t parentID = -1;
                 if (const Gui::Node* node = Gui::FindNodeByMesh(Gui::root, mesh.get());
-                    node->parent && node->parent != Gui::root) {
-                    parentID = node->parent->mesh->meshID;
+                    node && node->parent && node->parent != Gui::root) {
+                        parentID = node->parent->mesh->meshID;
                     }
 
                 safeWrite(&parentID, sizeof(parentID), "Failed to write parentID");
@@ -171,7 +175,7 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
                 //Write the model matrix
                 safeWrite(&mesh->modelMatrix, sizeof(mesh->modelMatrix), "Failed to write model matrix");
             }
-
+        }
             const int lightCount = scene.lights.size();
             safeWrite(&lightCount, sizeof(lightCount), "Failed to write lightCount");
 
@@ -180,7 +184,7 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
                 safeWrite(&light.lightColor, sizeof(light.lightColor), "Failed to write light colour");
                 safeWrite(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to write attenuation scale");
             }
-        }
+
     } catch (std::ios_base::failure &e) {
         Log("stdError", e.what());
     }
@@ -195,10 +199,8 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
 
     Gui::ClearRoot();
 
-    std::vector<std::unique_ptr<Mesh>> meshes;
+    std::vector<std::vector<std::unique_ptr<Mesh>>> objects;
     std::vector<Light> lights;
-
-
 
     auto safeRead = [&](auto* data, const std::streamsize size, const char* errorMsg) {
         if (!file.read(reinterpret_cast<char*>(data), size)) {
@@ -217,10 +219,11 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
             throw std::ios_base::failure("Version mismatch");
 
 
-        int meshCount;
-        safeRead(&meshCount, sizeof(meshCount), "Failed to read mesh count");
+        int objectCount;
+        safeRead(&objectCount, sizeof(objectCount), "Failed to read mesh count");
 
-        for (int i = 0; i < meshCount; ++i) {
+        for (int i = 0; i < objectCount; ++i) {
+            int meshCount;
             int nameLen;
             int verticesLen;
             int indicesLen;
@@ -228,95 +231,101 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
             int specMapPathLen;
             int normalMapPathLen;
 
-            //Get name length
-            safeRead(&nameLen, sizeof(nameLen), "Failed to read name len");
-            if (nameLen < 0 || nameLen > 1024) {
-                throw std::ios_base::failure("Invalid name length");
+            std::vector<std::unique_ptr<Mesh>> meshes;
+
+            safeRead(&meshCount, sizeof(meshCount), "Failed to read mesh count");
+
+            for (int m = 0; m < meshCount; ++m) {
+                //Get name length
+                safeRead(&nameLen, sizeof(nameLen), "Failed to read name len");
+                if (nameLen < 0 || nameLen > 1024) {
+                    throw std::ios_base::failure("Invalid name length");
+                }
+
+                Mesh mesh;
+
+                mesh.name.resize(nameLen);
+
+                //Read name
+                safeRead(mesh.name.data(), nameLen, "Failed to read name");
+
+                //Get vertices length
+                safeRead(&verticesLen, sizeof(verticesLen), "Failed to read verticesLen");
+                mesh.vertices.resize(verticesLen);
+
+                //Read every vertex
+                safeRead(mesh.vertices.data(), verticesLen * sizeof(GLfloat), "Failed to read vertices");
+
+                //Get indices length
+                safeRead(&indicesLen, sizeof(indicesLen), "Failed to read indicesLen");
+                mesh.indices.resize(indicesLen);
+
+                //Read every index
+                safeRead(mesh.indices.data(), indicesLen * sizeof(GLuint), "Failed to read indices");
+
+                //Read useTexture
+                safeRead(&mesh.useTexture, 1, "Failed to read useTexture");
+
+                //Read useNormalMap
+                safeRead(&mesh.useNormalMap, 1, "Failed to read useNormalMap");
+
+                //Read texturePath
+                safeRead(&texturePathLen, sizeof(texturePathLen), "Failed to read texturePathLen");
+                mesh.texturePath.resize(texturePathLen);
+                safeRead(mesh.texturePath.data(), texturePathLen, "Failed to read texturePathLen");
+
+                //Read specMapPath
+                safeRead(&specMapPathLen, sizeof(specMapPathLen), "Failed to read specMapPathLen");
+                mesh.specMapPath.resize(specMapPathLen);
+                safeRead(mesh.specMapPath.data(), specMapPathLen, "Failed to read specMapPathLen");
+
+                //Read normalMapPath
+                safeRead(&normalMapPathLen, sizeof(normalMapPathLen), "Failed to read normalMapPathLen");
+                mesh.normalMapPath.resize(normalMapPathLen);
+                safeRead(mesh.normalMapPath.data(), normalMapPathLen, "Failed to read normalMapPathLen");
+
+                //Load tex IDs
+                mesh.texId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.texturePath.data()).c_str());
+                mesh.specMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.specMapPath.data()).c_str());
+                mesh.normalMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.normalMapPath.data()).c_str());
+
+                //Read color
+                safeRead(&mesh.color[0], 4 * sizeof(float), "Failed to read colour");
+
+                //Read meshID
+                safeRead(&mesh.meshID, sizeof(mesh.meshID), "Failed to read meshID");
+
+                //Read parentID
+                uint16_t parentID;
+                safeRead(&parentID, sizeof(parentID), "Failed to read parentID");
+
+                //Read Position, Rotation, and Scale
+                safeRead(&mesh.position[0], 3 * sizeof(float), "Failed to read position");
+                safeRead(&mesh.rotation[0], 3 * sizeof(float), "Failed to read rotation");
+                safeRead(&mesh.scale[0], 3 * sizeof(float), "Failed to read scale");
+
+                //Read model matrix
+                safeRead(&mesh.modelMatrix[0][0], 16 * sizeof(float), "Failed to read model matrix");
+
+                mesh.setupBuffers();
+
+                //Recreate mesh hierarchy
+                auto* node = new Gui::Node;
+                auto meshPtr = std::make_unique<Mesh>(mesh);
+                node->mesh = meshPtr.get();
+                Gui::Node* parentNode = Gui::FindNodeByMeshID(Gui::root, parentID);
+                if (!parentNode) parentNode = Gui::root;
+
+                node->parent = parentNode;
+                parentNode->children.push_back(node);
+
+                meshes.push_back(std::move(meshPtr));
             }
-
-            Mesh mesh;
-
-
-            mesh.name.resize(nameLen);
-
-            //Read name
-            safeRead(mesh.name.data(), nameLen, "Failed to read name");
-
-            //Get vertices length
-            safeRead(&verticesLen, sizeof(verticesLen), "Failed to read verticesLen");
-            mesh.vertices.resize(verticesLen);
-
-            //Read every vertex
-            safeRead(mesh.vertices.data(), verticesLen * sizeof(GLfloat), "Failed to read vertices");
-
-            //Get indices length
-            safeRead(&indicesLen, sizeof(indicesLen), "Failed to read indicesLen");
-            mesh.indices.resize(indicesLen);
-
-            //Read every index
-            safeRead(mesh.indices.data(), indicesLen * sizeof(GLuint), "Failed to read indices");
-
-            //Read useTexture
-            safeRead(&mesh.useTexture, 1, "Failed to read useTexture");
-
-            //Read useNormalMap
-            safeRead(&mesh.useNormalMap, 1, "Failed to read useNormalMap");
-
-            //Read texturePath
-            safeRead(&texturePathLen, sizeof(texturePathLen), "Failed to read texturePathLen");
-            mesh.texturePath.resize(texturePathLen);
-            safeRead(mesh.texturePath.data(), texturePathLen, "Failed to read texturePathLen");
-
-            //Read specMapPath
-            safeRead(&specMapPathLen, sizeof(specMapPathLen), "Failed to read specMapPathLen");
-            mesh.specMapPath.resize(specMapPathLen);
-            safeRead(mesh.specMapPath.data(), specMapPathLen, "Failed to read specMapPathLen");
-
-            //Read normalMapPath
-            safeRead(&normalMapPathLen, sizeof(normalMapPathLen), "Failed to read normalMapPathLen");
-            mesh.normalMapPath.resize(normalMapPathLen);
-            safeRead(mesh.normalMapPath.data(), normalMapPathLen, "Failed to read normalMapPathLen");
-
-            //Load tex IDs
-            mesh.texId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.texturePath.data()).c_str());
-            mesh.specMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.specMapPath.data()).c_str());
-            mesh.normalMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.normalMapPath.data()).c_str());
-
-            //Read color
-            safeRead(&mesh.color[0], 4 * sizeof(float), "Failed to read colour");
-
-            //Read meshID
-            safeRead(&mesh.meshID, sizeof(mesh.meshID), "Failed to read meshID");
-
-            //Read parentID
-            uint16_t parentID;
-            safeRead(&parentID, sizeof(parentID), "Failed to read parentID");
-
-            //Read Position, Rotation, and Scale
-            safeRead(&mesh.position[0], 3 * sizeof(float), "Failed to read position");
-            safeRead(&mesh.rotation[0], 3 * sizeof(float), "Failed to read rotation");
-            safeRead(&mesh.scale[0], 3 * sizeof(float), "Failed to read scale");
-
-            //Read model matrix
-            safeRead(&mesh.modelMatrix[0][0], 16 * sizeof(float), "Failed to read model matrix");
-
-            mesh.setupBuffers();
-
-            //Recreate mesh hierarchy
-            auto* node = new Gui::Node;
-            auto meshPtr = std::make_unique<Mesh>(mesh);
-            node->mesh = meshPtr.get();
-            Gui::Node* parentNode = Gui::FindNodeByMeshID(Gui::root, parentID);
-            if (!parentNode) parentNode = Gui::root;
-
-            node->parent = parentNode;
-            parentNode->children.push_back(node);
-
-            meshes.push_back(std::move(meshPtr));
+            objects.push_back(std::move(meshes));
         }
 
         int lightCount;
-        safeRead(&lightCount, sizeof(lightCount), "Failed to read ligth count");
+        safeRead(&lightCount, sizeof(lightCount), "Failed to read light count");
 
         for (int i = 0; i < lightCount; ++i) {
             Light light;
@@ -339,10 +348,7 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
     Log("stdInfo", "Successfully read file");
     std::cout << std::endl;
 
-    std::vector<std::vector<std::unique_ptr<Mesh>>> objects;
-    objects.push_back(std::move(meshes));
     return Scene{ std::move(objects), std::move(lights) };
-
 }
 
 

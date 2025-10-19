@@ -101,6 +101,9 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 				meshes.push_back(std::move(uniqueMesh));
 			}
 
+			auto* node = new Gui::Node{ meshes[0].get(), Gui::root, {} };
+			Gui::root->children.push_back(node);
+
 			scene.meshes.push_back(std::move(meshes));
 		}
 		default:
@@ -113,9 +116,9 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 
 		scene.meshes.push_back(std::vector<std::unique_ptr<Mesh>>());
 		scene.meshes.back().push_back(std::move(newMesh));
-
-		lastClickMesh = scene.meshes.size() - 1;
 	}
+
+	lastClickMesh = scene.meshes.size() - 1;
 
 	Log("stdInfo", "Successfully added mesh");
 }
