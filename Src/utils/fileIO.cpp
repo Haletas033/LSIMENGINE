@@ -87,26 +87,32 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
     std::cout << std::endl;
     Log("stdInfo", "Beginning to write to file");
 
-    auto safeWrite = [&](const auto* data, const std::streamsize size, const char* errorMsg) {
-        if (!file.write(reinterpret_cast<const char*>(data), size)) {
-            throw std::ios_base::failure(errorMsg);
+    const float versionNumeric = std::stof(std::string(engineDefaults.version).substr(1));
+
+    auto safeWrite = [&](const auto* data, const std::streamsize size, const char* errorMsg, const char* addedIn, const char* removedIn = "v0.0") {
+        const float addedInNumeric = std::stof(std::string(addedIn).substr(1));
+        const float removedInNumeric = std::stof(std::string(removedIn).substr(1));
+        if (addedInNumeric <= versionNumeric && (removedInNumeric == 0 || versionNumeric < removedInNumeric)) {
+            if (!file.write(reinterpret_cast<const char*>(data), size)) {
+                throw std::ios_base::failure(errorMsg);
+            }
         }
     };
 
     try {
         const int versionLen = engineDefaults.version.length();
-        safeWrite(&versionLen, sizeof(versionLen), "Failed to read versionLen");
+        safeWrite(&versionLen, sizeof(versionLen), "Failed to read versionLen", "v1.0");
 
-        safeWrite(engineDefaults.version.data(), versionLen * sizeof(char), "Failed to read version");
+        safeWrite(engineDefaults.version.data(), versionLen * sizeof(char), "Failed to read version", "v1.0");
 
         const int objectCount = scene.meshes.size();
-        safeWrite(&objectCount, sizeof(objectCount), "Failed to write object count");
+        safeWrite(&objectCount, sizeof(objectCount), "Failed to write object count", "v1.1");
 
         uint16_t NextMeshID = 0;
         for (auto &object : scene.meshes) {
             //Write meshCount
             const int meshCount = object.size();
-            safeWrite(&meshCount, sizeof(meshCount), "Failed to write mesh count");
+            safeWrite(&meshCount, sizeof(meshCount), "Failed to write mesh count", "v1.0");
 
             for (auto& mesh : object) {
                 mesh->meshID = NextMeshID;
@@ -121,42 +127,42 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
                 int specMapPathLen = mesh->specMapPath.size();
                 int normalMapPathLen = mesh->normalMapPath.size();
 
-                safeWrite(&nameLen, sizeof(nameLen), "Failed to write name length");
+                safeWrite(&nameLen, sizeof(nameLen), "Failed to write name length", "v1.0");
 
                 //Write name
-                safeWrite(mesh->name.c_str(), mesh->name.size() * sizeof(char), "Failed to write namee");
+                safeWrite(mesh->name.c_str(), mesh->name.size() * sizeof(char), "Failed to write namee", "v1.0");
 
                 //Write vertices
-                safeWrite(&verticesLen, sizeof(verticesLen), "Failed to write verticesLen");
-                safeWrite(mesh->vertices.data(), verticesLen * sizeof(mesh->vertices[0]), "Failed to write vertices");
+                safeWrite(&verticesLen, sizeof(verticesLen), "Failed to write verticesLen", "v1.0");
+                safeWrite(mesh->vertices.data(), verticesLen * sizeof(mesh->vertices[0]), "Failed to write vertices", "v1.0");
 
                 //Write indices
-                safeWrite(&indicesLen, sizeof(indicesLen), "Failed to write indicesLen");
-                safeWrite(mesh->indices.data(), indicesLen * sizeof(mesh->indices[0]), "Failed to write indices");
+                safeWrite(&indicesLen, sizeof(indicesLen), "Failed to write indicesLen", "v1.0");
+                safeWrite(mesh->indices.data(), indicesLen * sizeof(mesh->indices[0]), "Failed to write indices", "v1.0");
 
                 //Write useTexture
-                safeWrite(&mesh->useTexture, sizeof(mesh->useTexture), "Failed to write useTexture");
+                safeWrite(&mesh->useTexture, sizeof(mesh->useTexture), "Failed to write useTexture", "v1.0");
 
                 //Write useNormalMap
-                safeWrite(&mesh->useNormalMap, sizeof(mesh->useNormalMap), "Failed to write useNormalMap");
+                safeWrite(&mesh->useNormalMap, sizeof(mesh->useNormalMap), "Failed to write useNormalMap", "v1.0");
 
                 //Write texturePath
-                safeWrite(&texturePathLen, sizeof(texturePathLen), "Failed to write texturePathLen");
-                safeWrite(mesh->texturePath.data(), texturePathLen * sizeof(char), "Failed to write texturePath");
+                safeWrite(&texturePathLen, sizeof(texturePathLen), "Failed to write texturePathLen", "v1.0");
+                safeWrite(mesh->texturePath.data(), texturePathLen * sizeof(char), "Failed to write texturePath", "v1.0");
 
                 //Write specMapPath
-                safeWrite(&specMapPathLen, sizeof(specMapPathLen), "Failed to write specMapPathLen");
-                safeWrite(mesh->specMapPath.data(), specMapPathLen * sizeof(char), "Failed to write specMapPath");
+                safeWrite(&specMapPathLen, sizeof(specMapPathLen), "Failed to write specMapPathLen", "v1.0");
+                safeWrite(mesh->specMapPath.data(), specMapPathLen * sizeof(char), "Failed to write specMapPath", "v1.0");
 
                 //Write normalMapPath
-                safeWrite(&normalMapPathLen, sizeof(normalMapPathLen), "Failed to write normalMapPathLen");
-                safeWrite(mesh->normalMapPath.data(), normalMapPathLen * sizeof(char), "Failed to write normalMapPath");
+                safeWrite(&normalMapPathLen, sizeof(normalMapPathLen), "Failed to write normalMapPathLen", "v1.0");
+                safeWrite(mesh->normalMapPath.data(), normalMapPathLen * sizeof(char), "Failed to write normalMapPath", "v1.0");
 
                 //Write color
-                safeWrite(&mesh->color, sizeof(mesh->color), "Failed to write colour");
+                safeWrite(&mesh->color, sizeof(mesh->color), "Failed to write colour", "v1.0");
 
                 //Write meshID
-                safeWrite(&mesh->meshID, sizeof(mesh->meshID), "Failed to write meshID");
+                safeWrite(&mesh->meshID, sizeof(mesh->meshID), "Failed to write meshID", "v1.0");
 
                 //Write the meshID of the parent node
                 uint16_t parentID = -1;
@@ -165,24 +171,24 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
                         parentID = node->parent->mesh->meshID;
                     }
 
-                safeWrite(&parentID, sizeof(parentID), "Failed to write parentID");
+                safeWrite(&parentID, sizeof(parentID), "Failed to write parentID", "v1.0");
 
                 //Write the transformation matrix
-                safeWrite(&mesh->position, sizeof(mesh->position), "Failed to write position");
-                safeWrite(&mesh->rotation, sizeof(mesh->rotation), "Failed to write rotation");
-                safeWrite(&mesh->scale, sizeof(mesh->scale), "Failed to write scale");
+                safeWrite(&mesh->position, sizeof(mesh->position), "Failed to write position", "v1.0");
+                safeWrite(&mesh->rotation, sizeof(mesh->rotation), "Failed to write rotation", "v1.0");
+                safeWrite(&mesh->scale, sizeof(mesh->scale), "Failed to write scale", "v1.0");
 
                 //Write the model matrix
-                safeWrite(&mesh->modelMatrix, sizeof(mesh->modelMatrix), "Failed to write model matrix");
+                safeWrite(&mesh->modelMatrix, sizeof(mesh->modelMatrix), "Failed to write model matrix", "v1.0");
             }
         }
             const int lightCount = scene.lights.size();
-            safeWrite(&lightCount, sizeof(lightCount), "Failed to write lightCount");
+            safeWrite(&lightCount, sizeof(lightCount), "Failed to write lightCount", "v1.0");
 
             for (Light light : scene.lights) {
-                safeWrite(&light.lightPos, sizeof(light.lightPos), "Failed to write light position");
-                safeWrite(&light.lightColor, sizeof(light.lightColor), "Failed to write light colour");
-                safeWrite(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to write attenuation scale");
+                safeWrite(&light.lightPos, sizeof(light.lightPos), "Failed to write light position", "v1.0");
+                safeWrite(&light.lightColor, sizeof(light.lightColor), "Failed to write light colour", "v1.0");
+                safeWrite(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to write attenuation scale", "v1.0");
             }
 
     } catch (std::ios_base::failure &e) {
