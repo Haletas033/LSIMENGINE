@@ -156,6 +156,12 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
                 //Write color
                 safeWrite(&mesh->color, sizeof(mesh->color), "Failed to write colour");
 
+                //Write roughness
+                safeWrite(&mesh->roughness, sizeof(float), "Failed to write roughness");
+
+                //Write F0
+                safeWrite(&mesh->F0, sizeof(float), "Failed to write F0");
+
                 //Write meshID
                 safeWrite(&mesh->meshID, sizeof(mesh->meshID), "Failed to write meshID");
 
@@ -304,6 +310,12 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
 
                 //Read color
                 safeRead(&mesh.color[0], 4 * sizeof(float), "Failed to read colour", "v1.0");
+
+                //Read roughness
+                safeRead(&mesh.roughness, sizeof(float), "Failed to read roughness", "v1.1");
+
+                //Read F0
+                safeRead(&mesh.F0, sizeof(float), "Failed to read F0", "v1.1");
 
                 //Read meshID
                 safeRead(&mesh.meshID, sizeof(mesh.meshID), "Failed to read meshID", "v1.0");
