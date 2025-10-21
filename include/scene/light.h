@@ -27,7 +27,7 @@ public:
     float quadratic  = 0.032f * invScale;
     float intensity = 1.0f;
 
-    float spotAngle = 20;
+    float spotAngle = 0.5;
 };
 
 #endif //LIGHT_H

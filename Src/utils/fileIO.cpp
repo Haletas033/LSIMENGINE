@@ -181,9 +181,13 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
             safeWrite(&lightCount, sizeof(lightCount), "Failed to write lightCount");
 
             for (Light light : scene.lights) {
+                safeWrite(&light.lightType, sizeof(light.lightType), "Failed to write light type");
                 safeWrite(&light.lightPos, sizeof(light.lightPos), "Failed to write light position");
                 safeWrite(&light.lightColor, sizeof(light.lightColor), "Failed to write light colour");
+                safeWrite(&light.lightDir, sizeof(light.lightDir), "Failed to write light direction");
+                safeWrite(&light.spotAngle, sizeof(light.spotAngle), "Failed to write spotlight angle");
                 safeWrite(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to write attenuation scale");
+                safeWrite(&light.intensity, sizeof(light.intensity), "Failed to write intensity");
             }
 
     } catch (std::ios_base::failure &e) {
@@ -339,9 +343,13 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
         for (int i = 0; i < lightCount; ++i) {
             Light light;
 
+            safeRead(&light.lightType, sizeof(light.lightType), "Failed to read light type", "v1.1");
             safeRead(&light.lightPos[0], 3 * sizeof(float), "Failed to read light position", "v1.0");
             safeRead(&light.lightColor[0], 4 * sizeof(float), "Failed to read light colour", "v1.0");
+            safeRead(&light.lightDir[0], 3 * sizeof(float), "failed to read light direction", "v1.1");
+            safeRead(&light.spotAngle, sizeof(float), "failed to read spotlight angle", "v1.1");
             safeRead(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to read attenuation scale", "v1.0");
+            safeRead(&light.intensity, sizeof(light.intensity), "Failed to read intensity", "v1.1");
 
             lights.push_back(light);
         }
