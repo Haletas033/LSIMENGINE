@@ -195,6 +195,10 @@ void DrawLights(Shader &shader, Defaults defaults, Scene &scene) {
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "spotAngle").c_str()), 0.0f);
 		}
 	}
+
+	//Ambient
+	glUniform4fv(glGetUniformLocation(shader.ID, "ambientLightColour"), 1, glm::value_ptr(scene.ambientLightColour));
+	glUniform1f(glGetUniformLocation(shader.ID, "ambientLightIntensity"), scene.ambientLightIntensity);
 }
 
 Defaults engineDefaults;
@@ -558,7 +562,7 @@ int main(int argc, char** argv)
 
 		Gui::Lighting(scene.lights, currentLight);
 
-		Gui::Scene(skyboxTexId);
+		Gui::Scene(skyboxTexId, scene.ambientLightColour, scene.ambientLightIntensity);
 
 		Gui::Debug(mouseX, mouseY);
 

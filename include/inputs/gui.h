@@ -45,7 +45,7 @@ public:
 
     static void Console(int &selectedLogLevel, const std::vector<Logger> &logs);
 
-    static void Scene(unsigned int &skyboxTexId);
+    static void Scene(unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
 
     static void DrawNode(Node *node, int &clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes);
 

@@ -45,6 +45,9 @@ struct Scene {
     std::vector<std::unique_ptr<InstancedMesh>> instancedMeshes;
     std::vector<Light> lights;
 
+    glm::vec4 ambientLightColour = glm::vec4(1.0);
+    float ambientLightIntensity = 1;
+
     // Signals for meshes
     mutable bool addMeshSignal = false;
     mutable bool deleteMeshSignal = false;
@@ -63,10 +66,6 @@ struct Scene {
     Scene& operator=(Scene&& other) noexcept {
         meshes = std::move(other.meshes);
         lights = std::move(other.lights);
-        addMeshSignal = other.addMeshSignal;
-        deleteMeshSignal = other.deleteMeshSignal;
-        addLightSignal = other.addLightSignal;
-        deleteLightSignal = other.deleteLightSignal;
         return *this;
     }
 

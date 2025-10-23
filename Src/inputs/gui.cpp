@@ -2,6 +2,10 @@
 
 #include <iterator>
 
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
 #include "include/utils/texture.h"
 
 Gui::Node* Gui::root = nullptr;
@@ -341,7 +345,7 @@ void Gui::Console(int &selectedLogLevel, const std::vector<Logger> &logs) {
     }
 }
 
-void Gui::Scene(unsigned int &skyboxTexId) {
+void Gui::Scene(unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity) {
     if (ImGui::CollapsingHeader("Scene")) {
         if (ImGui::Button("Set Skybox")) {
             std::string faces[6];
@@ -359,6 +363,9 @@ void Gui::Scene(unsigned int &skyboxTexId) {
 
             skyboxTexId = Texture::GetCubemapId(faces);
         }
+
+        ImGui::ColorEdit4("Ambient Light Colour", glm::value_ptr(ambientLightColour));
+        ImGui::InputFloat("Ambient Light Intensity", &ambientLightIntensity);
     }
 }
 
