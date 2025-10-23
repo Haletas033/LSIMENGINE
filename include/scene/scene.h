@@ -46,7 +46,7 @@ struct Scene {
     std::vector<Light> lights;
 
     glm::vec4 ambientLightColour = glm::vec4(1.0);
-    float ambientLightIntensity = 1;
+    float ambientLightIntensity = 0.1;
 
     // Signals for meshes
     mutable bool addMeshSignal = false;
