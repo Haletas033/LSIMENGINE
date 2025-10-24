@@ -37,6 +37,15 @@ public:
 
     static void CleanUp();
 
+    static void AddTexture(const char *name, std::string fileName,
+                           const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, const std::vector<int> &currentMeshes, const std::string
+                           &workingDir,
+                           GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use);
+
+    static void RemoveTexture(const char *name,
+                              const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes,
+                              const std::vector<int> &currentMeshes, GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use);
+
     static void Transform(const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
 
     static void Lighting(std::vector<Light> &lights, int &currentLight);
@@ -51,7 +60,7 @@ public:
 
     static void DeleteNode(Node *node);
 
-    static void DeleteNodeRercursively(Node *node);
+    static void DeleteNodeRecursively(Node *node);
 
     static void ClearRoot();
 

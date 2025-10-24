@@ -21,6 +21,9 @@ struct Light {
 uniform Light lights[MAX_LIGHTS];
 uniform vec4 meshColor;
 
+uniform vec4 ambientLightColour;
+uniform float ambientLightIntensity;
+
 uniform sampler2D albedo;
 uniform sampler2D normal;
 uniform sampler2D specular;
@@ -145,5 +148,5 @@ void main()
     }
 
 
-    FragColor = vec4(Lo + emissiveMap, 1.0);
+    FragColor = vec4(Lo + emissiveMap, 1.0) + vec4(albedo, 1.) * ambientLightColour * ambientLightIntensity;
 }

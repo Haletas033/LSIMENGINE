@@ -602,7 +602,7 @@ int main(int argc, char** argv)
 	}
 	Log("stdInfo", "Exiting L-SIMENGINE");
 
-	Gui::DeleteNodeRercursively(Gui::root);
+	Gui::DeleteNodeRecursively(Gui::root);
 
 	Gui::CleanUp();
 

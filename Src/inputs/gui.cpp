@@ -55,6 +55,38 @@ void Gui::CleanUp() {
     ImGui::DestroyContext();
 }
 
+void Gui::AddTexture(const char* name, std::string fileName, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes,
+    const std::vector<int> &currentMeshes, const std::string &workingDir,GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use) {
+    if (ImGui::Button(name)) {
+        const std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
+
+        //Get just the fileName
+        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
+
+        //Copy the file from the file path into the project dir
+        std::cout << fileName << std::endl;
+        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
+
+        const unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
+        for (const int mesh : currentMeshes) {
+            if (use) meshes[mesh][0].get()->*use = true;
+            meshes[mesh][0].get()->*id = texture;
+            meshes[mesh][0].get()->*path = fileName;
+        }
+    }
+}
+
+void Gui::RemoveTexture(const char* name, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, const std::vector<int> &currentMeshes,
+    GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use) {
+    if (ImGui::Button(name)) {
+        for (const int mesh : currentMeshes) {
+            if (use) meshes[mesh][0].get()->*use = false;
+            meshes[mesh][0].get()->*id = NULL;
+            meshes[mesh][0].get()->*path = "";
+        }
+    }
+}
+
 void Gui::Transform(const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
@@ -82,7 +114,7 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::vector
                 if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
                     for (const int mesh : currentMeshes) meshes[mesh][0].get()->name = nameBuffer;
                 }
-    
+
                 if (ImGui::InputFloat3("Position", glm::value_ptr(position))) {
                     for (int idx : currentMeshes) {
                         meshes[idx][0]->position = position;
@@ -93,7 +125,7 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::vector
                         meshes[idx][0]->rotation = rotation;
                     }
                 }
-    
+
                 if (uniformScaleLock) {
                     if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
                         for (int idx : currentMeshes) {
@@ -122,102 +154,34 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::vector
                     }
                 } else {
                     static std::string fileName = "No texture";
-                    if (ImGui::Button("Add Texture")) {
-                        std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
 
-                        //Get just the fileName
-                        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
+                    //Texture
+                    AddTexture("Add Texture", fileName, meshes, currentMeshes, workingDir,
+                        &Mesh::texId, &Mesh::texturePath, nullptr);
 
-                        //Copy the file from the file path into the project dir
-                        std::cout << fileName << std::endl;
-                        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
-
-                        unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh][0].get()->texId = texture;
-                            meshes[mesh][0].get()->texturePath = fileName;
-                        }
-                    }
-
-                    if (ImGui::Button("Add Specular Map")) {
-                        std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
-
-                        //Get just the fileName
-                        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
-
-                        //Copy the file from the file path into the project dir
-                        std::cout << fileName << std::endl;
-                        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
-
-                        unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh][0].get()->specMapId = texture;
-                            meshes[mesh][0].get()->specMapPath = fileName;
-                        }
-                    }
+                    //Specular Map
+                    AddTexture("Add Specular Map", fileName, meshes, currentMeshes, workingDir,
+                        &Mesh::specMapId, &Mesh::specMapPath, nullptr);
 
                     ImGui::SameLine();
 
-                    if (ImGui::Button("Remove Specular Map")) {
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh][0].get()->specMapId = NULL;
-                            meshes[mesh][0].get()->specMapPath = "";
-                        }
-                    }
+                    RemoveTexture("Remove Specular Map", meshes, currentMeshes, &Mesh::specMapId, &Mesh::specMapPath, nullptr);
 
-                    if (ImGui::Button("Add Normal Map")) {
-                        std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
-
-                        //Get just the fileName
-                        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
-
-                        //Copy the file from the file path into the project dir
-                        std::cout << fileName << std::endl;
-                        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
-
-                        unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh][0].get()->useNormalMap = true;
-                            meshes[mesh][0].get()->normalMapId = texture;
-                            meshes[mesh][0].get()->normalMapPath = fileName;
-                        }
-                    }
+                    //Normal Map
+                    AddTexture("Add Normal Map", fileName, meshes, currentMeshes, workingDir,
+                        &Mesh::normalMapId, &Mesh::normalMapPath, &Mesh::useNormalMap);
 
                     ImGui::SameLine();
 
-                    if (ImGui::Button("Remove Normal Map")) {
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh][0].get()->useNormalMap = false;
-                            meshes[mesh][0].get()->normalMapId = NULL;
-                            meshes[mesh][0].get()->normalMapPath = "";
-                        }
-                    }
+                    RemoveTexture("Remove Normal Map", meshes, currentMeshes, &Mesh::normalMapId, &Mesh::normalMapPath, &Mesh::useNormalMap);
 
-                    if (ImGui::Button("Add Emissive Map")) {
-                        std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
-
-                        //Get just the fileName
-                        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
-
-                        //Copy the file from the file path into the project dir
-                        std::cout << fileName << std::endl;
-                        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
-
-                        unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh][0].get()->emissiveMapId = texture;
-                            meshes[mesh][0].get()->emissiveMapPath = fileName;
-                        }
-                    }
+                    //Emissive Map
+                    AddTexture("Add Emissive Map", fileName, meshes, currentMeshes, workingDir,
+                        &Mesh::emissiveMapId, &Mesh::emissiveMapPath, nullptr);
 
                     ImGui::SameLine();
 
-                    if (ImGui::Button("Remove Emissive Map")) {
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh][0].get()->emissiveMapId = NULL;
-                            meshes[mesh][0].get()->emissiveMapPath = "";
-                        }
-                    }
+                    RemoveTexture("Remove Emissive Map", meshes, currentMeshes, &Mesh::emissiveMapId, &Mesh::emissiveMapPath, nullptr);
                 }
 
                 ImGui::InputFloat("Emissive Intensity", &refMesh->emissiveIntensity);
@@ -331,8 +295,6 @@ void Gui::Console(int &selectedLogLevel, const std::vector<Logger> &logs) {
         ImGui::EndCombo();
     }
 
-
-
     for (Logger log : logs) {
         if (log.GetLevel() >= selectedLogLevel) {
             auto it = std::find(modules.begin(), modules.end(), log.GetModule());
@@ -368,7 +330,6 @@ void Gui::Scene(unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float 
         ImGui::InputFloat("Ambient Light Intensity", &ambientLightIntensity);
     }
 }
-
 
 void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes) {
     if (!node) return;
@@ -442,9 +403,9 @@ void Gui::DeleteNode(Node* node) {
     delete node;
 }
 
-void Gui::DeleteNodeRercursively(Node* node) {
+void Gui::DeleteNodeRecursively(Node* node) {
     for (const auto child : node->children) {
-        DeleteNodeRercursively(child);
+        DeleteNodeRecursively(child);
     }
     node->children = {};
     if (node != root)
@@ -453,7 +414,7 @@ void Gui::DeleteNodeRercursively(Node* node) {
 
 void Gui::ClearRoot() {
     for (auto* child : root->children) {
-        DeleteNodeRercursively(child);
+        DeleteNodeRecursively(child);
     }
     root->children.clear();
 }
