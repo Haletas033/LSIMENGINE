@@ -21,7 +21,8 @@ void main()
     data_out.crntPos = vec3(instanceMatrix * vec4(aPos, 1.0f));
     gl_Position = camMatrix * vec4(data_out.crntPos, 1.0);
 
-    data_out.Normal = normalMatrix * aNormal;
+    mat3 normalMat = mat3(transpose(inverse(instanceMatrix)));
+    data_out.Normal = normalize(normalMat * aNormal);
     data_out.texCoord = aTex;
     data_out.projection = camMatrix;
     data_out.model = instanceMatrix;
