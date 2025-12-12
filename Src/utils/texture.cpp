@@ -3,8 +3,9 @@
 //
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 
+#include <stb/stb_image.h>
 #include "include/utils/texture.h"
 
 extern json config;
@@ -109,4 +110,8 @@ unsigned int Texture::GetCubemapId(std::string faces[6]) {
     return textureID;
 }
 
-
+void Texture::ByteArrayToPNG(const char* filename, const unsigned char* texture,
+    const unsigned int width, const unsigned int height)
+{
+    stbi_write_png(filename, width, height, 4, texture, width * 4);
+}

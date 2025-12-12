@@ -6,7 +6,7 @@
 #include<glm/gtc/type_ptr.hpp>
 
 //Define regions based on height, color, and name
-std::vector<TerrainType> regions = {
+std::vector<Terrain::TerrainType> Terrain::regions = {
     {"Deep Water", 0.3f, Color(0.0f, 0.0f, 0.5f, 1.0f)},
     {"Shallow Water", 0.4f, Color(0.0f, 0.3f, 0.7f, 1.0f)},
     {"Sand", 0.5f, Color(0.9f, 0.8f, 0.6f, 1.0f)},
@@ -16,7 +16,7 @@ std::vector<TerrainType> regions = {
     {"Snow", 0.95f, Color(1.0f, 1.0f, 1.0f, 1.0f)}
 };
 
-std::vector<std::vector<float>> GenerateNoiseMap(const unsigned int width, const unsigned int height, int seed, float scale, int octaves, float persistence, float lacunarity) {
+std::vector<std::vector<float>> Terrain::GenerateNoiseMap(const unsigned int width, const unsigned int height, int seed, float scale, int octaves, float persistence, float lacunarity) {
 
 
     //Initialize the noise generator with an OpenSimplex2 noise.
@@ -82,21 +82,9 @@ std::vector<std::vector<float>> GenerateNoiseMap(const unsigned int width, const
     return noiseMap;
 }
 
-GLuint noiseMapToTexture(std::vector<std::vector<float>>& noiseMap) {
+GLuint Terrain::noiseMapToTexture(std::vector<std::vector<float>>& noiseMap, const char* outputLocation) {
     int width = noiseMap.size();
     int height = noiseMap[0].size();
-
-    //Generate and bind a new OpenGL 2D texture
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-    //Allocate texture storage with RGBA channels
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_FILL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_FILL);
 
     auto* colorMap = new unsigned char[width * height * 4];
 
@@ -126,15 +114,16 @@ GLuint noiseMapToTexture(std::vector<std::vector<float>>& noiseMap) {
             colorMap[index + 3] = a;
         }
     }
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, colorMap);
+
+    Texture::ByteArrayToPNG(outputLocation, colorMap, width, height);
 
     //Delete the colorMap to free up memory
     delete[] colorMap;
 
-    return textureID;
+    return Texture::GetTexId(outputLocation);
 }
 
-void noiseMapToMesh(std::vector<std::vector<float>> &noiseMap, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, float heightScale, float gridScale) {
+void Terrain::noiseMapToMesh(std::vector<std::vector<float>> &noiseMap, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, float heightScale, float gridScale) {
     int width = noiseMap[0].size();
     int height = noiseMap.size();
 
