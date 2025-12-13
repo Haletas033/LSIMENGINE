@@ -47,7 +47,7 @@ static void Log(const std::string& key, const std::string& msg) {
 		(*it->second)(msg, logs);
 }
 
-void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType, int &lastClickMesh, const char* outputPath) {
+void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType, int &lastClickMesh, const char* workingDir) {
 	scene.addMeshSignal = false;
 
 	std::unique_ptr<Mesh> newMesh;
@@ -79,6 +79,8 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 			std::vector<std::vector<float>> noiseMap = Terrain::GenerateNoiseMap(defaults.size, defaults.size, static_cast<int>(time(nullptr)),
 				defaults.scale, defaults.octaves, defaults.persistence, defaults.lacunarity);
 
+			const auto uID = static_cast<long long>(glfwGetTime() * 1'000'000'000LL);
+			const char* outputPath = (std::string(workingDir) + "resources/" + std::to_string(uID) + "terrain.png").c_str();
 			const GLuint noiseMapTexture = Terrain::noiseMapToTexture(noiseMap, outputPath);
 
 			Terrain::noiseMapToMesh(noiseMap, vertices, indices, defaults.heightScale, defaults.gridScale);
@@ -86,7 +88,7 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 			newMesh = std::make_unique<Mesh>(vertices, indices);
 			newMesh->name = "Terrain";
 			newMesh->useTexture = true;
-			newMesh->texturePath = outputPath;
+			newMesh->texturePath = std::to_string(uID) + "terrain.png";
 			newMesh->texId = noiseMapTexture;
 			break;
 		}
@@ -413,9 +415,7 @@ int main(int argc, char** argv)
 
 
 		if (scene.addMeshSignal) {
-			const auto uID = static_cast<long long>(glfwGetTime() * 1'000'000'000LL);
-
-			AddMesh(scene, engineDefaults, selectedMeshType, lastClickMesh, (std::string(workingDir) + "resources/" + std::to_string(uID) + "terrain.png").c_str());
+			AddMesh(scene, engineDefaults, selectedMeshType, lastClickMesh, workingDir.c_str());
 			Log("stdInfo", "Adding mesh");
 		}
 
