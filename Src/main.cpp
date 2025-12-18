@@ -231,10 +231,16 @@ int main(int argc, char** argv)
 	engineDefaults = JSONManager::InitJSON(workingDir + "config/config.json", config, loggers);
 
 	//Load shaders
+
+	//default shaders
 	std::string vertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.vert", config);
-	std::string instanceShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/instance.vert", config);
 	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.frag", config);
 	std::string geometryShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.geom", config);
+
+	//instance shaders
+	std::string instanceVertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/instance.vert", config);
+	std::string instanceFragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/instance.frag", config);
+	std::string instanceGeometryShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/instance.geom", config);
 
 	std::string skyboxVert = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.vert", config);
 	std::string skyboxFrag = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.frag", config);
@@ -290,7 +296,7 @@ int main(int argc, char** argv)
 
 	//Generate Shader object using shaders default.vert and default.frag
 	Shader shaderProgram(vertexShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
-	Shader instanceShaderProgram(instanceShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
+	Shader instanceShaderProgram(instanceVertexShader.c_str(), instanceFragmentShader.c_str(), instanceGeometryShader.c_str(), true);
 	Shader skyboxShaderProgram(skyboxVert.c_str(), skyboxFrag.c_str(), true);
 
 	Gui::Initialize(window);
