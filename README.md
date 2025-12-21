@@ -1,8 +1,8 @@
 # LSIM ENGINE
-**v1.0**\
+**v1.1**\
 Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdocs.html)
 
-<img width="1147" height="727" alt="image" src="https://github.com/user-attachments/assets/9a74fad5-4774-465f-92ae-2d08e109c814" />
+<img width="1908" height="981" alt="Maze Photo" src="https://github.com/user-attachments/assets/16993191-a488-4359-8955-9331246de6be" />
 
 ## Current Features:
 * OpenGL rendering pipeline with GLFW windowing
@@ -16,15 +16,18 @@ Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdo
 * A launcher [here](https://github.com/Haletas033/LSIMLAUNCHER)
 
 ## v1.1 Projected Features:
-* More light types (directional, spotlight)
 * Lights in Hierarchy
 * A lot of bug fixes
-* Some optimizations
-* Skyboxes
-* Better Gui
+* Model loading
+* Mesh picking
+* lighting improvements
+* More light types (directional, spotlight)
 
 ## v1.1 Implemented Features:
 * Model loading
+* Mesh picking
+* lighting improvements
+* More light types (directional, spotlight)
 
 ## Prerequisites (Windows)
 This project requires Git, Cmake, Ninja(or another build system)
