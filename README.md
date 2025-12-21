@@ -17,17 +17,15 @@ Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdo
 
 ## v1.1 Projected Features:
 * Lights in Hierarchy
-* A lot of bug fixes
-* Model loading
-* Mesh picking
-* lighting improvements
-* More light types (directional, spotlight)
+* Light meshes
 
 ## v1.1 Implemented Features:
 * Model loading
 * Mesh picking
 * lighting improvements
 * More light types (directional, spotlight)
+* Emmisive map
+* Terrain texture saving 
 
 ## Prerequisites (Windows)
 This project requires Git, Cmake, Ninja(or another build system)
