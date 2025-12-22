@@ -328,6 +328,7 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
                 //Read model matrix
                 safeRead(&mesh.modelMatrix[0][0], 16 * sizeof(float), "Failed to read model matrix", "v1.0");
 
+                if (versionNumeric == 1.0) mesh.GenerateTangents();
                 mesh.setupBuffers();
 
                 //Recreate mesh hierarchy
