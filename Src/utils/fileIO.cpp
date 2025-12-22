@@ -342,8 +342,9 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
                 parentNode->children.push_back(node);
 
                 meshes.push_back(std::move(meshPtr));
+                if (versionNumeric == 1.0) objects.push_back(std::move(meshes));
             }
-            objects.push_back(std::move(meshes));
+            if (versionNumeric != 1.0) objects.push_back(std::move(meshes));
         }
 
         int lightCount;
