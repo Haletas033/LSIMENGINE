@@ -234,11 +234,7 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
 
         versionNumeric = std::stof(version.substr(1));
 
-        if (version != engineDefaults.version)
-            throw std::ios_base::failure("Version mismatch");
-
-
-        int objectCount;
+        int objectCount = 1;
         safeRead(&objectCount, sizeof(objectCount), "Failed to read object count", "v1.1");
 
         for (int i = 0; i < objectCount; ++i) {
