@@ -13,8 +13,6 @@ class Mesh {
 public:
     std::string name;
 
-
-
     std::vector<GLfloat> vertices;
     std::vector<GLuint> indices;
 
@@ -59,6 +57,20 @@ public:
     Mesh() = default;
 
     void Draw(::Shader &shader, ::Camera &camera, const glm::mat4 &finalMatrix);
+
+    //Helper to generate the vecs needed for tangents
+    template <glm::length_t N>
+    using vec = glm::vec<N, float>;
+    template <glm::length_t N>
+    vec<N> VecFromVertices(const int STRIDE, const GLuint iN, const int offset = 0) {
+        vec<N> p;
+
+        for (int i = 0; i < N; i++) {
+            p[i] = vertices[iN*STRIDE+i+offset];
+        }
+
+        return p;
+    }
 
     void GenerateTangents();
 

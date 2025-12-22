@@ -78,43 +78,20 @@ void Mesh::GenerateTangents() {
     constexpr int STRIDE = 8;
     std::vector tangents(vertices.size() / STRIDE, glm::vec3(0.0f));
 
+
+
     for (size_t i = 0; i < indices.size(); i+=3) {
         GLuint i0 = indices[i];
         GLuint i1 = indices[i+1];
         GLuint i2 = indices[i+2];
 
-        auto p0 = glm::vec3(
-            vertices[i0 * STRIDE + 0],
-            vertices[i0 * STRIDE + 1],
-            vertices[i0 * STRIDE + 2]
-        );
+        auto p0 = VecFromVertices<3>(STRIDE, i0);
+        auto p1 = VecFromVertices<3>(STRIDE, i1);
+        auto p2 = VecFromVertices<3>(STRIDE, i2);
 
-        auto p1 = glm::vec3(
-            vertices[i1 * STRIDE + 0],
-            vertices[i1 * STRIDE + 1],
-            vertices[i1 * STRIDE + 2]
-        );
-
-        auto p2 = glm::vec3(
-            vertices[i2 * STRIDE + 0],
-            vertices[i2 * STRIDE + 1],
-            vertices[i2 * STRIDE + 2]
-        );
-
-        auto uv0 = glm::vec2(
-            vertices[i0 * STRIDE + 6],
-            vertices[i0 * STRIDE + 7]
-        );
-
-        auto uv1 = glm::vec2(
-            vertices[i1 * STRIDE + 6],
-            vertices[i1 * STRIDE + 7]
-        );
-
-        auto uv2 = glm::vec2(
-            vertices[i2 * STRIDE + 6],
-            vertices[i2 * STRIDE + 7]
-        );
+        auto uv0 = VecFromVertices<2>(STRIDE, i0, 6);
+        auto uv1 = VecFromVertices<2>(STRIDE, i1, 6);
+        auto uv2 = VecFromVertices<2>(STRIDE, i2, 6);
 
         const glm::vec3 edge1 = p1 - p0;
         const glm::vec3 edge2 = p2 - p0;
