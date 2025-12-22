@@ -1,7 +1,8 @@
-in vec3 Normal;
 in vec3 crntPos;
+in vec3 viewDir;
+in vec3 Normal;
 in vec2 texCoord;
-in mat3 TBN_out;
+in mat3 TBN;
 
 struct Light {
     int lightType;
@@ -24,6 +25,7 @@ uniform vec4 meshColor;
 uniform vec4 ambientLightColour;
 uniform float ambientLightIntensity;
 
+//Maps
 uniform sampler2D albedo;
 uniform sampler2D normal;
 uniform sampler2D specular;
@@ -45,7 +47,7 @@ out vec4 FragColor;
 
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
-    return F0 + (1.0 - F0) * pow(1.0 - clamp(cosTheta,0.0,1.0), 5.0);
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
@@ -69,34 +71,21 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float k)
     return GeometrySchlickGGX(max(dot(N,V),0.0), k) * GeometrySchlickGGX(max(dot(N,L),0.0), k);
 }
 
-void main()
-{
-    //Create TBN
-    vec3 T = normalize(TBN_out[0]);
-    vec3 B = normalize(TBN_out[1]);
-    vec3 N = normalize(TBN_out[2]);
-    N = normalize(cross(T,B));
-    B = cross(N,T);
-    mat3 TBNn = mat3(T,B,N);
-
-    //Get Normal information
-    vec3 nMap = useNormalMap ? texture(normal, texCoord).rgb * 2.0 - 1.0 : vec3(0.0,0.0,1.0);
-    vec3 FragNormal = normalize(TBNn * nMap);
-
+void main(){
     vec3 albedo = useTexture ? texture(albedo, texCoord).rgb : meshColor.rgb;
+
+    vec3 V = normalize(viewPos - crntPos);
+
+    vec3 Lo = vec3(0.0);
 
     vec3 F0_local = F0;
     vec3 emissiveMap = vec3(0.0);
-    if(useTexture) {
+    if (useTexture){
         float specMap = pow(texture(specular, texCoord).r, 2.2);
         F0_local = mix(F0, vec3(specMap), 1.0);
 
         emissiveMap = pow(texture(emissive, texCoord).rgb, vec3(2.2)) * emissiveIntensity;
     }
-
-    vec3 V = normalize(viewPos - crntPos);
-
-    vec3 Lo = vec3(0.0);
 
     for (int i = 0; i < MAX_LIGHTS; ++i){
         Light light = lights[i];
@@ -126,16 +115,20 @@ void main()
         }
 
         vec3 H = normalize(V + L);
-        float NdotL = max(dot(FragNormal, L), 0.0);
 
-        //Cook-Torrance
+        vec3 nMap = useNormalMap ? texture(normal, texCoord).rgb * 2.0 - 1.0 : vec3(0.0,0.0,1.0);
+        vec3 N = normalize(TBN * nMap);
+
+        float NdotL = max(dot(N, L), 0.0);
+
+        //Cook torrance
         vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0_local);
-        float D = DistributionGGX(FragNormal, H, roughness);
+        float D = DistributionGGX(N, H, roughness);
         float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
-        float G = GeometrySmith(FragNormal, V, L, k);
+        float G = GeometrySmith(N, V, L, k);
 
         vec3 numerator = D * G * F;
-        float denominator = max(4.0 * max(dot(FragNormal, V), 0.0) * NdotL, 1e-6);
+        float denominator = max(4.0 * max(dot(N, V), 0.0) * NdotL, 1e-6);
         vec3 specular = numerator / denominator;
 
         vec3 kS = F;
@@ -144,9 +137,11 @@ void main()
 
         vec3 radiance = light.lightColor.rgb * light.intensity * attenuation;
 
+
         Lo += (diffuse + specular) * radiance * NdotL;
     }
 
+    vec3 ambient = albedo * ambientLightColour.rgb * ambientLightIntensity;
+    FragColor = vec4(Lo + emissiveMap + ambient, 1.0);
 
-    FragColor = vec4(Lo + emissiveMap, 1.0) + vec4(albedo, 1.) * ambientLightColour * ambientLightIntensity;
 }

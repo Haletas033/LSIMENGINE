@@ -26,10 +26,10 @@ struct Scene {
             glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4), instances.data(), GL_STATIC_DRAW);
 
             for (int i = 0; i < 4; ++i) {
-                glEnableVertexAttribArray(3 + i);
-                glVertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                glEnableVertexAttribArray(4 + i);
+                glVertexAttribPointer(4 + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
                     reinterpret_cast<void *>(i * sizeof(glm::vec4)));
-                glVertexAttribDivisor(3 + i, 1);
+                glVertexAttribDivisor(4 + i, 1);
             }
             glBindVertexArray(0);
         }

@@ -60,6 +60,8 @@ public:
 
     void Draw(::Shader &shader, ::Camera &camera, const glm::mat4 &finalMatrix);
 
+    void GenerateTangents();
+
     void setupBuffers();
 
 
