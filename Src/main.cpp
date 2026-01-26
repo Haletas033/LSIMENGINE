@@ -444,12 +444,12 @@ int main(int argc, char** argv)
 			if (currentMeshes.empty()) {
 				int falseMesh = 0;
 
-				inputs.InputHandler(window, scene, workingDir, falseMesh,
-					currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
+				inputs.InputHandler(window, scene, deltaTime, workingDir,
+				                    falseMesh, currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			} else {
 				for (int mesh : currentMeshes)
-					inputs.InputHandler(window, scene, workingDir, mesh,
-						currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
+					inputs.InputHandler(window, scene, deltaTime, workingDir,
+					                    mesh, currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			}
 			#endif
 		}

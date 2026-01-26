@@ -6,6 +6,14 @@
 
 #include "gl/VAO.h"
 #include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
 #include "include/utils/json.h"
 
 extern json config;
@@ -58,8 +66,8 @@ bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
     return false;
 }
 
-void Inputs::MeshInputs(GLFWwindow* window, const Scene &scene,
-    const int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
+void Inputs::MeshInputs(GLFWwindow *window, const Scene &scene, const float deltaTime,
+                        const int &currentMesh, int &selectedMesh, glm::vec3 Orientation) {
     // Flatten y
     Orientation.y = 0;
 
@@ -124,23 +132,25 @@ void Inputs::MeshInputs(GLFWwindow* window, const Scene &scene,
             positiveX = !positiveX;
     }
 
+    const float adjustedTransformSpeed = defaults.transformSpeed * deltaTime;
+
     if (isDown(GLFW_KEY_UP, false, window)) {
-        *cameraForward -= positiveZ ? defaults.transformSpeed : -defaults.transformSpeed;
+        *cameraForward -= (positiveZ ? adjustedTransformSpeed : -adjustedTransformSpeed);
     }
     if (isDown(GLFW_KEY_DOWN, false, window)) {
-        *cameraForward += positiveZ ? defaults.transformSpeed : -defaults.transformSpeed;
+        *cameraForward += positiveZ ? adjustedTransformSpeed : -adjustedTransformSpeed;
     }
     if (isDown(GLFW_KEY_RIGHT, false, window)) {
-         *cameraSide += positiveX ? defaults.transformSpeed : -defaults.transformSpeed;
+         *cameraSide += positiveX ? adjustedTransformSpeed : -adjustedTransformSpeed;
     }
     if (isDown(GLFW_KEY_LEFT, false, window)) {
-        *cameraSide -= positiveX ? defaults.transformSpeed : -defaults.transformSpeed;
+        *cameraSide -= positiveX ? adjustedTransformSpeed : -adjustedTransformSpeed;
     }
     if (isDown(GLFW_KEY_PAGE_UP, false, window)) {
-         cameraUp += defaults.transformSpeed;
+         cameraUp += adjustedTransformSpeed;
     }
     if (isDown(GLFW_KEY_PAGE_DOWN, false, window)) {
-        cameraUp -= defaults.transformSpeed;
+        cameraUp -= adjustedTransformSpeed;
     }
     if (isDown(GLFW_KEY_RIGHT_BRACKET, true, window)) {
         selectedMesh++;
@@ -165,24 +175,26 @@ void Inputs::MeshInputs(GLFWwindow* window, const Scene &scene,
     }
 }
 
-void Inputs::LightInputs(Scene &scene, const int &currentLight, GLFWwindow* window) {
+void Inputs::LightInputs(Scene &scene, const float deltaTime, const int &currentLight, GLFWwindow* window) {
+    const float adjustedTransformSpeed = defaults.transformSpeed * deltaTime;
+
     if (isDown(GLFW_KEY_UP, false, window)) {
-        scene.lights[currentLight].lightPos.z -= defaults.transformSpeed;
+        scene.lights[currentLight].lightPos.z -= adjustedTransformSpeed;
     }
     if (isDown(GLFW_KEY_DOWN, false, window)) {
-        scene.lights[currentLight].lightPos.z += defaults.transformSpeed;
+        scene.lights[currentLight].lightPos.z += adjustedTransformSpeed;
     }
     if (isDown(GLFW_KEY_RIGHT, false, window)) {
-        scene.lights[currentLight].lightPos.x += defaults.transformSpeed;
+        scene.lights[currentLight].lightPos.x += adjustedTransformSpeed;
     }
     if (isDown(GLFW_KEY_LEFT, false, window)) {
-        scene.lights[currentLight].lightPos.x -= defaults.transformSpeed;
+        scene.lights[currentLight].lightPos.x -= adjustedTransformSpeed;
     }
     if (isDown(GLFW_KEY_PAGE_UP, false, window)) {
-        scene.lights[currentLight].lightPos.y += defaults.transformSpeed;
+        scene.lights[currentLight].lightPos.y += adjustedTransformSpeed;
     }
     if (isDown(GLFW_KEY_PAGE_DOWN, false, window)) {
-        scene.lights[currentLight].lightPos.y -= defaults.transformSpeed;
+        scene.lights[currentLight].lightPos.y -= adjustedTransformSpeed;
     }
 
 }
@@ -203,7 +215,7 @@ void Inputs::IOInputs(GLFWwindow *window, Scene &scene, const std::string & work
     }
 }
 
-void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::string &workingDir,
+void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const float deltaTime, const std::string &workingDir,
     const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
     if (isDown(GLFW_KEY_M, true, window)) {
         currentMode = meshMode;
@@ -216,7 +228,7 @@ void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::string &w
 
     if (currentMode == meshMode) {
         if (!scene.meshes.empty() && currentMesh >= 0 && currentMesh < scene.meshes.size()) {
-            MeshInputs(window, scene, currentMesh, selectedMeshType, selectedMesh, Orientation);
+            MeshInputs(window, scene, deltaTime, currentMesh, selectedMesh, Orientation);
         }
 
         // Handle changing mesh type with 0-5
@@ -237,7 +249,7 @@ void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const std::string &w
         }
     }
     else if (currentMode == lightMode) {
-        LightInputs(scene, currentLight, window);
+        LightInputs(scene, deltaTime, currentLight, window);
 
         //Handle adding and deleting lights
         if (isDown(GLFW_KEY_F, true, window)) {
