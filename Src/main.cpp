@@ -94,6 +94,7 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 		}
 		case 6: {
 			const auto filePath = IO::Dialog("Model Files\0*.gltf\0All Files\0*.*\0", GetOpenFileNameA);
+			if (filePath.empty()) break; //Exist if FileDIalog was cancelled
 			Log("stdInfo", filePath);
 			const Model model{(filePath.c_str())};
 
