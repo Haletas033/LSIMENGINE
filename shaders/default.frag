@@ -142,6 +142,8 @@ void main(){
     }
 
     vec3 ambient = albedo * ambientLightColour.rgb * ambientLightIntensity;
-    FragColor = vec4(Lo + emissiveMap + ambient, 1.0);
-
+    //Tone-mapping
+    vec3 hdrColor = Lo + emissiveMap + ambient;
+    vec3 mapped = hdrColor / (hdrColor + vec3(1.0));
+    FragColor = vec4(mapped, 1.0);
 }
