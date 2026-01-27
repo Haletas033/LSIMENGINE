@@ -120,7 +120,7 @@ GLuint Terrain::noiseMapToTexture(std::vector<std::vector<float>>& noiseMap, con
     //Delete the colorMap to free up memory
     delete[] colorMap;
 
-    return Texture::GetTexId(outputLocation);
+    return Texture::GetTexId(outputLocation, GL_NEAREST);
 }
 
 void Terrain::noiseMapToMesh(std::vector<std::vector<float>> &noiseMap, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, float heightScale, float gridScale) {

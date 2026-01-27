@@ -263,19 +263,19 @@ void Model::getTextures(Mesh &model)
             model.useTexture = true;
             std::cout << fileDirectory + texPath.c_str();
             model.texturePath = fileDirectory + texPath.c_str();
-            model.texId = Texture::GetTexId(model.texturePath.c_str());
+            model.texId = Texture::GetTexId(model.texturePath.c_str(), GL_NEAREST);
         }
         //Load specular texture
         else if (texPath.find("Roughness") != std::string::npos)
         {
             model.specMapPath = fileDirectory + texPath.c_str();
-            model.specMapId = Texture::GetTexId(model.specMapPath.c_str());
+            model.specMapId = Texture::GetTexId(model.specMapPath.c_str(), GL_NEAREST);
         }
         //Load normal map
         else if (texPath.find("Normal") != std::string::npos)
         {
             model.normalMapPath = fileDirectory + texPath.c_str();
-            model.normalMapId = Texture::GetTexId(model.normalMapPath.c_str());
+            model.normalMapId = Texture::GetTexId(model.normalMapPath.c_str(), GL_NEAREST);
             model.useNormalMap = true;
         }
 

@@ -300,9 +300,9 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
                 safeRead(mesh.normalMapPath.data(), normalMapPathLen, "Failed to read normalMapPathLen", "v1.0");
 
                 //Load tex IDs
-                mesh.texId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.texturePath.data()).c_str());
-                mesh.specMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.specMapPath.data()).c_str());
-                mesh.normalMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.normalMapPath.data()).c_str());
+                mesh.texId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.texturePath.data()).c_str(), GL_NEAREST);
+                mesh.specMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.specMapPath.data()).c_str(), GL_NEAREST);
+                mesh.normalMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.normalMapPath.data()).c_str(), GL_NEAREST);
 
                 //Read color
                 safeRead(&mesh.color[0], 4 * sizeof(float), "Failed to read colour", "v1.0");

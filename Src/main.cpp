@@ -354,7 +354,7 @@ int main(int argc, char** argv)
 	};
 
 	//Get skybox texture id
-	unsigned int skyboxTexId = Texture::GetCubemapId(faces);
+	unsigned int skyboxTexId = Texture::GetCubemapId(faces, GL_LINEAR);
 
 	//Run Start() for all scripts
 	for (auto script : Script::GetAllScripts()) {
