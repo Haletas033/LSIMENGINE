@@ -80,6 +80,39 @@ ninja
 │       │   └── log.cpp
 │       └── texture.cpp
 ├── Website
+│   ├── LSIMdocs
+│   │   ├── 001welcome.md
+│   │   ├── 002gettingStarted.md
+│   │   ├── 003fixingLauncherIssues.md
+│   │   ├── 004theBasics.md
+│   │   ├── 005movement.md
+│   │   ├── 006transformations.md
+│   │   ├── 007creations.md
+│   │   ├── 008textures.md
+│   │   ├── 009fileIO.md
+│   │   ├── 010goingFurther.md
+│   │   ├── 011workingWithConfigs.md
+│   │   ├── 012logger.md
+│   │   ├── 013fileIO.md
+│   │   ├── 014otherSystems.md
+│   │   ├── 015primitives.md
+│   │   ├── 016mesh.md
+│   │   ├── 017light.md
+│   │   ├── 018gui.md
+│   │   ├── 019inputs.md
+│   │   ├── 020texture.md
+│   │   ├── 021programmingYourGame.md
+│   │   ├── 022exampleGame.md
+│   │   ├── 023theEnd.md
+│   │   └── imgs
+│   │       ├── after.png
+│   │       ├── before.png
+│   │       ├── components.png
+│   │       ├── configMisconfig.png
+│   │       ├── normalExample.jpg
+│   │       ├── shaderMisconfig.png
+│   │       ├── specularExample.png
+│   │       └── success.png
 │   └── Src
 │       └── docs
 │           └── LSIMdocs.h
@@ -118,7 +151,7 @@ ninja
 ├── tree.txt
 └── website.dsp
 
-20 directories, 45 files
+22 directories, 76 files
 ```
 <!-- TREE_END -->
 ## Contributing
