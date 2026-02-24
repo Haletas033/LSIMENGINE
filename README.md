@@ -79,6 +79,10 @@ ninja
 │       ├── logging
 │       │   └── log.cpp
 │       └── texture.cpp
+├── Website
+│   └── Src
+│       └── docs
+│           └── LSIMdocs.h
 ├── config
 │   └── config.json
 ├── include
@@ -114,7 +118,7 @@ ninja
 ├── tree.txt
 └── website.dsp
 
-17 directories, 44 files
+20 directories, 45 files
 ```
 <!-- TREE_END -->
 ## Contributing
