@@ -1,5 +1,5 @@
 websiteIndex:;
 docsIndex: docs/LSIMdocs;
-build: Website/Src/LSIMdocs.h;
+build: Website/Src/docs/LSIMdocs.h;
 resources: Website/LSIMdocs;
 styles:;
