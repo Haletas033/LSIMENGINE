@@ -10,8 +10,9 @@
 #include <string.h>
 #include <cmark.h>
 
-#include "../Tag.h"
-#include "../utils/nav/nav.h"
+#include "Tag.h"
+#include "utils/nav/nav.h"
+#include "utils/misc/misc.h"
 
 inline void LSIMdocs() {
     Tag header("header");
@@ -24,7 +25,7 @@ inline void LSIMdocs() {
 
     std::vector<std::filesystem::path> mds;
 
-    for (const auto &currMd : std::filesystem::directory_iterator("LSIMdocs")) {
+    for (const auto &currMd : std::filesystem::directory_iterator("../LSIMdocs")) {
         mds.push_back(currMd);
     }
 
