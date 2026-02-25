@@ -10,8 +10,8 @@
 #include <string.h>
 #include <cmark.h>
 
-#include "../../Tag.h"
-#include "../../utils/nav/nav.h"
+#include "../Tag.h"
+#include "../utils/nav/nav.h"
 
 inline void LSIMdocs() {
     Tag header("header");
