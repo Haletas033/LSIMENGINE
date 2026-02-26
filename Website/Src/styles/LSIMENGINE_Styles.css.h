@@ -1,15 +1,15 @@
 #ifndef LSIMENGINE_STYLES_CSS_H
 #define LSIMENGINE_STYLES_CSS_H
 
-#include "../style.h"
+#include "style.h"
 
 //Currently a test
-inline void LSIMENGINE() {
-    Style LSIMENGINEid("#LSIMENGINE");
-    LSIMENGINEid
-        .put("color", "blue");
+inline void LSIMENGINE_Styles() {
+    Style LSIMENGINE_H2("#LSIMENGINE h2");
+    LSIMENGINE_H2
+        .put("color", "orangered");
 
     Builder::Build("LSIMENGINE_Styles");
 }
 
-#endif //STYLE_LSIMENGINE_STYLES_CSS_H
+#endif //LSIMENGINE_STYLES_CSS_H
