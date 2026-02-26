@@ -8,4 +8,4 @@ docsDescription: "Documentation for how to use the L-SIM ENGINE";
 #Needed files
 build: Website/Src/docs/LSIMdocs.h;
 resources: Website/LSIMdocs;
-styles:Src/styles/LSIMENGINE_Styles.css.h;
+styles: Website/Src/styles/LSIMENGINE_Styles.css.h;
