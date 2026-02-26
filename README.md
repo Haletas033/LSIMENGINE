@@ -114,8 +114,10 @@ ninja
 │   │       ├── specularExample.png
 │   │       └── success.png
 │   └── Src
-│       └── docs
-│           └── LSIMdocs.h
+│       ├── docs
+│       │   └── LSIMdocs.h
+│       └── styles
+│           └── LSIMENGINE_Styles.css.h
 ├── config
 │   └── config.json
 ├── include
@@ -151,7 +153,7 @@ ninja
 ├── tree.txt
 └── website.dsp
 
-22 directories, 76 files
+23 directories, 77 files
 ```
 <!-- TREE_END -->
 ## Contributing
