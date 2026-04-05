@@ -58,14 +58,14 @@ void Gui::CleanUp() {
 void Gui::AddTexture(const char* name, std::string fileName, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes,
     const std::vector<int> &currentMeshes, const std::string &workingDir,GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use) {
     if (ImGui::Button(name)) {
-        const std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
+        const std::string filePath = IO::OpenDialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0");
 
         //Get just the fileName
         fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
 
         //Copy the file from the file path into the project dir
         std::cout << fileName << std::endl;
-        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
+        std::filesystem::copy(filePath.c_str(), std::string(workingDir + "resources/") + fileName, std::filesystem::copy_options::overwrite_existing);
 
         const unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
         for (const int mesh : currentMeshes) {

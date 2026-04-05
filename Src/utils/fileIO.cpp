@@ -8,9 +8,11 @@
 #include "include/utils/texture.h"
 #include "include/utils/defaults.h"
 
+#ifdef _WIN32
 OPENFILENAME ofn;                           //common dialog box structure
 char szFile[260] = {"untitled.lsim"};       //File size buffer
 HWND hwnd;                                  //owner window
+#endif
 
 extern json config;
 
@@ -39,7 +41,7 @@ void IO::InitIO() {
     Log("stdInfo", "Successfully initialized the file loggers");
 }
 
-
+#ifdef _WIN32
 std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
     Log("stdInfo", "Initializing file dialog");
     //Initialize OPENFILENAME
@@ -81,6 +83,46 @@ std::string IO::DirectoryDialog() {
     Log("stdInfo", "Directory dialog closed without selecting a directory");
     return {};
 }
+
+std::string IO::OpenDialog(const char* filter) {
+    return Dialog(filter, GetOpenFileNameA);
+}
+std::string IO::SaveDialog(const char* filter) {
+    return Dialog(filter, GetSaveFileNameA);
+}
+#else
+std::string IO::Dialog(const char *filter) {
+    FILE* file = popen("zenity --file-selection", "r");
+    if (file == nullptr) return {};
+    char filePath[512];
+    if (fgets(filePath, 512, file) == nullptr) {
+        pclose(file);
+        return {};
+    }
+    pclose(file);
+    *strchr(filePath, '\n') = '\0';
+    return filePath;
+}
+
+std::string IO::DirectoryDialog() {
+    FILE* file = popen("zenity --file-selection --directory", "r");
+    if (file == nullptr) return {};
+    char filePath[512];
+    if (fgets(filePath, 512, file) == nullptr) {
+        pclose(file);
+        return {};
+    }
+    pclose(file);
+    *strchr(filePath, '\n') = '\0';
+    return filePath;
+}
+std::string IO::OpenDialog(const char* filter) {
+    return Dialog(filter);
+}
+std::string IO::SaveDialog(const char* filter) {
+    return Dialog(filter);
+}
+#endif
 
 
 void IO::saveToFile(std::ofstream &file, const Scene& scene) {

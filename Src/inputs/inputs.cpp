@@ -189,14 +189,14 @@ void Inputs::LightInputs(Scene &scene, const int &currentLight, GLFWwindow* wind
 
 void Inputs::IOInputs(GLFWwindow *window, Scene &scene, const std::string & workingDir) {
     if (isDown(GLFW_KEY_O, true, window)) {
-        std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetSaveFileNameA);
+        std::string fileName = IO::SaveDialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0");
         if (std::ofstream file(fileName, std::ios::out | std::ios::binary); file.is_open()) {
             IO::saveToFile(file, scene);
         }
     }
 
     if (isDown(GLFW_KEY_I, true, window)) {
-        std::string fileName = IO::Dialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0", GetOpenFileNameA);
+        std::string fileName = IO::OpenDialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0");
         if (std::ifstream file(fileName, std::ios::in | std::ios::binary); file.is_open()) {
             scene = IO::loadFromFile(file, workingDir);
         }

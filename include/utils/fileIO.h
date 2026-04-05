@@ -8,9 +8,12 @@
 #include <fstream>
 #include <utility>
 #include <memory>
+
+#ifdef _WIN32
 #include <windows.h>
 #include <shlobj.h>
 #include <commdlg.h>
+#endif
 
 #include <include/utils/logging/log.h>
 #include "../scene/scene.h"
@@ -21,11 +24,18 @@
 
 class IO {
 public:
+#ifdef _WIN32
     typedef BOOL (__stdcall *FileDialogFunc)(LPOPENFILENAMEA);
-
+#endif
     static void InitIO();
+#ifdef _WIN32
     static std::string Dialog(const char* filter, FileDialogFunc func);
+#else
+    static std::string Dialog(const char* filter);
+#endif
     static std::string DirectoryDialog();
+    static std::string OpenDialog(const char* filter);
+    static std::string SaveDialog(const char* filter);
     static void saveToFile(std::ofstream &file, const Scene &scene);
     static Scene loadFromFile(std::ifstream &file, const std::string &workingDir);
 };
