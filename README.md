@@ -60,6 +60,7 @@ ninja
 ├── Src
 │   ├── geometry
 │   │   ├── mesh.cpp
+│   │   ├── model.cpp
 │   │   ├── primitives.cpp
 │   │   └── terrain.cpp
 │   ├── gl
@@ -79,11 +80,51 @@ ninja
 │       ├── logging
 │       │   └── log.cpp
 │       └── texture.cpp
+├── Website
+│   ├── LSIMdocs
+│   │   ├── 001welcome.md
+│   │   ├── 002gettingStarted.md
+│   │   ├── 003fixingLauncherIssues.md
+│   │   ├── 004theBasics.md
+│   │   ├── 005movement.md
+│   │   ├── 006transformations.md
+│   │   ├── 007creations.md
+│   │   ├── 008textures.md
+│   │   ├── 009fileIO.md
+│   │   ├── 010goingFurther.md
+│   │   ├── 011workingWithConfigs.md
+│   │   ├── 012logger.md
+│   │   ├── 013fileIO.md
+│   │   ├── 014otherSystems.md
+│   │   ├── 015primitives.md
+│   │   ├── 016mesh.md
+│   │   ├── 017light.md
+│   │   ├── 018gui.md
+│   │   ├── 019inputs.md
+│   │   ├── 020texture.md
+│   │   ├── 021programmingYourGame.md
+│   │   ├── 022exampleGame.md
+│   │   ├── 023theEnd.md
+│   │   └── imgs
+│   │       ├── after.png
+│   │       ├── before.png
+│   │       ├── components.png
+│   │       ├── configMisconfig.png
+│   │       ├── normalExample.jpg
+│   │       ├── shaderMisconfig.png
+│   │       ├── specularExample.png
+│   │       └── success.png
+│   └── Src
+│       ├── docs
+│       │   └── LSIMdocs.h
+│       └── styles
+│           └── LSIMENGINE_Styles.css.h
 ├── config
 │   └── config.json
 ├── include
 │   ├── geometry
 │   │   ├── mesh.h
+│   │   ├── model.h
 │   │   ├── primitives.h
 │   │   └── terrain.h
 │   ├── gl
@@ -105,15 +146,25 @@ ninja
 │       ├── json.h
 │       ├── logging
 │       │   └── log.h
+│       ├── meshPicking.h
 │       └── texture.h
 ├── shaders
 │   ├── default.frag
-│   ├── default.geom
 │   ├── default.vert
-│   └── instance.vert
-└── tree.txt
+│   ├── instance.vert
+│   ├── skybox.frag
+│   └── skybox.vert
+├── skybox
+│   ├── back.jpg
+│   ├── bottom.jpg
+│   ├── front.jpg
+│   ├── left.jpg
+│   ├── right.jpg
+│   └── top.jpg
+├── tree.txt
+└── website.dsp
 
-17 directories, 43 files
+24 directories, 87 files
 ```
 <!-- TREE_END -->
 ## Contributing
