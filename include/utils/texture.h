@@ -13,8 +13,8 @@
 class Texture {
 public:
     static void InitTextures();
-    static unsigned int GetTexId(const char* path);
-    static unsigned int GetCubemapId(std::string faces[6]);
+    static unsigned int GetTexId(const char *path, int texFilter);
+    static unsigned int GetCubemapId(std::string faces[], int texFilter);
 
     static void ByteArrayToPNG(const char *filename, const unsigned char *texture, unsigned int width, unsigned int height);
 };

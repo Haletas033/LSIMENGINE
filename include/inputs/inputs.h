@@ -14,9 +14,10 @@
 
 class Inputs {
 private:
-    void MeshInputs(GLFWwindow* window, const Scene &scene, const int &currentMesh, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
+    void MeshInputs(::GLFWwindow *window, const ::Scene &scene, float deltaTime, const int &currentMesh, int &selectedMesh, glm::vec3
+                    Orientation);
 
-    void LightInputs(Scene &scene, const int &currentLight, GLFWwindow* window);
+    void LightInputs(Scene &scene, float deltaTime, const int &currentLight, GLFWwindow *window);
 
     void IOInputs(GLFWwindow *window, Scene &scene, const std::string &workingDir);
 public:
@@ -37,8 +38,9 @@ public:
 
     static void InitInputs();
 
-    void InputHandler(struct ::GLFWwindow *window, ::Scene &scene, const ::std::string &workingDir,
-                      const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation);
+    void InputHandler(::GLFWwindow *window, ::Scene &scene, float deltaTime,
+                      const ::std::string &workingDir, const int &currentMesh, const int &currentLight, int &selectedMeshType, int &
+                      selectedMesh, glm::vec3 Orientation);
 };
 
 #endif //INPUTS_CLASS_H

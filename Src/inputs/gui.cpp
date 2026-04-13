@@ -67,7 +67,7 @@ void Gui::AddTexture(const char* name, std::string fileName, const std::vector<s
         std::cout << fileName << std::endl;
         std::filesystem::copy(filePath.c_str(), std::string(workingDir + "resources/") + fileName, std::filesystem::copy_options::overwrite_existing);
 
-        const unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
+        const unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str(), GL_NEAREST);
         for (const int mesh : currentMeshes) {
             if (use) meshes[mesh][0].get()->*use = true;
             meshes[mesh][0].get()->*id = texture;
@@ -325,7 +325,7 @@ void Gui::Scene(const std::string &workingDir, unsigned int &skyboxTexId, glm::v
             faces[4] = skyBoxDir + "/front.jpg";
             faces[5] = skyBoxDir + "/back.jpg";
 
-            skyboxTexId = Texture::GetCubemapId(faces);
+            skyboxTexId = Texture::GetCubemapId(faces, GL_NEAREST);
         }
 
         ImGui::ColorEdit4("Ambient Light Colour", glm::value_ptr(ambientLightColour));

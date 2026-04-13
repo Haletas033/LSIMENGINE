@@ -93,7 +93,7 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 			break;
 		}
 		case 6: {
-			const auto filePath = IO::OpenDialog("Model Files\0*.gltf\0All Files\0*.*\0");
+			const auto filePath = IO::Dialog("Model Files\0*.gltf\0All Files\0*.*\0", GetOpenFileNameA);
 			Log("stdInfo", filePath);
 			const Model model{(filePath.c_str())};
 
@@ -354,7 +354,7 @@ int main(int argc, char** argv)
 	};
 
 	//Get skybox texture id
-	unsigned int skyboxTexId = Texture::GetCubemapId(faces);
+	unsigned int skyboxTexId = Texture::GetCubemapId(faces, GL_LINEAR);
 
 	//Run Start() for all scripts
 	for (auto script : Script::GetAllScripts()) {
@@ -444,12 +444,12 @@ int main(int argc, char** argv)
 			if (currentMeshes.empty()) {
 				int falseMesh = 0;
 
-				inputs.InputHandler(window, scene, workingDir, falseMesh,
-					currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
+				inputs.InputHandler(window, scene, deltaTime, workingDir,
+				                    falseMesh, currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			} else {
 				for (int mesh : currentMeshes)
-					inputs.InputHandler(window, scene, workingDir, mesh,
-						currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
+					inputs.InputHandler(window, scene, deltaTime, workingDir,
+					                    mesh, currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			}
 			#endif
 		}
