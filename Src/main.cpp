@@ -11,15 +11,17 @@
 #include <include/utils/defaults.h>
 #include <include/utils/logging/log.h>
 #include <include/utils/json.h>
+#include <include/geometry/model.h>
 
 #include <nlohmann/json.hpp>
 
 #include "include/scene/script.h"
 #include "include/utils/texture.h"
+#include "utils/meshPicking.h"
 
 double mouseX, mouseY;
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 
 json config;
 
@@ -36,7 +38,7 @@ std::vector<GLfloat> vertices;
 //Indices for vertices order
 std::vector<GLuint> indices;
 
-std::vector<std::unique_ptr<Mesh>> meshes;
+std::vector<std::vector<std::unique_ptr<Mesh>>> meshes;
 
 std::vector<Logger> logs;
 
@@ -45,7 +47,7 @@ static void Log(const std::string& key, const std::string& msg) {
 		(*it->second)(msg, logs);
 }
 
-void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType, int &lastClickMesh) {
+void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType, int &lastClickMesh, const char* workingDir) {
 	scene.addMeshSignal = false;
 
 	std::unique_ptr<Mesh> newMesh;
@@ -74,18 +76,38 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 			newMesh->name = "Torus";
 			break;
 		case 5: {
-			std::vector<std::vector<float>> noiseMap = GenerateNoiseMap(defaults.size, defaults.size, static_cast<int>(time(nullptr)),
+			std::vector<std::vector<float>> noiseMap = Terrain::GenerateNoiseMap(defaults.size, defaults.size, static_cast<int>(time(nullptr)),
 				defaults.scale, defaults.octaves, defaults.persistence, defaults.lacunarity);
 
-			const GLuint noiseMapTexture = noiseMapToTexture(noiseMap);
+			const auto uID = static_cast<long long>(glfwGetTime() * 1'000'000'000LL);
+			const char* outputPath = (std::string(workingDir) + "resources/" + std::to_string(uID) + "terrain.png").c_str();
+			const GLuint noiseMapTexture = Terrain::noiseMapToTexture(noiseMap, outputPath);
 
-			noiseMapToMesh(noiseMap, vertices, indices, defaults.heightScale, defaults.gridScale);
+			Terrain::noiseMapToMesh(noiseMap, vertices, indices, defaults.heightScale, defaults.gridScale);
 
 			newMesh = std::make_unique<Mesh>(vertices, indices);
 			newMesh->name = "Terrain";
 			newMesh->useTexture = true;
+			newMesh->texturePath = std::to_string(uID) + "terrain.png";
 			newMesh->texId = noiseMapTexture;
 			break;
+		}
+		case 6: {
+			const auto filePath = IO::Dialog("Model Files\0*.gltf\0All Files\0*.*\0");
+			Log("stdInfo", filePath);
+			const Model model{(filePath.c_str())};
+
+			std::vector<std::unique_ptr<Mesh>> meshes;
+
+			for (const auto &mesh : model.meshes) {
+				auto uniqueMesh = std::make_unique<Mesh>(mesh);
+				meshes.push_back(std::move(uniqueMesh));
+			}
+
+			auto* node = new Gui::Node{ meshes[0].get(), Gui::root, {} };
+			Gui::root->children.push_back(node);
+
+			scene.meshes.push_back(std::move(meshes));
 		}
 		default:
 			break;
@@ -95,10 +117,11 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 		auto* node = new Gui::Node{ newMesh.get(), Gui::root, {} };
 		Gui::root->children.push_back(node);
 
-		scene.meshes.push_back(std::move(newMesh));
-
-		lastClickMesh = scene.meshes.size() - 1;
+		scene.meshes.push_back(std::vector<std::unique_ptr<Mesh>>());
+		scene.meshes.back().push_back(std::move(newMesh));
 	}
+
+	lastClickMesh = scene.meshes.size() - 1;
 
 	Log("stdInfo", "Successfully added mesh");
 }
@@ -108,14 +131,16 @@ void DeleteMesh(Scene &scene, std::vector<int>& currentMeshes, int &lastClickMes
 
 	std::sort(currentMeshes.begin(), currentMeshes.end());
 	std::reverse(currentMeshes.begin(), currentMeshes.end());
-	for (const int mesh : currentMeshes) {
-		const Mesh* meshToDelete = scene.meshes[mesh].get();
+	for (const int object : currentMeshes) {
+		for (const auto &mesh : scene.meshes[object]) {
+			const Mesh* meshToDelete = mesh.get();
 
-		if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete)) {
-			Gui::DeleteNode(nodeToDelete); // This handles reparenting children
+			if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete)) {
+				Gui::DeleteNode(nodeToDelete); // This handles reparenting children
+			}
 		}
 
-		scene.meshes.erase(scene.meshes.begin() + mesh);
+		scene.meshes.erase(scene.meshes.begin() + object);
 	}
 	currentMeshes.clear();
 	if (lastClickMesh > scene.meshes.size() -1)
@@ -152,18 +177,31 @@ void DrawLights(Shader &shader, Defaults defaults, Scene &scene) {
 	for (int i = 0; i < defaults.MAX_LIGHTS; ++i) {
 		std::string prefix = "lights[" + std::to_string(i) + "].";
 		if (i < scene.lights.size()) {
+			glUniform1i(glGetUniformLocation(shader.ID, (prefix + "lightType").c_str()), scene.lights[i].lightType);
 			glUniform4fv(glGetUniformLocation(shader.ID, (prefix + "lightColor").c_str()), 1, &scene.lights[i].lightColor[0]);
 			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, &scene.lights[i].lightPos[0]);
+			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightDir").c_str()), 1, &scene.lights[i].lightDir[0]);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "linear").c_str()), scene.lights[i].linear);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "quadratic").c_str()), scene.lights[i].quadratic);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "intensity").c_str()), scene.lights[i].intensity);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "spotAngle").c_str()), scene.lights[i].spotAngle);
 		} else {
 			// Clear unused lights
+			glUniform1i(glGetUniformLocation(shader.ID, (prefix + "lightType").c_str()), 0);
 			glUniform4fv(glGetUniformLocation(shader.ID, (prefix + "lightColor").c_str()), 1, glm::value_ptr(glm::vec4(0.0f)));
 			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
+			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
+			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightDir").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "linear").c_str()), 0.0f);
 			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "quadratic").c_str()), 0.0f);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "intensity").c_str()), 0.0f);
+			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "spotAngle").c_str()), 0.0f);
 		}
 	}
+
+	//Ambient
+	glUniform4fv(glGetUniformLocation(shader.ID, "ambientLightColour"), 1, glm::value_ptr(scene.ambientLightColour));
+	glUniform1f(glGetUniformLocation(shader.ID, "ambientLightIntensity"), scene.ambientLightIntensity);
 }
 
 Defaults engineDefaults;
@@ -172,6 +210,7 @@ Scene scene {};
 Camera camera {};
 GLFWwindow* window;
 std::string workingDir;
+
 
 int main(int argc, char** argv)
 {
@@ -192,10 +231,15 @@ int main(int argc, char** argv)
 	engineDefaults = JSONManager::InitJSON(workingDir + "config/config.json", config, loggers);
 
 	//Load shaders
+
+	//default shaders
 	std::string vertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.vert", config);
-	std::string instanceShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/instance.vert", config);
 	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.frag", config);
-	std::string geometryShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.geom", config);
+
+	std::string instanceVertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/instance.vert", config);
+
+	std::string skyboxVert = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.vert", config);
+	std::string skyboxFrag = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.frag", config);
 
 	loggers["stdInfo"]->SetModule("MAIN");
 	loggers["stdWarn"]->SetModule("MAIN");
@@ -237,6 +281,7 @@ int main(int argc, char** argv)
 
 	//Introduce the window into the current context
 	glfwMakeContextCurrent(window);
+	glfwSwapInterval(0);
 
 	//Load GLAD so it configures OpenGL
 	gladLoadGL();
@@ -246,16 +291,20 @@ int main(int argc, char** argv)
 	// Register the window resize callback function
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-	//Generate Shader object using shaders default.vert and default.frag
-	Shader shaderProgram(vertexShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
-	Shader instanceShaderProgram(instanceShader.c_str(), fragmentShader.c_str(), geometryShader.c_str(), true);
+	Shader shaderProgram(vertexShader.c_str(), fragmentShader.c_str(), true);
+	Shader instanceShaderProgram(instanceVertexShader.c_str(), fragmentShader.c_str(), true);
+	Shader skyboxShaderProgram(skyboxVert.c_str(), skyboxFrag.c_str(), true);
 
 	Gui::Initialize(window);
 
-	meshes.push_back(std::make_unique<Mesh>(primitives::GenerateCube(1)));
-	meshes.back()->name = "First Cube";
-	auto* node = new Gui::Node{ meshes.back().get(), Gui::root, {} };
+	meshes.emplace_back();
+	meshes.back().push_back(std::make_unique<Mesh>(primitives::GenerateCube(1)));
+
+	meshes.back()[0]->name = "First Cube";
+	auto* node = new Gui::Node{ meshes.back()[0].get(), Gui::root, {} };
 	Gui::root->children.push_back(node);
+	Log("stdInfo", "Successfully created the default \"First Cube\"");
+
 	Log("stdInfo", "Successfully created the default \"First Cube\"");
 
 	//Enable the Depth Buffer
@@ -278,7 +327,7 @@ int main(int argc, char** argv)
 	int lastClickMesh = -1;
 	int currentLight = 0;
 
-	scene = {std::move(meshes), std::move(lights)};
+	scene = Scene{ std::move(meshes), std::move(lights) };
 	Log("stdInfo", "Successfully moved meshes and lights into the main scene");
 
 	if (!workingDir.empty()) {
@@ -291,10 +340,27 @@ int main(int argc, char** argv)
 		}
 	}
 
+	//Create skybox
+	std::unique_ptr<Mesh> skybox = std::make_unique<Mesh>(primitives::GenerateCube(1));
+
+	//Skybox faces
+	std::string faces[6] = {
+		"skybox/right.jpg",
+		"skybox/left.jpg",
+		"skybox/top.jpg",
+		"skybox/bottom.jpg",
+		"skybox/front.jpg",
+		"skybox/back.jpg",
+	};
+
+	//Get skybox texture id
+	unsigned int skyboxTexId = Texture::GetCubemapId(faces, GL_LINEAR);
+
 	//Run Start() for all scripts
 	for (auto script : Script::GetAllScripts()) {
 		script->Start();
 	}
+
 
 	//Main render loop
 	Log("stdInfo", "Starting main gameplay loop");
@@ -343,9 +409,15 @@ int main(int argc, char** argv)
 		static int selectedMeshType = 0;
 		static int selectedLogLevel = 0;
 
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+			auto viewport = glm::vec4(0.0f, 0.0f, windowWidth, windowHeight);
+			auto rayDir = meshPicking::GetMouseRay(mouseX, mouseY, camera.projection, camera.view, viewport);
+			lastClickMesh = meshPicking::pickMesh(scene.meshes, camera.Position, rayDir);
+		}
+
 
 		if (scene.addMeshSignal) {
-			AddMesh(scene, engineDefaults, selectedMeshType, lastClickMesh);
+			AddMesh(scene, engineDefaults, selectedMeshType, lastClickMesh, workingDir.c_str());
 			Log("stdInfo", "Adding mesh");
 		}
 
@@ -372,29 +444,39 @@ int main(int argc, char** argv)
 			if (currentMeshes.empty()) {
 				int falseMesh = 0;
 
-				inputs.InputHandler(window, scene, workingDir, falseMesh,
-					currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
+				inputs.InputHandler(window, scene, deltaTime, workingDir,
+				                    falseMesh, currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			} else {
 				for (int mesh : currentMeshes)
-					inputs.InputHandler(window, scene, workingDir, mesh,
-						currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
+					inputs.InputHandler(window, scene, deltaTime, workingDir,
+					                    mesh, currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
 			}
 			#endif
 		}
 
-		//Draw meshes
+		shaderProgram.Activate();
+
+		//Draw all meshes
 		if (!scene.meshes.empty()) {
-			for (auto& meshPtr : scene.meshes) {
-				Mesh& mesh = *meshPtr;
+			for (auto& objectPtr : scene.meshes) {
+				glm::mat4 finalMatrix = objectPtr[0]->modelMatrix;
 
-				GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
-				GLint useNormalMapLoc = glGetUniformLocation(shaderProgram.ID, "useNormalMap");
-				glUniform1i(useTexLoc, mesh.useTexture);
-				glUniform1i(useNormalMapLoc, mesh.useNormalMap);
+				for (auto& meshPtr : objectPtr) {
+					Mesh& mesh = *meshPtr;
 
-				glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
+					GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
+					GLint useNormalMapLoc = glGetUniformLocation(shaderProgram.ID, "useNormalMap");
+					glUniform1i(useTexLoc, mesh.useTexture);
+					glUniform1i(useNormalMapLoc, mesh.useNormalMap);
 
-				mesh.Draw(shaderProgram, camera);
+					glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
+
+					glUniform1f(glGetUniformLocation(shaderProgram.ID, "roughness"), mesh.roughness);
+					glUniform3f(glGetUniformLocation(shaderProgram.ID, "F0"), mesh.F0, mesh.F0, mesh.F0);
+
+					auto updatedMatrix = meshPtr->modelMatrix == finalMatrix ? finalMatrix : finalMatrix * meshPtr->modelMatrix;
+					mesh.Draw(shaderProgram, camera, updatedMatrix);
+				}
 			}
 		}
 
@@ -426,16 +508,38 @@ int main(int argc, char** argv)
 			instance->DrawInstances(instanceShaderProgram, camera);
 		}
 
+		//Draw skybox
+		glDepthFunc(GL_LEQUAL);
+
+		skyboxShaderProgram.Activate();
+		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, skyboxShaderProgram, "camMatrix", aspect);
+
+		DrawLights(skyboxShaderProgram, engineDefaults, scene);
+
+		auto view = glm::mat4(1.0f);
+		auto projection = glm::mat4(1.0f);
+		view = glm::mat4(glm::mat3(glm::lookAt(camera.Position, camera.Position + camera.Orientation, camera.Up)));
+		projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
+		glUniformMatrix4fv(glGetUniformLocation(skyboxShaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(skyboxShaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexId);
+		glUniform1i(glGetUniformLocation(skyboxShaderProgram.ID, "skybox"), 0);
+
+		skybox->Draw(skyboxShaderProgram, camera, skybox->modelMatrix);
+
+		glDepthFunc(GL_LESS);
+
 		//Run Update() function for all scripts
 		for (auto script : Script::GetAllScripts()) {
 			script->Update(deltaTime);
 		}
 
 		//Update every mesh
-		for (const auto &mesh : scene.meshes) {
-			mesh.get()->ApplyTransformations();
+		for (const auto &object : scene.meshes) {
+			for (const auto &mesh : object)
+				mesh.get()->ApplyTransformations();
 		}
-
 
 		//Update every light
 		for (auto &light : scene.lights) {
@@ -462,6 +566,8 @@ int main(int argc, char** argv)
 		Gui::Transform(workingDir, scene.meshes, currentMeshes, selectedMeshType, lastClickMesh);
 
 		Gui::Lighting(scene.lights, currentLight);
+
+		Gui::Scene(workingDir, skyboxTexId, scene.ambientLightColour, scene.ambientLightIntensity);
 
 		Gui::Debug(mouseX, mouseY);
 
@@ -501,7 +607,7 @@ int main(int argc, char** argv)
 	}
 	Log("stdInfo", "Exiting L-SIMENGINE");
 
-	Gui::DeleteNodeRercursively(Gui::root);
+	Gui::DeleteNodeRecursively(Gui::root);
 
 	Gui::CleanUp();
 

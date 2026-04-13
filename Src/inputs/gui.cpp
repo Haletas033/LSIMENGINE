@@ -2,6 +2,10 @@
 
 #include <iterator>
 
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
+#include "gl/VAO.h"
 #include "include/utils/texture.h"
 
 Gui::Node* Gui::root = nullptr;
@@ -51,13 +55,45 @@ void Gui::CleanUp() {
     ImGui::DestroyContext();
 }
 
-void Gui::Transform(const std::string &workingDir, const std::vector<std::unique_ptr<Mesh>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
+void Gui::AddTexture(const char* name, std::string fileName, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes,
+    const std::vector<int> &currentMeshes, const std::string &workingDir,GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use) {
+    if (ImGui::Button(name)) {
+        const std::string filePath = IO::OpenDialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0");
+
+        //Get just the fileName
+        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
+
+        //Copy the file from the file path into the project dir
+        std::cout << fileName << std::endl;
+        std::filesystem::copy(filePath.c_str(), std::string(workingDir + "resources/") + fileName, std::filesystem::copy_options::overwrite_existing);
+
+        const unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str(), GL_NEAREST);
+        for (const int mesh : currentMeshes) {
+            if (use) meshes[mesh][0].get()->*use = true;
+            meshes[mesh][0].get()->*id = texture;
+            meshes[mesh][0].get()->*path = fileName;
+        }
+    }
+}
+
+void Gui::RemoveTexture(const char* name, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, const std::vector<int> &currentMeshes,
+    GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use) {
+    if (ImGui::Button(name)) {
+        for (const int mesh : currentMeshes) {
+            if (use) meshes[mesh][0].get()->*use = false;
+            meshes[mesh][0].get()->*id = NULL;
+            meshes[mesh][0].get()->*path = "";
+        }
+    }
+}
+
+void Gui::Transform(const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
 
             Mesh* refMesh = nullptr;
             if (!currentMeshes.empty()){
-                refMesh = meshes[currentMeshes[0]].get();
+                refMesh = meshes[currentMeshes[0]][0].get();
             }
 
             if (refMesh){
@@ -76,30 +112,30 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
                 }
     
                 if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
-                    for (const int mesh : currentMeshes) meshes[mesh].get()->name = nameBuffer;
+                    for (const int mesh : currentMeshes) meshes[mesh][0].get()->name = nameBuffer;
                 }
-    
+
                 if (ImGui::InputFloat3("Position", glm::value_ptr(position))) {
                     for (int idx : currentMeshes) {
-                        meshes[idx]->position = position;
+                        meshes[idx][0]->position = position;
                     }
                 }
                 if (ImGui::InputFloat3("Rotation", glm::value_ptr(rotation))) {
                     for (int idx : currentMeshes) {
-                        meshes[idx]->rotation = rotation;
+                        meshes[idx][0]->rotation = rotation;
                     }
                 }
-    
+
                 if (uniformScaleLock) {
                     if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
                         for (int idx : currentMeshes) {
-                            meshes[idx]->scale = glm::vec3(uniformScale);
+                            meshes[idx][0]->scale = glm::vec3(uniformScale);
                         }
                     }
                 } else {
                     if (ImGui::InputFloat3("Scale", glm::value_ptr(scale))) {
                         for (int idx : currentMeshes) {
-                            meshes[idx]->scale = scale;
+                            meshes[idx][0]->scale = scale;
                         }
                     }
                 }
@@ -112,87 +148,49 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
                 if (!refMesh->useTexture) {
                     if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh->color))) {
                         for (int mesh : currentMeshes) {
-                            meshes[mesh].get()->useTexture = false;
-                            meshes[mesh].get()->color = refMesh->color;
+                            meshes[mesh][0].get()->useTexture = false;
+                            meshes[mesh][0].get()->color = refMesh->color;
                         }
                     }
                 } else {
                     static std::string fileName = "No texture";
-                    if (ImGui::Button("Add Texture")) {
-                        std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
 
-                        //Get just the fileName
-                        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
+                    //Texture
+                    AddTexture("Add Texture", fileName, meshes, currentMeshes, workingDir,
+                        &Mesh::texId, &Mesh::texturePath, nullptr);
 
-                        //Copy the file from the file path into the project dir
-                        std::cout << fileName << std::endl;
-                        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
-
-                        unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh].get()->texId = texture;
-                            meshes[mesh].get()->texturePath = fileName;
-                        }
-                    }
-
-                    if (ImGui::Button("Add Specular Map")) {
-                        std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
-
-                        //Get just the fileName
-                        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
-
-                        //Copy the file from the file path into the project dir
-                        std::cout << fileName << std::endl;
-                        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
-
-                        unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh].get()->specMapId = texture;
-                            meshes[mesh].get()->specMapPath = fileName;
-                        }
-                    }
+                    //Specular Map
+                    AddTexture("Add Specular Map", fileName, meshes, currentMeshes, workingDir,
+                        &Mesh::specMapId, &Mesh::specMapPath, nullptr);
 
                     ImGui::SameLine();
 
-                    if (ImGui::Button("Remove Specular Map")) {
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh].get()->specMapId = NULL;
-                            meshes[mesh].get()->specMapPath = "";
-                        }
-                    }
+                    RemoveTexture("Remove Specular Map", meshes, currentMeshes, &Mesh::specMapId, &Mesh::specMapPath, nullptr);
 
-                    if (ImGui::Button("Add Normal Map")) {
-                        std::string filePath = IO::Dialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0", GetOpenFileNameA);
-
-                        //Get just the fileName
-                        fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
-
-                        //Copy the file from the file path into the project dir
-                        std::cout << fileName << std::endl;
-                        CopyFile(filePath.c_str(), (std::string(workingDir + "resources/") + fileName).c_str(), FALSE);
-
-                        unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str());
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh].get()->useNormalMap = true;
-                            meshes[mesh].get()->normalMapId = texture;
-                            meshes[mesh].get()->normalMapPath = fileName;
-                        }
-                    }
+                    //Normal Map
+                    AddTexture("Add Normal Map", fileName, meshes, currentMeshes, workingDir,
+                        &Mesh::normalMapId, &Mesh::normalMapPath, &Mesh::useNormalMap);
 
                     ImGui::SameLine();
 
-                    if (ImGui::Button("Remove Normal Map")) {
-                        for (const int mesh : currentMeshes) {
-                            meshes[mesh].get()->useNormalMap = false;
-                            meshes[mesh].get()->normalMapId = NULL;
-                            meshes[mesh].get()->normalMapPath = "";
-                        }
-                    }
+                    RemoveTexture("Remove Normal Map", meshes, currentMeshes, &Mesh::normalMapId, &Mesh::normalMapPath, &Mesh::useNormalMap);
 
+                    //Emissive Map
+                    AddTexture("Add Emissive Map", fileName, meshes, currentMeshes, workingDir,
+                        &Mesh::emissiveMapId, &Mesh::emissiveMapPath, nullptr);
 
-                    ImGui::Text("Current texture file: %s", fileName.c_str());
+                    ImGui::SameLine();
+
+                    RemoveTexture("Remove Emissive Map", meshes, currentMeshes, &Mesh::emissiveMapId, &Mesh::emissiveMapPath, nullptr);
                 }
+
+                ImGui::InputFloat("Emissive Intensity", &refMesh->emissiveIntensity);
+
+                ImGui::SliderFloat("Roughness", &refMesh->roughness, 0, 1);
+                ImGui::SliderFloat("F0", &refMesh->F0, 0, 1);
             }
+
+
 
             static char meshSelectionBuffer[128] = "";
             static int lastClickedMesh = -1;
@@ -221,7 +219,7 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
             }
         }
 
-        const char* meshTypes[] = { "Cube", "Pyramid", "Plane", "Sphere", "Torus", "Terrain" };
+        const char* meshTypes[] = { "Cube", "Pyramid", "Plane", "Sphere", "Torus", "Terrain", "Model" };
         ImGui::Combo("Mesh Type", &selectedMeshType, meshTypes, IM_ARRAYSIZE(meshTypes));
     }
 }
@@ -229,11 +227,29 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::unique
 void Gui::Lighting(std::vector<Light> &lights, int &currentLight) {
     if (ImGui::CollapsingHeader("Lighting")) {
         if (currentLight != -1) {
+            const char* lightTypes[] = {"Point", "Directional", "Spot"};
+            int selectedIndex = lights[currentLight].lightType;
+
+            if (ImGui::Combo("Light Type", &selectedIndex, lightTypes, IM_ARRAYSIZE(lightTypes))) {
+                lights[currentLight].lightType = static_cast<Light::Type>(selectedIndex);
+            }
+
             ImGui::ColorEdit4("Light Color", glm::value_ptr(lights[currentLight].lightColor));
 
-            ImGui::InputFloat3("Light Position", glm::value_ptr(lights[currentLight].lightPos));
+            if (lights[currentLight].lightType != Light::directional)
+                ImGui::InputFloat3("Light Position", glm::value_ptr(lights[currentLight].lightPos));
 
-            ImGui::InputFloat("Light Attenuation", &lights[currentLight].attenuationScale);
+            if (lights[currentLight].lightType != Light::point)
+                ImGui::InputFloat3("Light Direction", glm::value_ptr(lights[currentLight].lightDir));
+
+            if (lights[currentLight].lightType != Light::directional)
+                ImGui::InputFloat("Light Attenuation", &lights[currentLight].attenuationScale);
+
+            if (lights[currentLight].lightType == Light::spotlight) {
+                ImGui::SliderAngle("Spotlight Angle", &lights[currentLight].spotAngle, -80.0f, 80.0f);
+            }
+
+            ImGui::InputFloat("Light Intensity", &lights[currentLight].intensity);
 
             if (ImGui::InputInt("Current Light", &currentLight))
                 currentLight = std::clamp(currentLight, 0, static_cast<int>(lights.size() - 1));
@@ -279,8 +295,6 @@ void Gui::Console(int &selectedLogLevel, const std::vector<Logger> &logs) {
         ImGui::EndCombo();
     }
 
-
-
     for (Logger log : logs) {
         if (log.GetLevel() >= selectedLogLevel) {
             auto it = std::find(modules.begin(), modules.end(), log.GetModule());
@@ -293,8 +307,33 @@ void Gui::Console(int &selectedLogLevel, const std::vector<Logger> &logs) {
     }
 }
 
+void Gui::Scene(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity) {
+    if (ImGui::CollapsingHeader("Scene")) {
+        if (ImGui::Button("Set Skybox")) {
+            std::string faces[6];
+            //Copy the skybox into resources
+            std::filesystem::copy(IO::DirectoryDialog(), workingDir + "skybox/", std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+            const std::string skyBoxDir = workingDir + "skybox";
 
-void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_ptr<Mesh>>& meshes) {
+            std::cout << skyBoxDir;
+
+            //Load faces
+            faces[0] = skyBoxDir + "/right.jpg";
+            faces[1] = skyBoxDir + "/left.jpg";
+            faces[2] = skyBoxDir + "/top.jpg";
+            faces[3] = skyBoxDir + "/bottom.jpg";
+            faces[4] = skyBoxDir + "/front.jpg";
+            faces[5] = skyBoxDir + "/back.jpg";
+
+            skyboxTexId = Texture::GetCubemapId(faces, GL_NEAREST);
+        }
+
+        ImGui::ColorEdit4("Ambient Light Colour", glm::value_ptr(ambientLightColour));
+        ImGui::InputFloat("Ambient Light Intensity", &ambientLightIntensity);
+    }
+}
+
+void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes) {
     if (!node) return;
 
     auto nodeName = "Game";
@@ -307,7 +346,7 @@ void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_p
         if (node->mesh) {
             int index = -1;
             for (int i = 0; i < meshes.size(); i++) {
-                if (meshes[i].get() == node->mesh) {
+                if (meshes[i][0].get() == node->mesh) {
                     index = i;
                     break;
                 }
@@ -366,9 +405,9 @@ void Gui::DeleteNode(Node* node) {
     delete node;
 }
 
-void Gui::DeleteNodeRercursively(Node* node) {
+void Gui::DeleteNodeRecursively(Node* node) {
     for (const auto child : node->children) {
-        DeleteNodeRercursively(child);
+        DeleteNodeRecursively(child);
     }
     node->children = {};
     if (node != root)
@@ -377,11 +416,10 @@ void Gui::DeleteNodeRercursively(Node* node) {
 
 void Gui::ClearRoot() {
     for (auto* child : root->children) {
-        DeleteNodeRercursively(child);
+        DeleteNodeRecursively(child);
     }
     root->children.clear();
 }
-
 
 Gui::Node* Gui::FindNodeByMesh(Node* node, const Mesh* mesh) {
     if (!node) return nullptr;
@@ -403,13 +441,10 @@ Gui::Node *Gui::FindNodeByMeshID(Node *node, const uint16_t meshID) {
     return nullptr;
 }
 
-
-int Gui::Hierarchy(const std::vector<std::unique_ptr<Mesh>>& meshes) {
+int Gui::Hierarchy(const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes) {
     int clickedMesh = -1;
     if (root) {
         DrawNode(root, clickedMesh, meshes);
     }
     return clickedMesh;
 }
-
-

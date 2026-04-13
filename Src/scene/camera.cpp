@@ -9,10 +9,10 @@ Camera::Camera(int width, int height, glm::vec3 position)
 	Position = position;
 }
 
-void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float aspect) const
+void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float aspect)
 {
-	glm::mat4 view = glm::lookAt(Position, Position + Orientation, Up);
-	glm::mat4 projection = glm::perspective(glm::radians(FOVdeg), aspect, nearPlane, farPlane);
+	view = glm::lookAt(Position, Position + Orientation, Up);
+	projection = glm::perspective(glm::radians(FOVdeg), aspect, nearPlane, farPlane);
 
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(projection * view));
 }
@@ -73,8 +73,8 @@ void Camera::Inputs(GLFWwindow* window, float deltaTime)
         }
 
         //Calculate mouse deltas
-        double deltaX = mouseX - lastMouseX;// Mouse movement in X (horizontal)
-        double deltaY = mouseY - lastMouseY;// Mouse movement in Y (vertical)
+        const double deltaX = mouseX - lastMouseX;// Mouse movement in X (horizontal)
+        const double deltaY = mouseY - lastMouseY;// Mouse movement in Y (vertical)
 
         lastMouseX = mouseX;
         lastMouseY = mouseY;

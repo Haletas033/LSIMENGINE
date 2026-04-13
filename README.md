@@ -1,5 +1,5 @@
 # LSIM ENGINE
-**v1.0**\
+**v1.1**\
 Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdocs.html)
 
 <img width="1908" height="981" alt="Maze Photo" src="https://github.com/user-attachments/assets/16993191-a488-4359-8955-9331246de6be" />
@@ -10,23 +10,23 @@ Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdo
 * Controllable camera (WASD + mouse)
 * Procedural terrain generation (Perlin noise)
 * Creating geometric primitives
-* Simple lighting
 * File I/O for scene loading and saving
 * Config system
 * A launcher [here](https://github.com/Haletas033/LSIMLAUNCHER)
-* Way to build games into `.exe` files
-
-## v1.1 (light update) Projected Features:
-* Sky boxes
+## Added in v1.1:
+* Model loading
+* Mesh picking
+* PBR lighting
 * More light types (directional, spotlight)
-* Shadows
-* Lights in Hierarchy
-* A lot of bug fixes
-* Some optimizations
+* Emissive map
+* Terrain texture saving 
+* Backwards compatibility
+* Sky-boxes
+* Linux support
 
-## Prerequisites (Windows)
+## Prerequisites:
 This project requires Git, Cmake, Ninja(or another build system)
-## How to run
+## How to run:
 1. Clone the repository
 ```bash
 git clone https://github.com/Haletas033/LSIMENGINE.git
@@ -79,45 +79,6 @@ ninja
 │       ├── logging
 │       │   └── log.cpp
 │       └── texture.cpp
-├── Website
-│   ├── LSIMdocs
-│   │   ├── 001welcome.md
-│   │   ├── 002gettingStarted.md
-│   │   ├── 003fixingLauncherIssues.md
-│   │   ├── 004theBasics.md
-│   │   ├── 005movement.md
-│   │   ├── 006transformations.md
-│   │   ├── 007creations.md
-│   │   ├── 008textures.md
-│   │   ├── 009fileIO.md
-│   │   ├── 010goingFurther.md
-│   │   ├── 011workingWithConfigs.md
-│   │   ├── 012logger.md
-│   │   ├── 013fileIO.md
-│   │   ├── 014otherSystems.md
-│   │   ├── 015primitives.md
-│   │   ├── 016mesh.md
-│   │   ├── 017light.md
-│   │   ├── 018gui.md
-│   │   ├── 019inputs.md
-│   │   ├── 020texture.md
-│   │   ├── 021programmingYourGame.md
-│   │   ├── 022exampleGame.md
-│   │   ├── 023theEnd.md
-│   │   └── imgs
-│   │       ├── after.png
-│   │       ├── before.png
-│   │       ├── components.png
-│   │       ├── configMisconfig.png
-│   │       ├── normalExample.jpg
-│   │       ├── shaderMisconfig.png
-│   │       ├── specularExample.png
-│   │       └── success.png
-│   └── Src
-│       ├── docs
-│       │   └── LSIMdocs.h
-│       └── styles
-│           └── LSIMENGINE_Styles.css.h
 ├── config
 │   └── config.json
 ├── include
@@ -150,10 +111,9 @@ ninja
 │   ├── default.geom
 │   ├── default.vert
 │   └── instance.vert
-├── tree.txt
-└── website.dsp
+└── tree.txt
 
-23 directories, 77 files
+17 directories, 43 files
 ```
 <!-- TREE_END -->
 ## Contributing

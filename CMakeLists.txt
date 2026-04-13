@@ -30,6 +30,7 @@ set(IMGUI_SOURCES
         include/utils/json.h Src/utils/json.cpp Src/utils/texture.cpp
         include/utils/texture.h
         include/scene/script.h
+        include/utils/meshPicking.h
 )
 add_executable(LSIM
         Src/main.cpp
@@ -49,6 +50,8 @@ add_executable(LSIM
         Src/geometry/mesh.cpp
         include/geometry/primitives.h
         Src/geometry/primitives.cpp
+        include/geometry/model.h
+        Src/geometry/model.cpp
         ${IMGUI_SOURCES}
         ${SCRIPTS_SOURCES}
         include/utils/fileIO.h
@@ -62,6 +65,7 @@ target_include_directories(LSIM
         include
 )
 file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/skybox DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
 target_link_libraries(LSIM PRIVATE glfw glm::glm-header-only glad)
 option(GAME "Build LSIM in GAME mode" OFF)

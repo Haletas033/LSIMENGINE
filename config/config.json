@@ -3,7 +3,7 @@
     "MAX_LIGHTS": 8
   },
   "defaults": {
-    "version": "v1.0",
+    "version": "v1.1",
     "defaultWindowWidth": 1920,
     "defaultWindowHeight": 1080,
 
@@ -30,7 +30,7 @@
     "speed": 1.0,
     "speedMultiplier": 50.0,
 
-    "transformSpeed": 0.1
+    "transformSpeed": 5
   },
   "loggers": {
     "stdInfo": {

@@ -23,6 +23,8 @@ public:
 
     virtual void Start() {};
 
+    virtual void Init() {};
+
     virtual void Update(const float deltaTime) {};
 
     using Creator = std::function<Script*()>;
@@ -41,6 +43,14 @@ public:
         for (auto& creator : GetRegistry()) {
             GetAllScripts().push_back(creator());
         }
+    }
+
+    template <typename T>
+    static T* Instantiate() {
+        T* self = new T();
+        self->Init();
+        GetAllScripts().push_back(self);
+        return self;
     }
 };
 

@@ -12,7 +12,7 @@
 #include "logging/log.h"
 #include "nlohmann/json.hpp"
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 class JSONManager {
 private:
     static std::unordered_map<std::string, const char*> colourMap;

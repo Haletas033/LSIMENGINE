@@ -37,7 +37,16 @@ public:
 
     static void CleanUp();
 
-    static void Transform(const std::string &workingDir, const std::vector<std::unique_ptr<Mesh>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
+    static void AddTexture(const char *name, std::string fileName,
+                           const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, const std::vector<int> &currentMeshes, const std::string
+                           &workingDir,
+                           GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use);
+
+    static void RemoveTexture(const char *name,
+                              const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes,
+                              const std::vector<int> &currentMeshes, GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use);
+
+    static void Transform(const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
 
     static void Lighting(std::vector<Light> &lights, int &currentLight);
 
@@ -45,11 +54,13 @@ public:
 
     static void Console(int &selectedLogLevel, const std::vector<Logger> &logs);
 
-    static void DrawNode(Node* node, int& clickedMesh, const std::vector<std::unique_ptr<Mesh>>& meshes);
+    static void Scene(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
+
+    static void DrawNode(Node *node, int &clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes);
 
     static void DeleteNode(Node *node);
 
-    static void DeleteNodeRercursively(Node *node);
+    static void DeleteNodeRecursively(Node *node);
 
     static void ClearRoot();
 
@@ -57,7 +68,7 @@ public:
 
     static Node *FindNodeByMeshID(Node *node, uint16_t meshID);
 
-    static int Hierarchy(const std::vector<std::unique_ptr<Mesh>>& meshes);
+    static int Hierarchy(const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes);
 
 
 };
