@@ -10,26 +10,23 @@ Documentation is available [here](https://haletas033.github.io/HaletasWeb/LSIMdo
 * Controllable camera (WASD + mouse)
 * Procedural terrain generation (Perlin noise)
 * Creating geometric primitives
-* Simple lighting
 * File I/O for scene loading and saving
 * Config system
 * A launcher [here](https://github.com/Haletas033/LSIMLAUNCHER)
-
-## v1.1 Projected Features:
-* Lights in Hierarchy
-* Light meshes
-
-## v1.1 Implemented Features:
+## Added in v1.1:
 * Model loading
 * Mesh picking
-* lighting improvements
+* PBR lighting
 * More light types (directional, spotlight)
-* Emmisive map
+* Emissive map
 * Terrain texture saving 
+* Backwards compatibility
+* Sky-boxes
+* Linux support
 
-## Prerequisites (Windows)
+## Prerequisites:
 This project requires Git, Cmake, Ninja(or another build system)
-## How to run
+## How to run:
 1. Clone the repository
 ```bash
 git clone https://github.com/Haletas033/LSIMENGINE.git
