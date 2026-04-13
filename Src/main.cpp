@@ -567,7 +567,7 @@ int main(int argc, char** argv)
 
 		Gui::Lighting(scene.lights, currentLight);
 
-		Gui::Scene(skyboxTexId, scene.ambientLightColour, scene.ambientLightIntensity);
+		Gui::Scene(workingDir, skyboxTexId, scene.ambientLightColour, scene.ambientLightIntensity);
 
 		Gui::Debug(mouseX, mouseY);
 

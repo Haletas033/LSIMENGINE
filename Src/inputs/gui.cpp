@@ -307,12 +307,14 @@ void Gui::Console(int &selectedLogLevel, const std::vector<Logger> &logs) {
     }
 }
 
-void Gui::Scene(unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity) {
+void Gui::Scene(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity) {
     if (ImGui::CollapsingHeader("Scene")) {
         if (ImGui::Button("Set Skybox")) {
             std::string faces[6];
+            //Copy the skybox into resources
+            std::filesystem::copy(IO::DirectoryDialog(), workingDir + "skybox/", std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
+            const std::string skyBoxDir = workingDir + "skybox";
 
-            const std::string skyBoxDir = IO::DirectoryDialog();
             std::cout << skyBoxDir;
 
             //Load faces
