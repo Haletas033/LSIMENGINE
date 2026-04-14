@@ -21,7 +21,7 @@ struct Scene {
             if (instanceVBO == 0)
                 glGenBuffers(1, &instanceVBO);
 
-            glBindVertexArray(mesh->vao.ID);
+            mesh->vao.Bind();
             glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
             glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4), instances.data(), GL_STATIC_DRAW);
 
@@ -35,7 +35,7 @@ struct Scene {
         }
 
         void DrawInstances(const Shader &shader, const Camera &camera) {
-            glBindVertexArray(mesh->vao.ID);
+            mesh->vao.Bind();
             glDrawElementsInstanced(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, nullptr, instances.size());
         }
     };

@@ -35,6 +35,10 @@ public:
     std::vector<Mesh> meshes;
 
     explicit Model(const char* file);
+    Model(Model&&) = default;
+    Model& operator=(Model&&) = default;
+    Model(const Model&) = delete;
+    Model& operator=(const Model&) = delete;
 
     std::vector<Mesh> loadMesh(unsigned int indMesh);
 

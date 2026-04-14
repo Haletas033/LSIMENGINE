@@ -5,7 +5,7 @@
 
 
 // Constructor
-Mesh::Mesh(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices) {
+Mesh::Mesh(const std::vector<GLfloat> &vertices, const std::vector<GLuint> &indices) {
     Mesh::vertices = vertices;
     Mesh::indices = indices;
 
@@ -128,20 +128,18 @@ void Mesh::GenerateTangents() {
 }
 
 void Mesh::setupBuffers() {
-    //Generate Vertex Array Object and binds it
     vao.Bind();
-    //Generates Vertex Buffer Object and links it to vertices
-    VBO vbo(vertices);
-    //Generate Element Buffer Object and links it to indices
-    EBO ebo(indices);
-    //Link VBO attributes such as coordinates and colors to VAO
-    vao.LinkAttrib(vbo, 0, 3, GL_FLOAT, 11 * sizeof(float), nullptr);
-    vao.LinkAttrib(vbo, 1, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
-    vao.LinkAttrib(vbo, 2, 2, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(6 * sizeof(float)));
-    vao.LinkAttrib(vbo, 3, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(8 * sizeof(float)));
-    //Unbind all to prevent accidentally modifying them
-    vao.Unbind();
-    vbo.Unbind();
-    ebo.Unbind();
+    vbo = VBO(vertices);
+    ebo = EBO(indices);
+    vbo->Bind();
+
+    vao.LinkAttrib(0, 3, GL_FLOAT, 11 * sizeof(float), nullptr);
+    vao.LinkAttrib(1, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+    vao.LinkAttrib(2, 2, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(6 * sizeof(float)));
+    vao.LinkAttrib(3, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(8 * sizeof(float)));
+
+    VAO::Unbind();
+    VBO::Unbind();
+    EBO::Unbind();
 }
 

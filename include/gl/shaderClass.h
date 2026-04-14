@@ -4,28 +4,28 @@
 
 #include<glad/glad.h>
 #include<string>
-#include<fstream>
-#include<sstream>
-#include<cerrno>
+#include <optional>
 
-std::string getFileContent(const char* filename);
+#define SHADER_SAFE_ATTACH(shader) do {if (shader) glAttachShader(ID, shader);} while (0)
+#define SHADER_SAFE_DELETE(shader) do {if (shader) glDeleteShader(shader);} while (0)
 
 class Shader {
-    public:
-        //Reference ID of the shaderProgram
-        GLuint ID;
+private:
+    GLuint ID = 0;
+    void Delete();
+    static GLuint CreateShader(const std::optional<std::string> &shaderSource, int type);
+public:
+    struct ShaderFiles {
+        std::optional<std::string> vertexSource;
+        std::optional<std::string> fragmentSource;
+        std::optional<std::string> geometrySource;
+    };
 
-        //Constructor that builds the shaderProgram from 3 different shaders
-        Shader(const char *vertexFile, const char *fragmentFile, const char *geometryFile, bool useRawString);
+    Shader(const ShaderFiles& shaders);
 
-        Shader(const char *vertexFile, const char *fragmentFile, bool useRawString);
+    void Activate() const;
 
-        //Activates the shaderProgram
-        void Activate();
-        //Deletes the shaderProgram
-        void Delete();
-    private:
-        static GLuint CreateShader(const char *shaderSource, int type);
+    ~Shader();
 };
 
 #endif //SHADER_CLASS_H

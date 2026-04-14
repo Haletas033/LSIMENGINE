@@ -5,18 +5,19 @@
 #include<vector>
 
 class EBO {
-    public:
-        //Reference ID of EBO
-        GLuint ID;
-        //Constructor that generates an EBO and links it to indices
-        EBO(std::vector<GLuint>& indices);
+private:
+    GLuint ID = 0;
+    void Delete();
+public:
+    explicit EBO(const std::vector<GLuint>& indices);
+    EBO(const EBO&) = delete;
+    EBO& operator=(const EBO&) = delete;
+    EBO(EBO &&other) noexcept;
+    EBO& operator=(EBO &&other) noexcept;
 
-        //Binds the EBO
-        void Bind();
-        //Unbinds the EBO
-        void Unbind();
-        //Deletes the EBO
-        void Delete();
+    void Bind() const;
+    static void Unbind();
+    ~EBO();
 };
 
 #endif //EBO_CLASS_H

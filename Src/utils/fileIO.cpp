@@ -375,7 +375,7 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
 
                 //Recreate mesh hierarchy
                 auto* node = new Gui::Node;
-                auto meshPtr = std::make_unique<Mesh>(mesh);
+                auto meshPtr = std::make_unique<Mesh>(std::move(mesh));
                 node->mesh = meshPtr.get();
                 Gui::Node* parentNode = Gui::FindNodeByMeshID(Gui::root, parentID);
                 if (!parentNode) parentNode = Gui::root;

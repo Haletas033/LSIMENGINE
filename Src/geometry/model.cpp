@@ -162,7 +162,7 @@ std::vector<Mesh> Model::loadMesh(const unsigned int indMesh) {
         Mesh model{vertices, indices};
         model.name = "Model_" + std::to_string(i);
         getTextures(model);
-        models.push_back(model);
+        models.push_back(std::move(model));
     }
     return models;
 }
@@ -235,7 +235,7 @@ void Model::TraverseNode(const unsigned int nextNode, const glm::mat4 &matrix) {
             const auto euler = glm::degrees(glm::eulerAngles(rotation));
             model.rotation = glm::vec3(euler.z, euler.y, euler.x); //Flip rotation
             model.scale = scale;
-            meshes.push_back(model);
+            meshes.push_back(std::move(model));
         }
     }
 

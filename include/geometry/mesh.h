@@ -1,6 +1,7 @@
 #ifndef MESH_CLASS_H
 #define MESH_CLASS_H
 
+#include <optional>
 #include<string>
 #include <vector>
 
@@ -43,6 +44,8 @@ public:
     uint16_t meshID = 0;
 
     VAO vao;
+    std::optional<VBO> vbo;
+    std::optional<EBO> ebo;
 
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 rotation = glm::vec3(0.0f);
@@ -53,8 +56,12 @@ public:
 
     void ApplyTransformations();
 
-    Mesh(std::vector<GLfloat>& vertices, std::vector<GLuint>& indices);
+    Mesh(const std::vector<GLfloat>& vertices, const std::vector<GLuint>& indices);
     Mesh() = default;
+    Mesh(Mesh&&) = default;
+    Mesh& operator=(Mesh&&) = default;
+    Mesh(const Mesh&) = delete;
+    Mesh& operator=(const Mesh&) = delete;
 
     void Draw(::Shader &shader, ::Camera &camera, const glm::mat4 &finalMatrix);
 

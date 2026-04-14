@@ -5,20 +5,19 @@
 #include "VBO.h"
 
 class VAO {
-    public:
-        //Reference ID for the VAO
-        GLuint ID;
-        //Constructor that generates a VAO ID
-        VAO();
-
-        // Links a VBO Attribute such as a position or color to the VAO
-        void LinkAttrib(VBO& VBO, GLuint layout, GLuint numComponents, GLenum type, GLsizeiptr stride, void* offset);
-        //Binds the VAO
-        void Bind();
-        //Unbinds the VAO
-        void Unbind();
-        //Deletes the VAO
-        void Delete();
+private:
+    GLuint ID = 0;
+    void Delete();
+public:
+    VAO();
+    VAO(const VAO&) = delete;
+    VAO& operator=(const VAO&) = delete;
+    VAO(VAO &&other) noexcept;
+    VAO& operator=(VAO &&other) noexcept;
+    void LinkAttrib(GLuint layout, GLuint numComponents, GLenum type, GLsizeiptr stride, const void *offset);
+    void Bind() const;
+    static void Unbind();
+    ~VAO();
 };
 
 #endif //VAO_CLASS_H

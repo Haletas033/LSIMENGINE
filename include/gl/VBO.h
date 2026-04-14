@@ -7,18 +7,18 @@
 
 
 class VBO {
-    public:
-        //Reference ID of the VBO
-        GLuint ID;
-        //Constructor that generates a VBO and links it to vertices
-        VBO(std::vector<GLfloat>& vertices);
-
-        //Binds the VBO
-        void Bind();
-        //Unbinds the VBO
-        void Unbind();
-        //Deletes the VBO
-        void Delete();
+private:
+    GLuint ID = 0;
+    void Delete();
+public:
+    explicit VBO(const std::vector<GLfloat>& vertices);
+    VBO(const VBO&) = delete;
+    VBO& operator=(const VBO&) = delete;
+    VBO(VBO &&other) noexcept;
+    VBO& operator=(VBO &&other) noexcept;
+    void Bind() const;
+    static void Unbind();
+    ~VBO();
 };
 
 #endif //VBO_CLASS_H
