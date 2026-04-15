@@ -177,31 +177,30 @@ void DrawLights(Shader &shader, Defaults defaults, Scene &scene) {
 	for (int i = 0; i < defaults.MAX_LIGHTS; ++i) {
 		std::string prefix = "lights[" + std::to_string(i) + "].";
 		if (i < scene.lights.size()) {
-			glUniform1i(glGetUniformLocation(shader.ID, (prefix + "lightType").c_str()), scene.lights[i].lightType);
-			glUniform4fv(glGetUniformLocation(shader.ID, (prefix + "lightColor").c_str()), 1, &scene.lights[i].lightColor[0]);
-			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, &scene.lights[i].lightPos[0]);
-			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightDir").c_str()), 1, &scene.lights[i].lightDir[0]);
-			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "linear").c_str()), scene.lights[i].linear);
-			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "quadratic").c_str()), scene.lights[i].quadratic);
-			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "intensity").c_str()), scene.lights[i].intensity);
-			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "spotAngle").c_str()), scene.lights[i].spotAngle);
+			shader.SetInt(prefix + "lightType", scene.lights[i].lightType);
+			shader.SetVec4(prefix + "lightColor", 1, &scene.lights[i].lightColor[0]);
+			shader.SetVec3(prefix + "lightPos", 1, &scene.lights[i].lightPos[0]);
+			shader.SetVec3(prefix + "lightDir", 1, &scene.lights[i].lightDir[0]);
+			shader.SetFloat(prefix + "linear", scene.lights[i].linear);
+			shader.SetFloat(prefix + "quadratic", scene.lights[i].quadratic);
+			shader.SetFloat(prefix + "intensity", scene.lights[i].intensity);
+			shader.SetFloat(prefix + "spotAngle", scene.lights[i].spotAngle);
 		} else {
 			// Clear unused lights
-			glUniform1i(glGetUniformLocation(shader.ID, (prefix + "lightType").c_str()), 0);
-			glUniform4fv(glGetUniformLocation(shader.ID, (prefix + "lightColor").c_str()), 1, glm::value_ptr(glm::vec4(0.0f)));
-			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
-			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightPos").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
-			glUniform3fv(glGetUniformLocation(shader.ID, (prefix + "lightDir").c_str()), 1, glm::value_ptr(glm::vec3(0.0f)));
-			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "linear").c_str()), 0.0f);
-			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "quadratic").c_str()), 0.0f);
-			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "intensity").c_str()), 0.0f);
-			glUniform1f(glGetUniformLocation(shader.ID, (prefix + "spotAngle").c_str()), 0.0f);
+			shader.SetInt(prefix + "lightType", 0);
+			shader.SetVec4(prefix + "lightColor", 1, glm::value_ptr(glm::vec4(0.0f)));
+			shader.SetVec3(prefix + "lightPos", 1, glm::value_ptr(glm::vec3(0.0f)));
+			shader.SetVec3(prefix + "lightPos", 1, glm::value_ptr(glm::vec3(0.0f)));
+			shader.SetVec3(prefix + "lightDir", 1, glm::value_ptr(glm::vec3(0.0f)));
+			shader.SetFloat(prefix + "linear", 0.0f);
+			shader.SetFloat(prefix + "quadratic", 0.0f);
+			shader.SetFloat(prefix + "intensity", 0.0f);
+			shader.SetFloat(prefix + "spotAngle", 0.0f);
 		}
 	}
 
-	//Ambient
-	glUniform4fv(glGetUniformLocation(shader.ID, "ambientLightColour"), 1, glm::value_ptr(scene.ambientLightColour));
-	glUniform1f(glGetUniformLocation(shader.ID, "ambientLightIntensity"), scene.ambientLightIntensity);
+	shader.SetVec4("ambientLightColour", 1, glm::value_ptr(scene.ambientLightColour));
+	shader.SetFloat("ambientLightIntensity", scene.ambientLightIntensity);
 }
 
 Defaults engineDefaults;
@@ -291,9 +290,9 @@ int main(int argc, char** argv)
 	// Register the window resize callback function
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-	Shader shaderProgram(vertexShader.c_str(), fragmentShader.c_str(), true);
-	Shader instanceShaderProgram(instanceVertexShader.c_str(), fragmentShader.c_str(), true);
-	Shader skyboxShaderProgram(skyboxVert.c_str(), skyboxFrag.c_str(), true);
+	Shader shaderProgram({vertexShader, fragmentShader});
+	Shader instanceShaderProgram({instanceVertexShader, fragmentShader});
+	Shader skyboxShaderProgram({skyboxVert, skyboxFrag});
 
 	Gui::Initialize(window);
 
@@ -464,15 +463,15 @@ int main(int argc, char** argv)
 				for (auto& meshPtr : objectPtr) {
 					Mesh& mesh = *meshPtr;
 
-					GLint useTexLoc = glGetUniformLocation(shaderProgram.ID, "useTexture");
-					GLint useNormalMapLoc = glGetUniformLocation(shaderProgram.ID, "useNormalMap");
+					GLint useTexLoc = shaderProgram.GetLocation("useTexture");
+					GLint useNormalMapLoc = shaderProgram.GetLocation("useNormalMap");
 					glUniform1i(useTexLoc, mesh.useTexture);
 					glUniform1i(useNormalMapLoc, mesh.useNormalMap);
 
-					glUniform4fv(glGetUniformLocation(shaderProgram.ID, "meshColor"), 1, glm::value_ptr(mesh.color));
+					shaderProgram.SetVec4("meshColor", 1, glm::value_ptr(mesh.color));
 
-					glUniform1f(glGetUniformLocation(shaderProgram.ID, "roughness"), mesh.roughness);
-					glUniform3f(glGetUniformLocation(shaderProgram.ID, "F0"), mesh.F0, mesh.F0, mesh.F0);
+					shaderProgram.SetFloat("roughness", mesh.roughness);
+					shaderProgram.SetVec3("F0", 1, glm::value_ptr(glm::vec3(mesh.F0)));
 
 					auto updatedMatrix = meshPtr->modelMatrix == finalMatrix ? finalMatrix : finalMatrix * meshPtr->modelMatrix;
 					mesh.Draw(shaderProgram, camera, updatedMatrix);
@@ -491,11 +490,11 @@ int main(int argc, char** argv)
 		for (auto& instance : scene.instancedMeshes) {
 			Mesh& mesh = *instance->mesh;
 
-			glUniform1i(glGetUniformLocation(instanceShaderProgram.ID, "tex0"), 0);
-			glUniform1i(glGetUniformLocation(instanceShaderProgram.ID, "normal0"), 1);
+			instanceShaderProgram.SetInt("tex0", 0);
+			instanceShaderProgram.SetInt("normal0", 1);
 
-			GLint useTexLoc = glGetUniformLocation(instanceShaderProgram.ID, "useTexture");
-			GLint useNormalMapLoc = glGetUniformLocation(instanceShaderProgram.ID, "useNormalMap");
+			GLint useTexLoc = shaderProgram.GetLocation("useTexture");
+			GLint useNormalMapLoc = shaderProgram.GetLocation("useNormalMap");
 			glUniform1i(useTexLoc, mesh.useTexture);
 			glUniform1i(useNormalMapLoc, mesh.useNormalMap);
 
@@ -520,11 +519,11 @@ int main(int argc, char** argv)
 		auto projection = glm::mat4(1.0f);
 		view = glm::mat4(glm::mat3(glm::lookAt(camera.Position, camera.Position + camera.Orientation, camera.Up)));
 		projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
-		glUniformMatrix4fv(glGetUniformLocation(skyboxShaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(skyboxShaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		skyboxShaderProgram.SetMat4("view", 1, glm::value_ptr(view));
+		skyboxShaderProgram.SetMat4("projection", 1, glm::value_ptr(projection));
 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexId);
-		glUniform1i(glGetUniformLocation(skyboxShaderProgram.ID, "skybox"), 0);
+		skyboxShaderProgram.SetInt("skybox", 0);
 
 		skybox->Draw(skyboxShaderProgram, camera, skybox->modelMatrix);
 
@@ -611,11 +610,7 @@ int main(int argc, char** argv)
 
 	Gui::CleanUp();
 
-	shaderProgram.Delete();
-	instanceShaderProgram.Delete();
-	//Delete window before ending the program
 	glfwDestroyWindow(window);
-	//Terminate GLFW before ending the program
 	glfwTerminate();
 
 	Log("stdInfo", "Successfully exited L-SIMENGINE");

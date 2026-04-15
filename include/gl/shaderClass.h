@@ -3,6 +3,7 @@
 #define SHADER_CLASS_H
 
 #include<glad/glad.h>
+#include <glm/glm.hpp>
 #include<string>
 #include <optional>
 
@@ -21,9 +22,15 @@ public:
         std::optional<std::string> geometrySource;
     };
 
-    Shader(const ShaderFiles& shaders);
-
+    explicit Shader(const ShaderFiles& shaders);
     void Activate() const;
+    GLint GetLocation(const std::string &name) const;
+    void SetInt(const std::string &name, int value) const;
+    void SetFloat(const std::string &name, float value) const;
+    void SetVec4(const std::string &name, int count, const float *value) const;
+    void SetVec3(const std::string &name, int count, const float *value) const;
+    void SetMat4(const std::string &name, int count, const float *value) const;
+    void SetMat3(const std::string &name, int count, const float *value) const;
 
     ~Shader();
 };
