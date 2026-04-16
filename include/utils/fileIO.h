@@ -36,6 +36,9 @@ public:
     static std::string DirectoryDialog();
     static std::string OpenDialog(const char* filter);
     static std::string SaveDialog(const char* filter);
+
+    static std::string GetFileContents(const std::string& filePath);
+
     static void saveToFile(std::ofstream &file, const Scene &scene);
     static Scene loadFromFile(std::ifstream &file, const std::string &workingDir);
 };

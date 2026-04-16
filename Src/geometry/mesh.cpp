@@ -25,12 +25,12 @@ void Mesh::ApplyTransformations() {
 }
 
 void Mesh::Draw(Shader& shader, Camera& camera, const glm::mat4 &finalMatrix) {
-    GLuint modelLoc = glGetUniformLocation(shader.ID, "model");
+    GLuint modelLoc = shader.GetLocation("model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(finalMatrix));
-    GLuint normalLoc = glGetUniformLocation(shader.ID, "normalMatrix");
+    GLuint normalLoc = shader.GetLocation("normalMatrix");
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(finalMatrix)));
     glUniformMatrix3fv(normalLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
-    GLuint viewPosLoc = glGetUniformLocation(shader.ID, "viewPos");
+    GLuint viewPosLoc = shader.GetLocation("viewPos");
     glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera.Position));
 
 
@@ -41,32 +41,32 @@ void Mesh::Draw(Shader& shader, Camera& camera, const glm::mat4 &finalMatrix) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texId);
         //Set the sampler uniform to use texture unit 0
-        GLint texLoc = glGetUniformLocation(shader.ID, "albedo");
+        GLint texLoc = shader.GetLocation("albedo");
         glUniform1i(texLoc, 0);
 
         //Specular
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specMapId);
         //Set the sampler uniform to use texture unit 1
-        GLint specMapLoc = glGetUniformLocation(shader.ID, "specular");
+        GLint specMapLoc = shader.GetLocation("specular");
         glUniform1i(specMapLoc, 1);
 
         //Normal
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, normalMapId);
         //Set the sampler uniform to use texture unit 2
-        GLint normalMapLoc = glGetUniformLocation(shader.ID, "normal");
+        GLint normalMapLoc = shader.GetLocation("normal");
         glUniform1i(normalMapLoc, 2);
 
         //Emissive
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, emissiveMapId);
         //Set the sampler uniform to use texture unit 3
-        GLint emissiveMapLoc = glGetUniformLocation(shader.ID, "emissive");
+        GLint emissiveMapLoc = shader.GetLocation("emissive");
         glUniform1i(emissiveMapLoc, 3);
 
         //Emissive Intensity
-        glUniform1f(glGetUniformLocation(shader.ID, "emissiveIntensity"), emissiveIntensity);
+        shader.SetFloat("emissiveIntensity", emissiveIntensity);
     }
 
     vao.Bind();

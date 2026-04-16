@@ -124,6 +124,14 @@ std::string IO::SaveDialog(const char* filter) {
 }
 #endif
 
+std::string IO::GetFileContents(const std::string& filePath) {
+    std::ifstream file(filePath, std::ios::binary);
+
+    return {
+        (std::istreambuf_iterator(file)),
+        std::istreambuf_iterator<char>()
+    };
+}
 
 void IO::saveToFile(std::ofstream &file, const Scene& scene) {
     std::cout << std::endl;

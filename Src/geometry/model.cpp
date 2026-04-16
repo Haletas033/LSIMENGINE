@@ -4,12 +4,13 @@
 
 #include "include/geometry/model.h"
 #include "scene/scene.h"
+#include "utils/fileIO.h"
 #include "utils/texture.h"
 
 extern Scene scene;
 
 Model::Model(const char *file) {
-    std::string text = getFileContent(file);
+    std::string text = IO::GetFileContents(file);
     JSON = json::parse(text);
 
     Model::file = file;
@@ -28,7 +29,7 @@ std::vector<unsigned char> Model::getData() {
 
     const auto fileStr = std::string(file);
     const std::string fileDir = fileStr.substr(0, fileStr.find_last_of('\\') + 1);
-    std::string bytesText = getFileContent((fileDir + uri).c_str());
+    std::string bytesText = IO::GetFileContents(fileDir + uri);
 
     std::vector<unsigned char> data(bytesText.begin(), bytesText.end());
     return data;

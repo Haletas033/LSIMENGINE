@@ -14,7 +14,7 @@ void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shade
 	view = glm::lookAt(Position, Position + Orientation, Up);
 	projection = glm::perspective(glm::radians(FOVdeg), aspect, nearPlane, farPlane);
 
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(projection * view));
+	glUniformMatrix4fv(shader.GetLocation(uniform), 1, GL_FALSE, glm::value_ptr(projection * view));
 }
 
 float pitch = 0.0f;
