@@ -25,7 +25,7 @@ using json = nlohmann::ordered_json;
 
 json config;
 
-static std::unordered_map<std::string, std::unique_ptr<Logger>> loggers;
+static Logger logger;
 
 //Callback function for window resizing
 void framebuffer_size_callback(GLFWwindow* window, const int width, const int height){
@@ -39,13 +39,6 @@ std::vector<GLfloat> vertices;
 std::vector<GLuint> indices;
 
 std::vector<std::vector<std::unique_ptr<Mesh>>> meshes;
-
-std::vector<Logger> logs;
-
-static void Log(const std::string& key, const std::string& msg) {
-	if (const auto it = loggers.find(key); it != loggers.end())
-		(*it->second)(msg, logs);
-}
 
 void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType, int &lastClickMesh, const char* workingDir) {
 	scene.addMeshSignal = false;
@@ -94,7 +87,7 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 		}
 		case 6: {
 			const auto filePath = IO::Dialog("Model Files\0*.gltf\0All Files\0*.*\0");
-			Log("stdInfo", filePath);
+			logger("stdInfo", filePath);
 			Model model{(filePath.c_str())};
 
 			std::vector<std::unique_ptr<Mesh>> meshes;
@@ -123,7 +116,7 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 
 	lastClickMesh = scene.meshes.size() - 1;
 
-	Log("stdInfo", "Successfully added mesh");
+	logger("stdInfo", "Successfully added mesh");
 }
 
 void DeleteMesh(Scene &scene, std::vector<int>& currentMeshes, int &lastClickMesh) {
@@ -146,7 +139,7 @@ void DeleteMesh(Scene &scene, std::vector<int>& currentMeshes, int &lastClickMes
 	if (lastClickMesh > scene.meshes.size() -1)
 		lastClickMesh = scene.meshes.size() - 1;
 
-	Log("stdInfo", "Successfully deleted mesh");
+	logger("stdInfo", "Successfully deleted mesh");
 }
 
 void AddLight(Scene &scene, int &currentLight) {
@@ -157,7 +150,7 @@ void AddLight(Scene &scene, int &currentLight) {
 
 	currentLight = scene.lights.size() - 1;
 
-	Log("stdInfo", "Successfully added light");
+	logger("stdInfo", "Successfully added light");
 }
 
 void DeleteLight(Scene &scene, int &currentLight) {
@@ -170,7 +163,7 @@ void DeleteLight(Scene &scene, int &currentLight) {
 	}
 	currentLight = -1;
 
-	Log("stdInfo", "Successfully deleted light");
+	logger("stdInfo", "Successfully deleted light");
 }
 
 void DrawLights(Shader &shader, Defaults defaults, Scene &scene) {
@@ -210,10 +203,7 @@ Camera camera {};
 GLFWwindow* window;
 std::string workingDir;
 
-
-int main(int argc, char** argv)
-{
-
+int main(int argc, char** argv) {
 	if (argc >= 2) {
 		for (int i = 1; i < argc; ++i) {
 			workingDir += argv[i];
@@ -221,13 +211,10 @@ int main(int argc, char** argv)
 				workingDir += " ";
 		}
 		workingDir += "/";
-
-		Log("stdInfo", "Set working dir to " + workingDir);
-	} else {
-		Log("stdWarn", "No working directory set");
 	}
 	//Load config
-	engineDefaults = JSONManager::InitJSON(workingDir + "config/config.json", config, loggers);
+	engineDefaults = JSONManager::InitJSON(workingDir + "config/config.json", config);
+	logger = Logger("MAIN");
 
 	//Load shaders
 
@@ -240,15 +227,11 @@ int main(int argc, char** argv)
 	std::string skyboxVert = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.vert", config);
 	std::string skyboxFrag = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.frag", config);
 
-	loggers["stdInfo"]->SetModule("MAIN");
-	loggers["stdWarn"]->SetModule("MAIN");
-	loggers["stdError"]->SetModule("MAIN");
-
 	IO::InitIO();
 	Inputs::InitInputs();
 	Texture::InitTextures();
 
-	Log("stdInfo", "starting L-SIMENGINE");
+	logger("stdInfo", "starting L-SIMENGINE");
 
 	//Initialize GLFW
 	glfwInit();
@@ -271,12 +254,12 @@ int main(int argc, char** argv)
 	//Error check if the window fails to create
 	if (window == nullptr)
 	{
-		Log("stdError", "Failed to create GLFW window");
+		logger("stdError", "Failed to create GLFW window");
 		glfwTerminate();
 		return -1;
 	}
 
-	Log("stdInfo", "Successfully created the GLFW window");
+	logger("stdInfo", "Successfully created the GLFW window");
 
 	//Introduce the window into the current context
 	glfwMakeContextCurrent(window);
@@ -302,9 +285,9 @@ int main(int argc, char** argv)
 	meshes.back()[0]->name = "First Cube";
 	auto* node = new Gui::Node{ meshes.back()[0].get(), Gui::root, {} };
 	Gui::root->children.push_back(node);
-	Log("stdInfo", "Successfully created the default \"First Cube\"");
+	logger("stdInfo", "Successfully created the default \"First Cube\"");
 
-	Log("stdInfo", "Successfully created the default \"First Cube\"");
+	logger("stdInfo", "Successfully created the default \"First Cube\"");
 
 	//Enable the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
@@ -312,7 +295,7 @@ int main(int argc, char** argv)
 	//Create camera object
 	camera = Camera(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, glm::vec3(0.0f, 0.0f, 2.0f));
 
-	Log("stdInfo", "Successfully created the camera object");
+	logger("stdInfo", "Successfully created the camera object");
 
 	std::unordered_map<int, bool> canPress;
 
@@ -327,12 +310,12 @@ int main(int argc, char** argv)
 	int currentLight = 0;
 
 	scene = Scene{ std::move(meshes), std::move(lights) };
-	Log("stdInfo", "Successfully moved meshes and lights into the main scene");
+	logger("stdInfo", "Successfully moved meshes and lights into the main scene");
 
 	if (!workingDir.empty()) {
 		for (const auto &file : std::filesystem::recursive_directory_iterator(workingDir)) {
 			if (file.path().extension().string() == ".lsim") {
-				Log("stdInfo", file.path().string());
+				logger("stdInfo", file.path().string());
 				std::ifstream LSIMfile(file.path().string(), std::ios::binary);
 				scene = IO::loadFromFile(LSIMfile, workingDir);
 			}
@@ -362,7 +345,7 @@ int main(int argc, char** argv)
 
 
 	//Main render loop
-	Log("stdInfo", "Starting main gameplay loop");
+	logger("stdInfo", "Starting main gameplay loop");
 	while (!glfwWindowShouldClose(window))
 	{
 		//Update aspect ratio from current framebuffer size
@@ -373,7 +356,7 @@ int main(int argc, char** argv)
 		//Check if the window is minimized if so skip render loop and just poll events
 		if (windowWidth <= 0 || windowHeight <= 0) {
 			glfwPollEvents();
-			Log("stdInfo", "Window minimized");
+			logger("stdInfo", "Window minimized");
 			continue;
 		}
 
@@ -417,25 +400,25 @@ int main(int argc, char** argv)
 
 		if (scene.addMeshSignal) {
 			AddMesh(scene, engineDefaults, selectedMeshType, lastClickMesh, workingDir.c_str());
-			Log("stdInfo", "Adding mesh");
+			logger("stdInfo", "Adding mesh");
 		}
 
 		if (scene.deleteMeshSignal) {
 			DeleteMesh(scene, currentMeshes, lastClickMesh);
-			Log("stdInfo", "Deleting mesh");
+			logger("stdInfo", "Deleting mesh");
 		}
 
 		if (scene.addLightSignal && scene.lights.size() < engineDefaults.MAX_LIGHTS) {
 			AddLight(scene, currentLight);
-			Log("stdInfo", "Adding light");
+			logger("stdInfo", "Adding light");
 		} else if (scene.addLightSignal) {
 			scene.addLightSignal = false;
-			Log("stdWarn", "Tried to create light but it would exceed the maximum number of lights (If you need more lights you can change MAX_LIGHTS in config.json)");
+			logger("stdWarn", "Tried to create light but it would exceed the maximum number of lights (If you need more lights you can change MAX_LIGHTS in config.json)");
 		}
 
 		if (scene.deleteLightSignal) {
 			DeleteLight(scene, currentLight);
-			Log("stdInfo", "Deleting light");
+			logger("stdInfo", "Deleting light");
 		}
 
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard) {
@@ -592,7 +575,7 @@ int main(int argc, char** argv)
 
 		ImGui::Begin("Console", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Console(selectedLogLevel, logs);
+		Gui::Console(selectedLogLevel);
 
 		ImGui::End();
 
@@ -604,7 +587,7 @@ int main(int argc, char** argv)
 		//Take care of all GLFW events
 		glfwPollEvents();
 	}
-	Log("stdInfo", "Exiting L-SIMENGINE");
+	logger("stdInfo", "Exiting L-SIMENGINE");
 
 	Gui::DeleteNodeRecursively(Gui::root);
 
@@ -613,7 +596,7 @@ int main(int argc, char** argv)
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
-	Log("stdInfo", "Successfully exited L-SIMENGINE");
+	logger("stdInfo", "Successfully exited L-SIMENGINE");
 
 	return 0;
 }

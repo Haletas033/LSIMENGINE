@@ -5,6 +5,19 @@
 #include <cstdarg>
 #include <include/utils/logging/log.h>
 
+#include "utils/json.h"
+
+extern json config;
+
+std::vector<Logger> Logger::logs;
+
+Logger::Logger(const std::string& subModule) {
+    JSONManager::LoadLoggers(config, loggers);
+    loggers["stdInfo"]->SetModule(subModule);
+    loggers["stdWarn"]->SetModule(subModule);
+    loggers["stdError"]->SetModule(subModule);
+}
+
 Logger& Logger::SetCustomTimeStamp(TimeFunc func) {
     this->useCustomTimeStamp = std::move(func);
     return *this;
@@ -71,23 +84,23 @@ std::string Logger::operator()() const {
 }
 
 
-void Logger::operator()(const std::string &message, std::vector<Logger> &logs) {
-    this->message = message;
+void Logger::operator()(const std::string& logger, const std::string &message) const {
+    const auto it = loggers.find(logger);
 
+    it->second->message = message;
 
+    const std::string localType = InsertBrackets(it->second->type);
+    const std::string localModule = InsertBrackets(it->second->module);
 
-    const std::string localType = InsertBrackets(type);
-    const std::string localModule = InsertBrackets(module);
-
-    if (hasTimeStamp) {
-        if (useCustomTimeStamp)
-                this->timeStamp = GetTimeStamp(useCustomTimeStamp);
+    if (it->second->hasTimeStamp) {
+        if (it->second->useCustomTimeStamp)
+            it->second->timeStamp = GetTimeStamp(it->second->useCustomTimeStamp);
         else
-            timeStamp = GetTimeStamp();
-        timeStamp = InsertBrackets(timeStamp);
+            it->second->timeStamp = GetTimeStamp();
+        it->second->timeStamp = InsertBrackets(it->second->timeStamp);
     }
 
-    logs.push_back(*this);
+    logs.push_back(*it->second);
 
-    std::cout << START << colour << timeStamp << localModule << VectorToString(subModules) << localType << message << END << std::endl;
+    std::cout << START << it->second->colour << it->second->timeStamp << localModule << VectorToString(it->second->subModules) << localType << message << END << std::endl;
 }

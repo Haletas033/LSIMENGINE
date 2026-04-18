@@ -32,11 +32,14 @@
 
 #include <functional>
 #include <iostream>
+#include <memory>
 
 #include "imgui.h"
 
 class Logger {
 private:
+    static std::vector<Logger> logs;
+
     enum LogLevel {
         INFO,
         WARNING,
@@ -68,8 +71,15 @@ private:
     static std::string GetTimeStamp(TimeFunc func) {
         return func();
     }
-
 public:
+    std::unordered_map<std::string, std::shared_ptr<Logger>> loggers;
+
+    static std::vector<Logger> GetLogs() { return logs; }
+
+    explicit Logger(const std::string& subModule);
+
+    Logger() = default;
+
     Logger& SetCustomTimeStamp(TimeFunc func);
 
     Logger& HasTimeStamp();
@@ -98,7 +108,7 @@ public:
 
     std::string operator()() const;
 
-    void operator()(const std::string &message, std::vector<Logger> &logs);
+    void operator()(const std::string& logger, const std::string &message) const;
 };
 
 #endif //LOG_H

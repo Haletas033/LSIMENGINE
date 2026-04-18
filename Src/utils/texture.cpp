@@ -8,29 +8,11 @@
 #include <stb/stb_image.h>
 #include "include/utils/texture.h"
 
-extern json config;
-
-extern std::vector<Logger> logs;
-
-static std::unordered_map<std::string, std::unique_ptr<Logger>> loggers;
-
-static void Log(const std::string& key, const std::string& msg) {
-    if (const auto it = loggers.find(key); it != loggers.end())
-        (*it->second)(msg, logs);
-}
+static Logger logger;
 
 void Texture::InitTextures() {
-    JSONManager::LoadLoggers(config, loggers);
-
-    // Ensure logger exists
-    if (!loggers.count("stdInfo"))
-        loggers["stdInfo"] = std::make_unique<Logger>();
-
-    loggers["stdInfo"]->SetModule("TEXTURE");
-    loggers["stdWarn"]->SetModule("TEXTURE");
-    loggers["stdError"]->SetModule("TEXTURE");
-
-    Log("stdInfo", "Successfully initialized the texture loggers");
+    logger = Logger("TEXTURE");
+    logger("stdInfo", "Successfully initialized the texture loggers");
 }
 
 unsigned int Texture::GetTexId(const char* path, const int texFilter) {
@@ -62,12 +44,12 @@ unsigned int Texture::GetTexId(const char* path, const int texFilter) {
             glGenerateMipmap(GL_TEXTURE_2D);
         }
         catch (std::exception &e) {
-            Log("stdError", e.what());
+            logger("stdError", e.what());
         }
     }
     else
     {
-        Log("stdError", "Failed to load texture");
+        logger("stdError", "Failed to load texture");
     }
     stbi_image_free(data);
 
@@ -101,12 +83,12 @@ unsigned int Texture::GetCubemapId(std::string faces[6], const int texFilter) {
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
             }
             catch (std::exception &e) {
-                Log("stdError", e.what());
+                logger("stdError", e.what());
             }
         }
         else
         {
-            Log("stdError", "Failed to load texture");
+            logger("stdError", "Failed to load texture");
         }
         stbi_image_free(data);
     }

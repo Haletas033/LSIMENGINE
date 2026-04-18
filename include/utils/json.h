@@ -21,10 +21,9 @@ public:
 
     static Defaults LoadConfigDefaults(json &config);
 
-    static void LoadLoggers(json &config, std::unordered_map<std::string, std::unique_ptr<Logger>> &loggers);
+    static void LoadLoggers(json &config, std::unordered_map<std::string, std::shared_ptr<Logger>> &loggers);
 
-    static Defaults InitJSON(const std::string &path, json &config,
-        std::unordered_map<std::string, std::unique_ptr<Logger>> &loggers);
+    static Defaults InitJSON(const std::string &path, json &config);
 
     static std::string LoadShaderWithDefines(const std::string &path, json &config);
 };

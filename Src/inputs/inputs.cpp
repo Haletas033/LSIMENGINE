@@ -18,27 +18,11 @@
 
 extern json config;
 
-extern std::vector<Logger> logs;
-
-static std::unordered_map<std::string, std::unique_ptr<Logger>> loggers;
-
-static void Log(const std::string& key, const std::string& msg) {
-    if (const auto it = loggers.find(key); it != loggers.end())
-        (*it->second)(msg, logs);
-}
+static Logger logger;
 
 void Inputs::InitInputs() {
-    JSONManager::LoadLoggers(config, loggers);
-
-    // Ensure logger exists
-    if (!loggers.count("stdInfo"))
-        loggers["stdInfo"] = std::make_unique<Logger>();
-
-    loggers["stdInfo"]->SetModule("INPUTS");
-    loggers["stdWarn"]->SetModule("INPUTS");
-    loggers["stdError"]->SetModule("INPUTS");
-
-    Log("stdInfo", "Successfully initialized the input loggers");
+    logger = Logger("INPUTS");
+    logger("stdInfo", "Successfully initialized the input loggers");
 }
 
 bool Inputs::isDown(const int key, const bool onlyOnPress, GLFWwindow* window) {
@@ -163,15 +147,15 @@ void Inputs::MeshInputs(GLFWwindow *window, const Scene &scene, const float delt
 
     if (isDown(GLFW_KEY_G, true, window)) {
         currentTransform = &Mesh::position;
-        Log("stdInfo", "Set position as the current transform");
+        logger("stdInfo", "Set position as the current transform");
     }
     if (isDown(GLFW_KEY_R, true, window)) {
         currentTransform = &Mesh::rotation;
-        Log("stdInfo", "Set Rotation as the current transform");
+        logger("stdInfo", "Set Rotation as the current transform");
     }
     if (isDown(GLFW_KEY_N, true, window)) {
         currentTransform = &Mesh::scale;
-        Log("stdInfo", "Set scale as the current transform");
+        logger("stdInfo", "Set scale as the current transform");
     }
 }
 
@@ -219,11 +203,11 @@ void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const float deltaTim
     const int &currentMesh, const int &currentLight, int &selectedMeshType, int &selectedMesh, glm::vec3 Orientation) {
     if (isDown(GLFW_KEY_M, true, window)) {
         currentMode = meshMode;
-        Log("stdInfo", "Switched to mesh mode");
+        logger("stdInfo", "Switched to mesh mode");
     }
     if (isDown(GLFW_KEY_L, true, window)) {
         currentMode = lightMode;
-        Log("stdInfo", "Switched to light mode");
+        logger("stdInfo", "Switched to light mode");
     }
 
     if (currentMode == meshMode) {
@@ -245,7 +229,7 @@ void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const float deltaTim
         if (!scene.meshes.empty() && isDown(GLFW_KEY_DELETE, true, window)) {
             scene.deleteMeshSignal = true;
         } else if (scene.meshes.empty() && isDown(GLFW_KEY_DELETE, true, window)) {
-            Log("stdWarn", "Pressed delete on mesh but there were none left");
+            logger("stdWarn", "Pressed delete on mesh but there were none left");
         }
     }
     else if (currentMode == lightMode) {
@@ -258,7 +242,7 @@ void Inputs::InputHandler(GLFWwindow* window, Scene &scene, const float deltaTim
         if (!scene.lights.empty() && isDown(GLFW_KEY_DELETE, true, window)) {
             scene.deleteLightSignal = true;
         } else if (scene.lights.empty() && isDown(GLFW_KEY_DELETE, true, window)) {
-            Log("stdWarn", "Pressed delete for light but there were none left");
+            logger("stdWarn", "Pressed delete for light but there were none left");
         }
     }
 

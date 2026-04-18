@@ -16,29 +16,13 @@ HWND hwnd;                                  //owner window
 
 extern json config;
 
-extern std::vector<Logger> logs;
-
 extern Defaults engineDefaults;
 
-static std::unordered_map<std::string, std::unique_ptr<Logger>> loggers;
-
-static void Log(const std::string& key, const std::string& msg) {
-    if (const auto it = loggers.find(key); it != loggers.end())
-        (*it->second)(msg, logs);
-}
+static Logger logger;
 
 void IO::InitIO() {
-    JSONManager::LoadLoggers(config, loggers);
-
-    // Ensure logger exists
-    if (!loggers.count("stdInfo"))
-        loggers["stdInfo"] = std::make_unique<Logger>();
-
-    loggers["stdInfo"]->SetModule("FILE");
-    loggers["stdWarn"]->SetModule("FILE");
-    loggers["stdError"]->SetModule("FILE");
-
-    Log("stdInfo", "Successfully initialized the file loggers");
+    logger = Logger("FILE");
+    logger("stdInfo", "Successfully initialized the file loggers");
 }
 
 #ifdef _WIN32
@@ -135,7 +119,7 @@ std::string IO::GetFileContents(const std::string& filePath) {
 
 void IO::saveToFile(std::ofstream &file, const Scene& scene) {
     std::cout << std::endl;
-    Log("stdInfo", "Beginning to write to file");
+    logger("stdInfo", "Beginning to write to file");
 
     auto safeWrite = [&](const auto* data, const std::streamsize size, const char* errorMsg) {
         if (!file.write(reinterpret_cast<const char*>(data), size)) {
@@ -247,16 +231,16 @@ void IO::saveToFile(std::ofstream &file, const Scene& scene) {
             }
 
     } catch (std::ios_base::failure &e) {
-        Log("stdError", e.what());
+        logger("stdError", e.what());
     }
 
-    Log("stdInfo", "Successfully wrote to file");
+    logger("stdInfo", "Successfully wrote to file");
     std::cout << std::endl;
 }
 
 Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
     std::cout << std::endl;
-    Log("stdInfo", "beginning to read from file");
+    logger("stdInfo", "beginning to read from file");
 
     Gui::ClearRoot();
 
@@ -414,7 +398,7 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
             lights.push_back(light);
         }
     } catch (std::ios_base::failure &e) {
-        Log("stdError", e.what());
+        logger("stdError", e.what());
         return Scene{
             std::vector<std::vector<std::unique_ptr<Mesh>>>{},
             std::vector<Light>{}
@@ -422,7 +406,7 @@ Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
 
     }
 
-    Log("stdInfo", "Successfully read file");
+    logger("stdInfo", "Successfully read file");
     std::cout << std::endl;
 
     return Scene{ std::move(objects), std::move(lights) };

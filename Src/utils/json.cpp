@@ -88,10 +88,10 @@ std::string JSONManager::LoadShaderWithDefines(const std::string &path, json &co
     return defines + buffer.str();
 }
 
-void JSONManager::LoadLoggers(json &config, std::unordered_map<std::string, std::unique_ptr<Logger>> &loggers) {
+void JSONManager::LoadLoggers(json &config, std::unordered_map<std::string, std::shared_ptr<Logger>> &loggers) {
     auto loggersJson = config["loggers"];
     for (const auto &[loggerName, loggerValue] : loggersJson.items()) {
-        auto logger = std::make_unique<Logger>();
+        auto logger = std::make_shared<Logger>();
 
         for (const auto &[fieldName, fieldValue] : loggerValue.items()) {
             if (fieldName == "hasTimeStamp") {
@@ -119,14 +119,12 @@ void JSONManager::LoadLoggers(json &config, std::unordered_map<std::string, std:
             }
         }
 
-        loggers[loggerName] = std::move(logger);
+        loggers[loggerName] = logger;
     }
 }
 
-Defaults JSONManager::InitJSON(const std::string &path, json &config,
-    std::unordered_map<std::string, std::unique_ptr<Logger>> &loggers) {
+Defaults JSONManager::InitJSON(const std::string &path, json &config) {
     LoadJSON(path, config);
-    LoadLoggers(config, loggers);
     return LoadConfigDefaults(config);
 }
 

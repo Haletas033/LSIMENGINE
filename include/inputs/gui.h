@@ -52,7 +52,7 @@ public:
 
     static void Debug(const double &mouseX, const double &mouseY);
 
-    static void Console(int &selectedLogLevel, const std::vector<Logger> &logs);
+    static void Console(int &selectedLogLevel);
 
     static void Scene(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
 
