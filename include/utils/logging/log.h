@@ -35,10 +35,11 @@
 #include <memory>
 
 #include "imgui.h"
+#include "LSIMtypes.h"
 
 class Logger {
 private:
-    static std::vector<Logger> logs;
+    static CapacityBuffer<Logger> logs;
 
     enum LogLevel {
         INFO,
@@ -74,7 +75,7 @@ private:
 public:
     std::unordered_map<std::string, std::shared_ptr<Logger>> loggers;
 
-    static std::vector<Logger> GetLogs() { return logs; }
+    static CapacityBuffer<Logger> GetLogs() { return logs; }
 
     explicit Logger(const std::string& subModule);
 
@@ -106,7 +107,9 @@ public:
 
     LogLevel GetLevel() const { return level; }
 
-    std::string operator()() const;
+    std::string GetLoggerMessage() const;
+
+    Logger& operator[](const std::string& logger) { return *this->loggers[logger]; };
 
     void operator()(const std::string& logger, const std::string &message) const;
 };

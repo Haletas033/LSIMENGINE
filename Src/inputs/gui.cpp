@@ -271,7 +271,7 @@ void Gui::Console(int &selectedLogLevel) {
     const char* logLevels[] = { "INFO", "WARNING", "ERROR" };
 
     std::vector<std::string> modules;
-    for (Logger log : Logger::GetLogs())
+    for (Logger log : Logger::GetLogs().buffer)
         if (std::find(modules.begin(), modules.end(), log.GetModule()) == modules.end())
             modules.push_back(log.GetModule());
 
@@ -295,13 +295,13 @@ void Gui::Console(int &selectedLogLevel) {
         ImGui::EndCombo();
     }
 
-    for (Logger log : Logger::GetLogs()) {
+    for (Logger log : Logger::GetLogs().buffer) {
         if (log.GetLevel() >= selectedLogLevel) {
             auto it = std::find(modules.begin(), modules.end(), log.GetModule());
 
             if (it != modules.end()) {
                 if (selectedItems[std::distance(modules.begin(), it)])
-                    ImGui::TextColored(colourMap[log.GetColour()], log().c_str());
+                    ImGui::TextColored(colourMap[log.GetColour()], log.GetLoggerMessage().c_str());
             }
         }
     }

@@ -9,7 +9,7 @@
 
 extern json config;
 
-std::vector<Logger> Logger::logs;
+CapacityBuffer<Logger> Logger::logs(UINT16_MAX);
 
 Logger::Logger(const std::string& subModule) {
     JSONManager::LoadLoggers(config, loggers);
@@ -48,9 +48,10 @@ Logger& Logger::AddSubModules(const std::vector<std::string>& sms) {
 
 std::string Logger::GetTimeStamp() {
     const time_t timestamp = time(nullptr);
-    const tm datetime = *localtime(&timestamp);
+    tm datetime;
+    localtime_r(&timestamp, &datetime);
 
-    static char output[50];
+    char output[50];
 
     strftime(output, sizeof(output), "%H:%M:%S", &datetime);
 
@@ -76,16 +77,18 @@ Logger Logger::Temp() const {
     return clone;
 }
 
-std::string Logger::operator()() const {
+std::string Logger::GetLoggerMessage() const {
     const std::string localType = InsertBrackets(type);
     const std::string localModule = InsertBrackets(module);
-
     return timeStamp + localModule + VectorToString(subModules) + localType + message;
 }
 
-
 void Logger::operator()(const std::string& logger, const std::string &message) const {
     const auto it = loggers.find(logger);
+    if (it == loggers.end()) {
+        std::cerr << "Unable to find logger: " << logger << std::endl;
+        return;
+    }
 
     it->second->message = message;
 

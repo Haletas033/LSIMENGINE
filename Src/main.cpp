@@ -252,8 +252,7 @@ int main(int argc, char** argv) {
 	Script::InstantiateAll();
 
 	//Error check if the window fails to create
-	if (window == nullptr)
-	{
+	if (window == nullptr) {
 		logger("stdError", "Failed to create GLFW window");
 		glfwTerminate();
 		return -1;
@@ -590,13 +589,14 @@ int main(int argc, char** argv) {
 	logger("stdInfo", "Exiting L-SIMENGINE");
 
 	Gui::DeleteNodeRecursively(Gui::root);
-
 	Gui::CleanUp();
+
+	scene.meshes.clear();
+	scene.instancedMeshes.clear();
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
 	logger("stdInfo", "Successfully exited L-SIMENGINE");
-
 	return 0;
 }

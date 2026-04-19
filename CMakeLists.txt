@@ -31,6 +31,7 @@ set(IMGUI_SOURCES
         include/utils/texture.h
         include/scene/script.h
         include/utils/meshPicking.h
+        include/LSIMtypes.h
 )
 add_executable(LSIM
         Src/main.cpp
