@@ -5,31 +5,6 @@
 #ifndef LOG_H
 #define LOG_H
 
-#define START "\033["
-#define END "\033[0m"
-
-#define BLACK "30m"
-#define RED "31m"
-#define GREEN "32m"
-#define YELLOW "33m"
-#define BLUE "34m"
-#define MAGENTA "35m"
-#define CYAN "36m"
-#define WHITE "37m"
-
-#define BRIGHT_BLACK "90m"
-#define BRIGHT_RED "91m"
-#define BRIGHT_GREEN "92m"
-#define BRIGHT_YELLOW "93m"
-#define BRIGHT_BLUE "94m"
-#define BRIGHT_MAGENTA "95m"
-#define BRIGHT_CYAN "96m"
-#define BRIGHT_WHITE "97m"
-
-#define ERROR_COLOUR "31m"
-#define WARNING_COLOUR "33m"
-#define INFO_COLOUR "34m"
-
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -37,15 +12,41 @@
 #include "imgui.h"
 #include "LSIMtypes.h"
 
-class Logger {
-private:
-    static CapacityBuffer<Logger> logs;
+namespace Ansi {
+    constexpr auto START = "\033[";
+    constexpr auto END = "\033[0m";
+    constexpr auto BLACK = "30m";
+    constexpr auto RED = "31m";
+    constexpr auto GREEN = "32m";
+    constexpr auto YELLOW = "33m";
+    constexpr auto BLUE = "34m";
+    constexpr auto MAGENTA = "35m";
+    constexpr auto CYAN = "36m";
+    constexpr auto WHITE = "37m";
 
+    constexpr auto BRIGHT_BLACK = "90m";
+    constexpr auto BRIGHT_RED = "91m";
+    constexpr auto BRIGHT_GREEN = "92m";
+    constexpr auto BRIGHT_YELLOW = "93m";
+    constexpr auto BRIGHT_BLUE = "94m";
+    constexpr auto BRIGHT_MAGENTA = "95m";
+    constexpr auto BRIGHT_CYAN = "96m";
+    constexpr auto BRIGHT_WHITE = "97m";
+
+    constexpr auto ERROR_COLOUR = "31m";
+    constexpr auto WARNING_COLOUR = "33m";
+    constexpr auto INFO_COLOUR = "34m";
+}
+
+class Logger {
+public:
     enum LogLevel {
         INFO,
         WARNING,
         ERR
     };
+private:
+    static CapacityBuffer<Logger> logs;
 
     LogLevel level = INFO;
 
@@ -55,7 +56,7 @@ private:
 
     std::string timeStamp;
 
-    std::string colour = BRIGHT_WHITE;
+    std::string colour = Ansi::BRIGHT_WHITE;
     std::string type;
     std::string module;
     std::vector<std::string> subModules;
@@ -75,7 +76,7 @@ private:
 public:
     std::unordered_map<std::string, std::shared_ptr<Logger>> loggers;
 
-    static CapacityBuffer<Logger> GetLogs() { return logs; }
+    static const CapacityBuffer<Logger>& GetLogs() { return logs; }
 
     explicit Logger(const std::string& subModule);
 
@@ -97,19 +98,17 @@ public:
 
     Logger& AddSubModules(const std::vector<std::string>& sms);
 
-    Logger Temp() const;
+    std::string GetColour() const { return colour; }
 
-    std::string GetColour() { return colour; }
+    std::string GetType() const { return type; }
 
-    std::string GetType() { return type; }
-
-    std::string GetModule() { return module; }
+    std::string GetModule() const { return module; }
 
     LogLevel GetLevel() const { return level; }
 
     std::string GetLoggerMessage() const;
 
-    Logger& operator[](const std::string& logger) { return *this->loggers[logger]; };
+    Logger& operator[](const std::string& logger) const { return *this->loggers.at(logger); }
 
     void operator()(const std::string& logger, const std::string &message) const;
 };

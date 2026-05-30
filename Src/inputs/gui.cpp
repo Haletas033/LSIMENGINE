@@ -15,14 +15,14 @@ Gui::Node* Gui::root = nullptr;
 
 //Map ANSI codes to there RGB values
 std::unordered_map<std::string, ImColor> Gui::colourMap = {
-    {BLACK, ImColor(12, 12, 12)}, {RED, ImColor(197, 15, 31)}, {GREEN, ImColor(19, 161, 14)},
-    {YELLOW, ImColor(193, 156, 0)}, {BLUE, ImColor(0, 55, 218)}, {MAGENTA, ImColor(136, 23, 152)},
-    {CYAN, ImColor(58, 150, 221)}, {WHITE, ImColor(204, 204, 204)},
-    {BRIGHT_RED, ImColor(255, 0, 0)}, {BRIGHT_GREEN, ImColor(0, 255, 0)},
-    {BRIGHT_YELLOW, ImColor(255, 255, 0)}, {BRIGHT_BLUE, ImColor(0, 0, 255)},
-    {BRIGHT_MAGENTA, ImColor(255, 0, 255)}, {BRIGHT_CYAN, ImColor(0, 255, 255)},
-    {BRIGHT_WHITE, ImColor(255, 255, 255)}, {INFO_COLOUR, ImColor(0, 55, 218)},
-    {WARNING_COLOUR, ImColor(193, 156, 0)}, {ERROR_COLOUR, ImColor(197, 15, 31)}
+    {Ansi::BLACK, ImColor(12, 12, 12)}, {Ansi::RED, ImColor(197, 15, 31)}, {Ansi::GREEN, ImColor(19, 161, 14)},
+    {Ansi::YELLOW, ImColor(193, 156, 0)}, {Ansi::BLUE, ImColor(0, 55, 218)}, {Ansi::MAGENTA, ImColor(136, 23, 152)},
+    {Ansi::CYAN, ImColor(58, 150, 221)}, {Ansi::WHITE, ImColor(204, 204, 204)},
+    {Ansi::BRIGHT_RED, ImColor(255, 0, 0)}, {Ansi::BRIGHT_GREEN, ImColor(0, 255, 0)},
+    {Ansi::BRIGHT_YELLOW, ImColor(255, 255, 0)}, {Ansi::BRIGHT_BLUE, ImColor(0, 0, 255)},
+    {Ansi::BRIGHT_MAGENTA, ImColor(255, 0, 255)}, {Ansi::BRIGHT_CYAN, ImColor(0, 255, 255)},
+    {Ansi::BRIGHT_WHITE, ImColor(255, 255, 255)}, {Ansi::INFO_COLOUR, ImColor(0, 55, 218)},
+    {Ansi::WARNING_COLOUR, ImColor(193, 156, 0)}, {Ansi::ERROR_COLOUR, ImColor(197, 15, 31)}
 };
 
 void Gui::Initialize(GLFWwindow *window) {
@@ -310,7 +310,7 @@ void Gui::Console(int &selectedLogLevel) {
 void Gui::Scene(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity) {
     if (ImGui::CollapsingHeader("Scene")) {
         if (ImGui::Button("Set Skybox")) {
-            std::string faces[6];
+            std::array<std::string, 6> faces;
             //Copy the skybox into resources
             std::filesystem::copy(IO::DirectoryDialog(), workingDir + "skybox/", std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
             const std::string skyBoxDir = workingDir + "skybox";

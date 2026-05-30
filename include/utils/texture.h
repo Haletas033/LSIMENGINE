@@ -11,12 +11,15 @@
 #include "include/utils/logging/log.h"
 
 class Texture {
+private:
+    static GLenum ChannelsToFormat(int nrChannels);
 public:
     static void InitTextures();
-    static unsigned int GetTexId(const char *path, int texFilter);
-    static unsigned int GetCubemapId(std::string faces[], int texFilter);
 
-    static void ByteArrayToPNG(const char *filename, const unsigned char *texture, unsigned int width, unsigned int height);
+    static unsigned int GetTexId(const char *path, int texFilter);
+    static unsigned int GetCubemapId(const std::array<std::string, 6>& faces, int texFilter);
+
+    static void ByteArrayToPNG(const char *filename, const unsigned char *texture, unsigned int width, unsigned int height, unsigned int channels);
 };
 
 #endif //TEXTURE_H

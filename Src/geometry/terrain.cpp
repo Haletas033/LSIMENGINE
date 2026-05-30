@@ -115,7 +115,7 @@ GLuint Terrain::noiseMapToTexture(std::vector<std::vector<float>>& noiseMap, con
         }
     }
 
-    Texture::ByteArrayToPNG(outputLocation, colorMap, width, height);
+    Texture::ByteArrayToPNG(outputLocation, colorMap, width, height, 4);
 
     //Delete the colorMap to free up memory
     delete[] colorMap;

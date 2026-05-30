@@ -12,20 +12,22 @@
 #include "logging/log.h"
 #include "nlohmann/json.hpp"
 
-using json = nlohmann::ordered_json;
 class JSONManager {
 private:
     static std::unordered_map<std::string, const char*> colourMap;
+
+    template<class T>
+    static void safeLoad(const nlohmann::json &json, const std::string &field, T &target);
 public:
-    static void LoadJSON(const std::string &path, json &config);
+    static void LoadJSON(const std::string &path, nlohmann::ordered_json &config);
 
-    static Defaults LoadConfigDefaults(json &config);
+    static Defaults LoadConfigDefaults(nlohmann::ordered_json &config);
 
-    static void LoadLoggers(json &config, std::unordered_map<std::string, std::shared_ptr<Logger>> &loggers);
+    static void LoadLoggers(nlohmann::ordered_json &config, std::unordered_map<std::string, std::shared_ptr<Logger>> &loggers);
 
-    static Defaults InitJSON(const std::string &path, json &config);
+    static Defaults InitJSON(const std::string &path, nlohmann::ordered_json &config);
 
-    static std::string LoadShaderWithDefines(const std::string &path, json &config);
+    static std::string LoadShaderWithDefines(const std::string &path, nlohmann::ordered_json &config);
 };
 
 #endif //JSON_H

@@ -14,7 +14,7 @@ char szFile[260] = {"untitled.lsim"};       //File size buffer
 HWND hwnd;                                  //owner window
 #endif
 
-extern json config;
+extern nlohmann::ordered_json config;
 
 extern Defaults engineDefaults;
 

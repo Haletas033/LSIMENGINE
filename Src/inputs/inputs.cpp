@@ -16,7 +16,7 @@
 #include "gl/VAO.h"
 #include "include/utils/json.h"
 
-extern json config;
+extern nlohmann::ordered_json config;
 
 static Logger logger;
 

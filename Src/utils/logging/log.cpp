@@ -2,12 +2,11 @@
 // Created by halet on 9/7/2025.
 //
 
-#include <cstdarg>
 #include <include/utils/logging/log.h>
 
 #include "utils/json.h"
 
-extern json config;
+extern nlohmann::ordered_json config;
 
 CapacityBuffer<Logger> Logger::logs(UINT16_MAX);
 
@@ -35,14 +34,13 @@ Logger& Logger::SetType(const std::string &t) { this->type = t; return *this; }
 Logger& Logger::SetModule(const std::string &m) { this->module = m; return *this; }
 
 Logger& Logger::AddSubModules(const std::initializer_list<std::string>& sms) {
-    for (const auto& sm : sms)
-        this->subModules.push_back(sm);
+    this->subModules.insert(this->subModules.end(), sms.begin(), sms.end());
     return *this;
 }
 
 Logger& Logger::AddSubModules(const std::vector<std::string>& sms) {
-    for (const auto& sm : sms)
-        this->subModules.push_back(sm);
+
+    this->subModules.insert(this->subModules.end(), sms.begin(), sms.end());
     return *this;
 }
 
@@ -70,11 +68,6 @@ std::string Logger::VectorToString(const std::vector<std::string>& items) {
         output += InsertBrackets(item);
     }
     return output;
-}
-
-Logger Logger::Temp() const {
-    Logger clone = *this;
-    return clone;
 }
 
 std::string Logger::GetLoggerMessage() const {
@@ -105,5 +98,5 @@ void Logger::operator()(const std::string& logger, const std::string &message) c
 
     logs.push_back(*it->second);
 
-    std::cout << START << it->second->colour << it->second->timeStamp << localModule << VectorToString(it->second->subModules) << localType << message << END << std::endl;
+    std::cout << Ansi::START << it->second->colour << it->second->timeStamp << localModule << VectorToString(it->second->subModules) << localType << message << Ansi::END << std::endl;
 }

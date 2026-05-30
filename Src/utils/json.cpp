@@ -5,29 +5,32 @@
 #include <include/utils/json.h>
 
 // Map for colour macros
+
+using json = nlohmann::ordered_json;
 std::unordered_map<std::string, const char*> JSONManager::colourMap = {
-    {"BLACK", BLACK}, {"RED", RED}, {"GREEN", GREEN},
-    {"YELLOW", YELLOW}, {"BLUE", BLUE}, {"MAGENTA", MAGENTA},
-    {"CYAN", CYAN}, {"WHITE", WHITE},
-    {"BRIGHT_RED", BRIGHT_RED}, {"BRIGHT_GREEN", BRIGHT_GREEN},
-    {"BRIGHT_YELLOW", BRIGHT_YELLOW}, {"BRIGHT_BLUE", BRIGHT_BLUE},
-    {"BRIGHT_MAGENTA", BRIGHT_MAGENTA}, {"BRIGHT_CYAN", BRIGHT_CYAN},
-    {"BRIGHT_WHITE", BRIGHT_WHITE}, {"INFO_COLOUR", INFO_COLOUR},
-    {"WARNING_COLOUR", WARNING_COLOUR}, {"ERROR_COLOUR", ERROR_COLOUR}
+    {"RED", Ansi::RED},                         {"BLUE", Ansi::BLUE},
+    {"BLACK", Ansi::BLACK},                     {"GREEN", Ansi::GREEN},
+    {"YELLOW", Ansi::YELLOW},                   {"MAGENTA", Ansi::MAGENTA},
+    {"CYAN", Ansi::CYAN},                       {"WHITE", Ansi::WHITE},
+    {"BRIGHT_RED", Ansi::BRIGHT_RED},           {"BRIGHT_GREEN", Ansi::BRIGHT_GREEN},
+    {"BRIGHT_YELLOW", Ansi::BRIGHT_YELLOW},     {"BRIGHT_BLUE", Ansi::BRIGHT_BLUE},
+    {"BRIGHT_MAGENTA", Ansi::BRIGHT_MAGENTA},   {"BRIGHT_CYAN", Ansi::BRIGHT_CYAN},
+    {"BRIGHT_WHITE", Ansi::BRIGHT_WHITE},       {"INFO_COLOUR", Ansi::INFO_COLOUR},
+    {"WARNING_COLOUR", Ansi::WARNING_COLOUR},   {"ERROR_COLOUR", Ansi::ERROR_COLOUR}
 };
 
 void JSONManager::LoadJSON(const std::string &path, json &config) {
     std::ifstream file(path);
-    if (!file.is_open()) throw std::runtime_error("Failed to open config.json");
+    if (!file.is_open()) throw std::runtime_error("Failed to open " + path);
     file >> config;
 }
 
 template <typename T>
-void safeLoad(nlohmann::json json, const std::string field, T &target) {
+void JSONManager::safeLoad(const nlohmann::json& json, const std::string& field, T &target) {
     if (json.contains(field)) {
         try {
             target = json[field].get<T>();
-        } catch (const std::exception e) {
+        } catch (const std::exception& e) {
             std::cerr << "Failed to load " << field << "using standard" << std::endl;
         }
     }
@@ -35,47 +38,48 @@ void safeLoad(nlohmann::json json, const std::string field, T &target) {
 
 Defaults JSONManager::LoadConfigDefaults(json &config) {
     Defaults configDefaults;
+    const json defaults = config["defaults"];
 
     configDefaults.MAX_LIGHTS = config["shader-constants"]["MAX_LIGHTS"].get<unsigned int>();
-    safeLoad(config["defaults"], "version", configDefaults.version);
-    safeLoad(config["defaults"], "defaultWindowWidth", configDefaults.defaultWindowWidth);
-    safeLoad(config["defaults"], "defaultWindowHeight", configDefaults.defaultWindowHeight);
+    safeLoad(defaults, "version", configDefaults.version);
+    safeLoad(defaults, "defaultWindowWidth", configDefaults.defaultWindowWidth);
+    safeLoad(defaults, "defaultWindowHeight", configDefaults.defaultWindowHeight);
 
     // Terrain defaults
-    safeLoad(config["defaults"], "size",        configDefaults.size);
-    safeLoad(config["defaults"], "gridScale",   configDefaults.gridScale);
-    safeLoad(config["defaults"], "heightScale", configDefaults.heightScale);
-    safeLoad(config["defaults"], "scale",       configDefaults.scale);
-    safeLoad(config["defaults"], "octaves",     configDefaults.octaves);
-    safeLoad(config["defaults"], "persistence", configDefaults.persistence);
-    safeLoad(config["defaults"], "lacunarity",  configDefaults.lacunarity);
+    safeLoad(defaults, "size",        configDefaults.size);
+    safeLoad(defaults, "gridScale",   configDefaults.gridScale);
+    safeLoad(defaults, "heightScale", configDefaults.heightScale);
+    safeLoad(defaults, "scale",       configDefaults.scale);
+    safeLoad(defaults, "octaves",     configDefaults.octaves);
+    safeLoad(defaults, "persistence", configDefaults.persistence);
+    safeLoad(defaults, "lacunarity",  configDefaults.lacunarity);
 
     // Sphere defaults
-    safeLoad(config["defaults"], "sphereSlices", configDefaults.sphereSlices);
-    safeLoad(config["defaults"], "sphereStacks", configDefaults.sphereStacks);
+    safeLoad(defaults, "sphereSlices", configDefaults.sphereSlices);
+    safeLoad(defaults, "sphereStacks", configDefaults.sphereStacks);
 
     // Torus defaults
-    safeLoad(config["defaults"], "torusRingSegments", configDefaults.torusRingSegments);
-    safeLoad(config["defaults"], "torusTubeSegments", configDefaults.torusTubeSegments);
-    safeLoad(config["defaults"], "torusRingRadius",   configDefaults.torusRingRadius);
-    safeLoad(config["defaults"], "torusTubeRadius",   configDefaults.torusTubeRadius);
+    safeLoad(defaults, "torusRingSegments", configDefaults.torusRingSegments);
+    safeLoad(defaults, "torusTubeSegments", configDefaults.torusTubeSegments);
+    safeLoad(defaults, "torusRingRadius",   configDefaults.torusRingRadius);
+    safeLoad(defaults, "torusTubeRadius",   configDefaults.torusTubeRadius);
 
     // Camera defaults
-    safeLoad(config["defaults"], "FOVdeg",          configDefaults.FOVdeg);
-    safeLoad(config["defaults"], "nearPlane",       configDefaults.nearPlane);
-    safeLoad(config["defaults"], "farPlane",        configDefaults.farPlane);
-    safeLoad(config["defaults"], "sensitivity",     configDefaults.sensitivity);
-    safeLoad(config["defaults"], "speedMultiplier", configDefaults.speedMultiplier);
+    safeLoad(defaults, "FOVdeg",          configDefaults.FOVdeg);
+    safeLoad(defaults, "nearPlane",       configDefaults.nearPlane);
+    safeLoad(defaults, "farPlane",        configDefaults.farPlane);
+    safeLoad(defaults, "sensitivity",     configDefaults.sensitivity);
+    safeLoad(defaults, "speedMultiplier", configDefaults.speedMultiplier);
 
     // Input defaults
-    safeLoad(config["defaults"], "transformSpeed", configDefaults.transformSpeed);
-
+    safeLoad(defaults, "transformSpeed", configDefaults.transformSpeed);
 
     return configDefaults;
 }
 
 std::string JSONManager::LoadShaderWithDefines(const std::string &path, json &config) {
     std::ifstream file(path);
+    if (!file.is_open()) throw std::runtime_error("Failed to open " + path);
     std::stringstream buffer;
     buffer << file.rdbuf();
 

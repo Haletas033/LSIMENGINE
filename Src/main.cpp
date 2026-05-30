@@ -325,7 +325,7 @@ int main(int argc, char** argv) {
 	std::unique_ptr<Mesh> skybox = std::make_unique<Mesh>(primitives::GenerateCube(1));
 
 	//Skybox faces
-	std::string faces[6] = {
+	std::array<std::string, 6> faces = {
 		"skybox/right.jpg",
 		"skybox/left.jpg",
 		"skybox/top.jpg",
