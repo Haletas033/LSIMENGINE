@@ -32,6 +32,8 @@ set(IMGUI_SOURCES
         include/scene/script.h
         include/utils/meshPicking.h
         include/LSIMtypes.h
+        include/editor/sharedState.h
+        Src/editor/sharedState.cpp
 )
 add_executable(LSIM
         Src/main.cpp
