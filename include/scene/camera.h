@@ -16,6 +16,10 @@
 class Camera
 {
 public:
+    struct CameraDirection {
+        glm::vec3 forward, side;
+    };
+
     //Stores the main vectors of the camera
     glm::vec3 Position{};
     glm::vec3 Orientation = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -49,7 +53,7 @@ public:
     //Handles camera inputs (keyboard and mouse)
     void Inputs(GLFWwindow* window, float deltaTime);
 
-
+    CameraDirection getDirection() const;
 };
 
 #endif

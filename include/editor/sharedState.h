@@ -10,14 +10,22 @@ extern Logger logger;
 
 class SharedState {
 public:
-	enum Mode {
+	enum class Mode {
 		MESH_MODE,
 		LIGHT_MODE
+	};
+
+	enum class Transform {
+		POSITION,
+		ROTATION,
+		SCALE
 	};
 private:
 	std::set<unsigned int> currentMeshes;
 	std::set<unsigned int> currentLights;
-	Mode currentMode = MESH_MODE;
+	Mode currentMode = Mode::MESH_MODE;
+	Transform currentTransform = Transform::POSITION;
+
 	Primitive::Type selectedMeshType = Primitive::CUBE;
 
 	static void safe_insert(std::set<unsigned>& field, const unsigned max, const std::set<unsigned int> &rhs, const std::string& type) {
@@ -74,6 +82,14 @@ public:
 
 	void set_selected_mesh_type(const Primitive::Type selected_mesh_type) {
 		selectedMeshType = selected_mesh_type;
+	}
+
+	[[nodiscard]] Transform current_transform() const {
+		return currentTransform;
+	}
+
+	void set_current_transform(const Transform current_transform) {
+		currentTransform = current_transform;
 	}
 };
 

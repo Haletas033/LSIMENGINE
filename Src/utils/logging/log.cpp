@@ -10,6 +10,8 @@ extern nlohmann::ordered_json config;
 
 CapacityBuffer<Logger> Logger::logs(UINT16_MAX);
 
+Logger engineLogger("ENGINE");
+
 Logger::Logger(const std::string& subModule) {
     JSONManager::LoadLoggers(config, loggers);
     loggers["stdInfo"]->SetModule(subModule);

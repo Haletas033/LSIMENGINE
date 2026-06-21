@@ -6,9 +6,19 @@
 
 class MeshInputs {
 private:
+	enum class Direction {
+		FORWARD,
+		SIDE,
+		UP
+	};
+
 	Inputs::BindingTable bindingTable;
+	static void add(glm::vec3& lhs, glm::vec3 rhs);
+	static void sub(glm::vec3& lhs, glm::vec3 rhs);
+	static void Move(const Scene &scene, const SharedState &sharedState, const Defaults &defaults, const Camera &camera, const Inputs::
+			InputContext &context, Direction directionType, const std::function<void(glm::vec3 &, glm::vec3)> &op);
 public:
-	void Init(Scene& scene, SharedState& sharedState, Inputs& inputs);
+	void Init(Scene &scene, SharedState &sharedState, const Defaults &defaults, const Camera &camera, Inputs &inputs);
 };
 
 #endif //LSIM_MESHINPUTS_H

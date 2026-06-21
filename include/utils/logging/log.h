@@ -113,4 +113,6 @@ public:
     void operator()(const std::string& logger, const std::string &message) const;
 };
 
+extern Logger engineLogger;
+
 #endif //LOG_H

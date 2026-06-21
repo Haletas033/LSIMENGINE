@@ -403,8 +403,10 @@ int main(int argc, char** argv) {
 		}
 
 		if (scene.deleteMeshSignal) {
-			DeleteMesh(scene, currentMeshes, lastClickMesh);
-			logger("stdInfo", "Deleting mesh");
+			if (!scene.meshes.empty()) {
+				DeleteMesh(scene, currentMeshes, lastClickMesh);
+				logger("stdInfo", "Deleting mesh");
+			}
 		}
 
 		if (scene.addLightSignal && scene.lights.size() < engineDefaults.MAX_LIGHTS) {

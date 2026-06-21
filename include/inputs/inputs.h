@@ -17,7 +17,7 @@
 
 class Inputs {
 public:
-    enum KeyCode {
+    enum class KeyCode {
         #include "keyDispatch.h"
         #include "keys.def"
         #include "keyDispatcherUndef.h"
@@ -43,6 +43,8 @@ public:
         void addAction(const std::string& action, Key keys);
 
         void addAction(const std::string &action, const KeyCodeKey& keys);
+
+        void addAction(const std::string &action, KeyCode key, bool onlyOnPress);
 
         void removeAction(const std::string& action);
         void changeActionForFunction(const std::string& oldAction, const std::string& newAction);

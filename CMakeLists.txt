@@ -24,6 +24,7 @@ set(IMGUI_SOURCES
         external/imgui/backends/imgui_impl_opengl3.cpp
         include/inputs/keyDispatch.h
         include/inputs/keyDispatcherUndef.h
+        include/LSIMhelpers.h
 )
 add_executable(LSIM
         ${IMGUI_SOURCES}

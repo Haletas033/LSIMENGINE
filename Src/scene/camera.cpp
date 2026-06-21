@@ -103,4 +103,46 @@ void Camera::Inputs(GLFWwindow* window, float deltaTime)
     glfwSetScrollCallback(window, scroll_callback);
 }
 
+Camera::CameraDirection Camera::getDirection() const {
+    CameraDirection cameraDirection = {};
+
+    const glm::vec2 flatForward(Orientation.x, Orientation.z);
+    const double facingAngle = atan2(flatForward.y, flatForward.x);
+    double yawDeg = facingAngle * 180.0f / glm::pi<float>();
+
+    /*  Relative to the world
+
+              forward
+                -90d
+                 |
+       left 0d --+-- 180d right
+                 |
+                90d
+             backwards
+    */
+
+    if (yawDeg >= -45 && yawDeg <= 45) {
+        // Facing left relative to word view
+        cameraDirection.forward = glm::vec3(1,0,0);
+        cameraDirection.side = glm::vec3(0,0,-1);
+    }
+    else if (yawDeg > 45 && yawDeg <= 135) {
+        // Facing backwards relative to world view
+        cameraDirection.forward = glm::vec3(0,0,-1);
+        cameraDirection.side = glm::vec3(-1,0,0);
+    }
+    else if (yawDeg > 135 || yawDeg <= -135) {
+        // Facing right relative to world view
+        cameraDirection.forward = glm::vec3(-1,0,0);
+        cameraDirection.side = glm::vec3(0,0,1);
+    }
+    else {
+        // Facing forward relative to world view
+        cameraDirection.forward = glm::vec3(0,0,1);
+        cameraDirection.side = glm::vec3(1,0,0);
+    }
+
+    return cameraDirection;
+}
+
 

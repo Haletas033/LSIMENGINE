@@ -64,6 +64,9 @@ void Inputs::BindingTable::addAction(const std::string &action, const KeyCodeKey
     addAction(action, intKeys);
 }
 
+void Inputs::BindingTable::addAction(const std::string &action, const KeyCode key, const bool onlyOnPress) {
+    addAction(action, KeyCodeKey{{key, onlyOnPress}});
+}
 void Inputs::BindingTable::removeAction(const std::string &action) {
     removeFunctionForAction(action);
     this->actionToKeys.erase(action);
@@ -121,115 +124,6 @@ bool Inputs::isDown(const BindingTable &bindingTable, const std::string& action)
             return true;
     }
     return false;
-}
-
-void Inputs::MeshInputs(GLFWwindow *window, const Scene &scene, const float deltaTime,
-                        const int &currentMesh, int &selectedMesh, glm::vec3 Orientation) {
-    // Flatten y
-    Orientation.y = 0;
-
-    float *cameraForward = nullptr;
-    float *cameraSide = nullptr;
-
-    bool positiveX;
-    bool positiveZ;
-
-    const glm::vec2 flatForward(Orientation.x, Orientation.z);
-    const double yaw = atan2(flatForward.y, flatForward.x);
-    double yawDeg = yaw * 180.0f / glm::pi<float>();
-
-    /*  Relative to the world
-
-              forward
-                -90d
-                 |
-       left 0d --+-- 180d right
-                 |
-                90d
-             backwards
-    */
-
-    if (yawDeg >= -45 && yawDeg <= 45) {
-        // Facing left relative to word view
-        cameraForward = &(scene.meshes[currentMesh][0].get()->*currentTransform).x;
-        cameraSide = &(scene.meshes[currentMesh][0].get()->*currentTransform).z;
-        positiveX = true;
-        positiveZ = false;
-    }
-    else if (yawDeg > 45 && yawDeg <= 135) {
-        // Facing backwards relative to world view
-        cameraForward = &(scene.meshes[currentMesh][0].get()->*currentTransform).z;
-        cameraSide = &(scene.meshes[currentMesh][0].get()->*currentTransform).x;
-        positiveX = false;
-        positiveZ = false;
-    }
-    else if (yawDeg > 135 || yawDeg <= -135) {
-        // Facing right relative to world view
-        cameraForward = &(scene.meshes[currentMesh][0].get()->*currentTransform).x;
-        cameraSide = &(scene.meshes[currentMesh][0].get()->*currentTransform).z;
-        positiveX = false;
-        positiveZ = true;
-    }
-    else {
-        // Facing forward relative to world view
-        cameraForward = &(scene.meshes[currentMesh][0].get()->*currentTransform).z;
-        cameraSide = &(scene.meshes[currentMesh][0].get()->*currentTransform).x;
-        positiveX = true;
-        positiveZ = true;
-    }
-
-    float &cameraUp = (scene.meshes[currentMesh][0].get()->*currentTransform).y;
-
-    if (currentTransform == &Mesh::scale) {positiveX = !positiveX; positiveZ = !positiveZ;} // Flip for scale
-    if (currentTransform == &Mesh::rotation) {
-        const auto tmp = cameraSide; cameraSide = cameraForward; cameraForward = tmp; // Flip for rotation
-        if (cameraForward == &(scene.meshes[currentMesh][0].get()->*currentTransform).z)
-            positiveZ = !positiveZ;
-        if (cameraSide == &(scene.meshes[currentMesh][0].get()->*currentTransform).z)
-            positiveX = !positiveX;
-    }
-
-    const float adjustedTransformSpeed = defaults.transformSpeed * deltaTime;
-
-    if (isDown(GLFW_KEY_UP, false, window)) {
-        *cameraForward -= (positiveZ ? adjustedTransformSpeed : -adjustedTransformSpeed);
-    }
-    if (isDown(GLFW_KEY_DOWN, false, window)) {
-        *cameraForward += positiveZ ? adjustedTransformSpeed : -adjustedTransformSpeed;
-    }
-    if (isDown(GLFW_KEY_RIGHT, false, window)) {
-         *cameraSide += positiveX ? adjustedTransformSpeed : -adjustedTransformSpeed;
-    }
-    if (isDown(GLFW_KEY_LEFT, false, window)) {
-        *cameraSide -= positiveX ? adjustedTransformSpeed : -adjustedTransformSpeed;
-    }
-    if (isDown(GLFW_KEY_PAGE_UP, false, window)) {
-         cameraUp += adjustedTransformSpeed;
-    }
-    if (isDown(GLFW_KEY_PAGE_DOWN, false, window)) {
-        cameraUp -= adjustedTransformSpeed;
-    }
-    if (isDown(GLFW_KEY_RIGHT_BRACKET, true, window)) {
-        selectedMesh++;
-        selectedMesh = std::clamp(selectedMesh, 0, static_cast<int>(scene.meshes.size() - 1));
-    }
-    if (isDown(GLFW_KEY_LEFT_BRACKET, true, window)) {
-        selectedMesh--;
-        selectedMesh = std::clamp(selectedMesh, 0, static_cast<int>(scene.meshes.size() - 1));
-    }
-
-    if (isDown(GLFW_KEY_G, true, window)) {
-        currentTransform = &Mesh::position;
-        logger("stdInfo", "Set position as the current transform");
-    }
-    if (isDown(GLFW_KEY_R, true, window)) {
-        currentTransform = &Mesh::rotation;
-        logger("stdInfo", "Set Rotation as the current transform");
-    }
-    if (isDown(GLFW_KEY_N, true, window)) {
-        currentTransform = &Mesh::scale;
-        logger("stdInfo", "Set scale as the current transform");
-    }
 }
 
 void Inputs::LightInputs(Scene &scene, const float deltaTime, const int &currentLight, GLFWwindow* window) {
