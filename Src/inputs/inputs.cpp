@@ -2,20 +2,8 @@
 #include <include/utils/logging/log.h>
 
 #include <algorithm>
-#include <iostream>
 #include <unordered_set>
 #include <utility>
-
-#include "gl/VAO.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
 #include "include/utils/json.h"
 
 extern nlohmann::ordered_json config;
@@ -126,22 +114,6 @@ bool Inputs::isDown(const BindingTable &bindingTable, const std::string& action)
     return false;
 }
 
-void Inputs::IOInputs(GLFWwindow *window, Scene &scene, const std::string & workingDir) {
-    if (isDown(GLFW_KEY_O, true, window)) {
-        std::string fileName = IO::SaveDialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0");
-        if (std::ofstream file(fileName, std::ios::out | std::ios::binary); file.is_open()) {
-            IO::saveToFile(file, scene);
-        }
-    }
-
-    if (isDown(GLFW_KEY_I, true, window)) {
-        std::string fileName = IO::OpenDialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0");
-        if (std::ifstream file(fileName, std::ios::in | std::ios::binary); file.is_open()) {
-            scene = IO::loadFromFile(file, workingDir);
-        }
-    }
-}
-
 void Inputs::handleInputs(const InputContext& context) {
     std::set<Key> consumed;
     for (const BindingTable& bindingTable : bindingTables) {
@@ -182,43 +154,4 @@ void Inputs::handleInputs(const InputContext& context) {
         currentMode = lightMode;
         logger("stdInfo", "Switched to light mode");
     }
-
-    if (currentMode == meshMode) {
-        if (!scene.meshes.empty() && currentMesh >= 0 && currentMesh < scene.meshes.size()) {
-            MeshInputs(window, scene, deltaTime, currentMesh, selectedMesh, Orientation);
-        }
-
-        // Handle changing mesh type with 0-5
-        for (int i = 0 + GLFW_KEY_0; i < 10 + GLFW_KEY_0; i++) {
-            if (isDown(i, true, window)) {
-                selectedMeshType = i - 48;
-            }
-        }
-
-        // Handle adding and deleting meshes
-        if (isDown(GLFW_KEY_F, true, window)) {
-            scene.addMeshSignal = true;
-        }
-        if (!scene.meshes.empty() && isDown(GLFW_KEY_DELETE, true, window)) {
-            scene.deleteMeshSignal = true;
-        } else if (scene.meshes.empty() && isDown(GLFW_KEY_DELETE, true, window)) {
-            logger("stdWarn", "Pressed delete on mesh but there were none left");
-        }
-    }
-    else if (currentMode == lightMode) {
-        LightInputs(scene, deltaTime, currentLight, window);
-
-        //Handle adding and deleting lights
-        if (isDown(GLFW_KEY_F, true, window)) {
-            scene.addLightSignal = true;
-        }
-        if (!scene.lights.empty() && isDown(GLFW_KEY_DELETE, true, window)) {
-            scene.deleteLightSignal = true;
-        } else if (scene.lights.empty() && isDown(GLFW_KEY_DELETE, true, window)) {
-            logger("stdWarn", "Pressed delete for light but there were none left");
-        }
-    }
-
-    IOInputs(window, scene, workingDir);
 }
-

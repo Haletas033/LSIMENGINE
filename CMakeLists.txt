@@ -22,11 +22,6 @@ set(IMGUI_SOURCES
         external/imgui/imgui_demo.cpp
         external/imgui/backends/imgui_impl_glfw.cpp
         external/imgui/backends/imgui_impl_opengl3.cpp
-        include/inputs/keyDispatch.h
-        include/inputs/keyDispatcherUndef.h
-        include/LSIMhelpers.h
-        Src/editor/lightInputs.cpp
-        include/editor/lightInputs.h
 )
 add_executable(LSIM
         ${IMGUI_SOURCES}
@@ -66,6 +61,13 @@ add_executable(LSIM
         Src/editor/sharedState.cpp
         include/editor/meshInputs.h
         Src/editor/meshInputs.cpp
+        include/inputs/keyDispatch.h
+        include/inputs/keyDispatcherUndef.h
+        include/LSIMhelpers.h
+        Src/editor/lightInputs.cpp
+        include/editor/lightInputs.h
+        include/editor/IOInputs.h
+        Src/editor/IOInputs.cpp
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include

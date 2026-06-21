@@ -1,11 +1,11 @@
 #ifndef INPUTS_CLASS_H
 #define INPUTS_CLASS_H
 
+#include <functional>
 #include <memory>
 #include <set>
 
 #include "../scene/scene.h"
-#include "../utils/fileIO.h"
 
 #include <unordered_map>
 #include <map>
