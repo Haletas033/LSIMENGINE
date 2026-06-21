@@ -1,10 +1,9 @@
-#ifndef LSIM_MESHINPUTS_H
-#define LSIM_MESHINPUTS_H
+#ifndef LSIM_LIGHTINPUTS_H
+#define LSIM_LIGHTINPUTS_H
 #include "sharedState.h"
 #include "inputs/inputs.h"
-#include "scene/scene.h"
 
-class MeshInputs {
+class LightInputs {
 private:
 	enum class Direction {
 		FORWARD,
@@ -13,12 +12,14 @@ private:
 	};
 
 	Inputs::BindingTable bindingTable;
+public:
 	static void add(glm::vec3& lhs, glm::vec3 rhs);
+
 	static void sub(glm::vec3& lhs, glm::vec3 rhs);
 	static void Move(Scene &scene, const SharedState &sharedState, const Defaults &defaults, const Camera &camera, const Inputs::
 			InputContext &context, Direction directionType, const std::function<void(glm::vec3 &, glm::vec3)> &op);
-public:
-	void Init(Scene &scene, SharedState &sharedState, const Defaults &defaults, const Camera &camera, Inputs &inputs);
+
+	void Init(Scene &scene, const SharedState &sharedState, const Defaults &defaults, const Camera &camera, Inputs &inputs);
 };
 
-#endif //LSIM_MESHINPUTS_H
+#endif //LSIM_LIGHTINPUTS_H

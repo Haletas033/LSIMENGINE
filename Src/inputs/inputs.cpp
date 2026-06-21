@@ -60,7 +60,7 @@ void Inputs::BindingTable::addAction(const std::string &action, Key keys) {
 void Inputs::BindingTable::addAction(const std::string &action, const KeyCodeKey& keys) {
     Key intKeys;
     for (const auto&[fst, snd] : keys)
-        intKeys.insert({fst, snd});
+        intKeys.insert({static_cast<int>(fst), snd});
     addAction(action, intKeys);
 }
 
@@ -124,30 +124,6 @@ bool Inputs::isDown(const BindingTable &bindingTable, const std::string& action)
             return true;
     }
     return false;
-}
-
-void Inputs::LightInputs(Scene &scene, const float deltaTime, const int &currentLight, GLFWwindow* window) {
-    const float adjustedTransformSpeed = defaults.transformSpeed * deltaTime;
-
-    if (isDown(GLFW_KEY_UP, false, window)) {
-        scene.lights[currentLight].lightPos.z -= adjustedTransformSpeed;
-    }
-    if (isDown(GLFW_KEY_DOWN, false, window)) {
-        scene.lights[currentLight].lightPos.z += adjustedTransformSpeed;
-    }
-    if (isDown(GLFW_KEY_RIGHT, false, window)) {
-        scene.lights[currentLight].lightPos.x += adjustedTransformSpeed;
-    }
-    if (isDown(GLFW_KEY_LEFT, false, window)) {
-        scene.lights[currentLight].lightPos.x -= adjustedTransformSpeed;
-    }
-    if (isDown(GLFW_KEY_PAGE_UP, false, window)) {
-        scene.lights[currentLight].lightPos.y += adjustedTransformSpeed;
-    }
-    if (isDown(GLFW_KEY_PAGE_DOWN, false, window)) {
-        scene.lights[currentLight].lightPos.y -= adjustedTransformSpeed;
-    }
-
 }
 
 void Inputs::IOInputs(GLFWwindow *window, Scene &scene, const std::string & workingDir) {

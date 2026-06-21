@@ -25,6 +25,8 @@ set(IMGUI_SOURCES
         include/inputs/keyDispatch.h
         include/inputs/keyDispatcherUndef.h
         include/LSIMhelpers.h
+        Src/editor/lightInputs.cpp
+        include/editor/lightInputs.h
 )
 add_executable(LSIM
         ${IMGUI_SOURCES}

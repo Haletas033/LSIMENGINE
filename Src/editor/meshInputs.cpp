@@ -27,7 +27,7 @@ glm::vec3 Mesh::* TransformToMeshProperty(const SharedState& sharedState) {
 	return field;
 }
 
-void MeshInputs::Move(const Scene &scene, const SharedState &sharedState, const Defaults& defaults, const Camera& camera,
+void MeshInputs::Move(Scene &scene, const SharedState &sharedState, const Defaults& defaults, const Camera& camera,
 	const Inputs::InputContext& context,const Direction directionType, const std::function<void(glm::vec3&, glm::vec3)>& op) {
 	auto [forward, side] = camera.getDirection();
 
@@ -66,10 +66,10 @@ void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& de
 	meshInputs.addAction("delete_mesh", Inputs::KeyCode::DELETE, true);
 
 	meshInputs.addFunctionForAction("move_meshes_forward", [&](const Inputs::InputContext& context) {
-		Move(scene, sharedState, defaults, camera, context, Direction::FORWARD, add);
+		Move(scene, sharedState, defaults, camera, context, Direction::FORWARD, sub);
 	});
 	meshInputs.addFunctionForAction("move_meshes_backward", [&](const Inputs::InputContext& context) {
-		Move(scene, sharedState, defaults, camera, context, Direction::FORWARD, sub);
+		Move(scene, sharedState, defaults, camera, context, Direction::FORWARD, add);
 	});
 	meshInputs.addFunctionForAction("move_meshes_left", [&](const Inputs::InputContext& context) {
 		Move(scene, sharedState, defaults, camera, context, Direction::SIDE, sub);
@@ -103,7 +103,6 @@ void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& de
 	});
 
 	// Generate 0-9 bindings
-
 	for (int i = 0; i < 10; i++) {
 		std::string name = "select_mesh_type_" + std::to_string(i);
 		meshInputs.addAction(
