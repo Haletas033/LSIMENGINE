@@ -1,7 +1,7 @@
 #include "../../include/editor/sharedState.h"
 
-static Logger logger;
+Logger logger;
 
-static void InitSharedState() {
+void SharedState::InitSharedState() {
 	logger = Logger("EDITOR");
 }

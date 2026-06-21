@@ -5,7 +5,7 @@
 
 #include <include/scene/scene.h>
 #include <include/geometry/terrain.h>
-#include <include/geometry/primitives.h>
+#include <include/geometry/primitive.h>
 #include <include/inputs/gui.h>
 #include <include/inputs/inputs.h>
 #include <include/utils/defaults.h>
@@ -47,23 +47,23 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 
 	switch (selectedMeshType) {
 		case 0:
-			newMesh = std::make_unique<Mesh>(primitives::GenerateCube(1));
+			newMesh = std::make_unique<Mesh>(Primitive::GenerateCube(1));
 			newMesh->name = "Cube";
 			break;
 		case 1:
-			newMesh = std::make_unique<Mesh>(primitives::GeneratePyramid(1));
+			newMesh = std::make_unique<Mesh>(Primitive::GeneratePyramid(1));
 			newMesh->name = "Pyramid";
 			break;
 		case 2:
-			newMesh = std::make_unique<Mesh>(primitives::GeneratePlane(1));
+			newMesh = std::make_unique<Mesh>(Primitive::GeneratePlane(1));
 			newMesh->name = "Plane";
 			break;
 		case 3:
-			newMesh = std::make_unique<Mesh>(primitives::GenerateSphere(defaults.sphereStacks, defaults.sphereSlices, 1));
+			newMesh = std::make_unique<Mesh>(Primitive::GenerateSphere(defaults.sphereStacks, defaults.sphereSlices, 1));
 			newMesh->name = "Sphere";
 			break;
 		case 4:
-			newMesh = std::make_unique<Mesh>(primitives::GenerateTorus(defaults.torusRingSegments, defaults.torusTubeSegments,
+			newMesh = std::make_unique<Mesh>(Primitive::GenerateTorus(defaults.torusRingSegments, defaults.torusTubeSegments,
 			                                                           defaults.torusRingRadius, defaults.torusTubeRadius, 1));
 
 			newMesh->name = "Torus";
@@ -279,7 +279,7 @@ int main(int argc, char** argv) {
 	Gui::Initialize(window);
 
 	meshes.emplace_back();
-	meshes.back().push_back(std::make_unique<Mesh>(primitives::GenerateCube(1)));
+	meshes.back().push_back(std::make_unique<Mesh>(Primitive::GenerateCube(1)));
 
 	meshes.back()[0]->name = "First Cube";
 	auto* node = new Gui::Node{ meshes.back()[0].get(), Gui::root, {} };
@@ -322,7 +322,7 @@ int main(int argc, char** argv) {
 	}
 
 	//Create skybox
-	std::unique_ptr<Mesh> skybox = std::make_unique<Mesh>(primitives::GenerateCube(1));
+	std::unique_ptr<Mesh> skybox = std::make_unique<Mesh>(Primitive::GenerateCube(1));
 
 	//Skybox faces
 	std::array<std::string, 6> faces = {

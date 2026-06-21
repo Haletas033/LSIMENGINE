@@ -22,12 +22,6 @@ extern nlohmann::ordered_json config;
 
 static Logger logger;
 
-Inputs::BindingTable engineTable = {
-    .priority = 0,
-    .is_enabled = true,
-    .actionToKeys = {}
-};
-
 void Inputs::InitInputs(GLFWwindow *_window) {
     logger = Logger("INPUTS");
     logger("stdInfo", "Successfully initialized the input loggers");
@@ -61,6 +55,13 @@ void Inputs::BindingTable::addAction(const std::string &action, Key keys) {
         return;
     }
     this->actionToKeys.insert({action, std::set<Key>{std::move(keys)}});
+}
+
+void Inputs::BindingTable::addAction(const std::string &action, const KeyCodeKey& keys) {
+    Key intKeys;
+    for (const auto&[fst, snd] : keys)
+        intKeys.insert({fst, snd});
+    addAction(action, intKeys);
 }
 
 void Inputs::BindingTable::removeAction(const std::string &action) {
@@ -110,7 +111,7 @@ bool Inputs::isDown(const int key, const bool onlyOnPress) {
 }
 
 bool Inputs::isDown(const KeyCode key, const bool onlyOnPress) {
-    return isDown(key+65, onlyOnPress);
+    return isDown(static_cast<int>(key), onlyOnPress);
 }
 
 bool Inputs::isDown(const BindingTable &bindingTable, const std::string& action) {
@@ -292,7 +293,7 @@ void Inputs::handleInputs(const InputContext& context) {
                         }
                     }
                 } else if constexpr (std::is_same_v<T, std::pair<KeyCode, bool>>) {
-                    int glfwKey = static_cast<int>(arg.first) + 65;
+                    int glfwKey = static_cast<int>(arg.first);
                     if (consumed.count(std::set{std::make_pair(glfwKey, arg.second)}) == 0) {
                         if (isDown(glfwKey, arg.second)) {
                             consumed.insert(std::set{std::make_pair(glfwKey, arg.second)});

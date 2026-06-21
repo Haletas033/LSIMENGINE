@@ -15,17 +15,12 @@
 
 #include "include/utils/defaults.h"
 
-
-
 class Inputs {
 public:
-    using Key = std::set<std::pair<int, bool>>;
     enum KeyCode {
-        A, B, C, D, E,
-        F, G, H, I, J,
-        K, L, M, N, O,
-        P, Q, R, S, T,
-        U, V, W, X, Y, Z
+        #include "keyDispatch.h"
+        #include "keys.def"
+        #include "keyDispatcherUndef.h"
     };
 
     struct InputContext {
@@ -33,14 +28,22 @@ public:
         float deltaTime = 0.0f;
     };
 
+    using Key = std::set<std::pair<int, bool>>;
+    using KeyCodeKey = std::set<std::pair<KeyCode, bool>>;
+    using ActionToKeys = std::unordered_map<std::string, std::set<Key>>;
+    using ActionToFunction = std::map<std::variant<std::string, std::pair<KeyCode, bool>>, std::function<void(const InputContext&)>>;
+
     struct BindingTable {
         uint32_t priority = 0;
         bool is_enabled = false;
-        std::unordered_map<std::string, std::set<Key>> actionToKeys;
-        std::map<std::variant<std::string, std::pair<KeyCode, bool>>, std::function<void(const InputContext&)>> actionToFunction;
+        ActionToKeys actionToKeys = {};
+        ActionToFunction actionToFunction = {};
         void addFunctionForAction(const std::string& action, const std::function<void(const InputContext&)>& function);
         void removeFunctionForAction(const std::string& action);
         void addAction(const std::string& action, Key keys);
+
+        void addAction(const std::string &action, const KeyCodeKey& keys);
+
         void removeAction(const std::string& action);
         void changeActionForFunction(const std::string& oldAction, const std::string& newAction);
         void changeFunctionForAction(const std::string& action, std::function<void(const InputContext&)> newFunction);

@@ -6,8 +6,18 @@
 
 #include "mesh.h"
 
-class primitives {
+class Primitive {
 public:
+    enum Type {
+        CUBE,
+        PYRAMID,
+        PLANE,
+        SPHERE,
+        TORUS,
+        TERRAIN,
+        MODEL
+    };
+
     static Mesh GeneratePlane(float tileScale);
     static Mesh GenerateCube(float tileScale);
     static Mesh GeneratePyramid(float tileScale);

@@ -1,9 +1,9 @@
-#include <include/geometry/primitives.h>
+#include <include/geometry/primitive.h>
 #include <include/geometry/mesh.h>
 
 constexpr float PI = 3.14159265359f;
 
-Mesh primitives::GeneratePlane(const float tileScale) {
+Mesh Primitive::GeneratePlane(const float tileScale) {
     std::vector<GLfloat> vertices = {
         -0.5f, 0.0f, -0.5f,  0, 1, 0,  0, 0,
          0.5f, 0.0f, -0.5f,  0, 1, 0,  tileScale, 0,
@@ -18,7 +18,7 @@ Mesh primitives::GeneratePlane(const float tileScale) {
     return {vertices, indices};
 }
 
-Mesh primitives::GenerateCube(const float tileScale) {
+Mesh Primitive::GenerateCube(const float tileScale) {
     std::vector<GLfloat> vertices = {
 
         -0.5f, -0.5f,  0.5f,  0, 0, 1,  0, 0,
@@ -69,7 +69,7 @@ Mesh primitives::GenerateCube(const float tileScale) {
     return {vertices, indices};
 }
 
-Mesh primitives::GeneratePyramid(const float tileScale) {
+Mesh Primitive::GeneratePyramid(const float tileScale) {
     // Vertices coordinates
     std::vector<GLfloat>vertices =
     { //     COORDINATES     /        COLORS      /   TexCoord  //
@@ -94,7 +94,7 @@ Mesh primitives::GeneratePyramid(const float tileScale) {
     return {vertices, indices};
 }
 
-Mesh primitives::GenerateSphere(const int stacks = 20, const int slices = 30, const float tileScale = 1) {
+Mesh Primitive::GenerateSphere(const int stacks = 20, const int slices = 30, const float tileScale = 1) {
     std::vector<GLfloat> vertices;
     std::vector<GLuint> indices;
 
@@ -145,7 +145,7 @@ Mesh primitives::GenerateSphere(const int stacks = 20, const int slices = 30, co
     return {vertices, indices};
 }
 
-Mesh primitives::GenerateTorus(const int ringSegments = 30, const int tubeSegments = 20, const float ringRadius = 0.3f, const float tubeRadius = 0.1f, const float tileScale = 1) {
+Mesh Primitive::GenerateTorus(const int ringSegments = 30, const int tubeSegments = 20, const float ringRadius = 0.3f, const float tubeRadius = 0.1f, const float tileScale = 1) {
     std::vector<GLfloat> vertices;
     std::vector<GLuint> indices;
 

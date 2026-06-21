@@ -22,20 +22,12 @@ set(IMGUI_SOURCES
         external/imgui/imgui_demo.cpp
         external/imgui/backends/imgui_impl_glfw.cpp
         external/imgui/backends/imgui_impl_opengl3.cpp
-        include/inputs/gui.h Src/inputs/gui.cpp
-        include/inputs/inputs.h Src/inputs/inputs.cpp
-        Src/main.cpp Src/main.cpp include/scene/light.h
-        include/scene/scene.h include/utils/defaults.h
-        include/utils/logging/log.h Src/utils/logging/log.cpp
-        include/utils/json.h Src/utils/json.cpp Src/utils/texture.cpp
-        include/utils/texture.h
-        include/scene/script.h
-        include/utils/meshPicking.h
-        include/LSIMtypes.h
-        include/editor/sharedState.h
-        Src/editor/sharedState.cpp
+        include/inputs/keyDispatch.h
+        include/inputs/keyDispatcherUndef.h
 )
 add_executable(LSIM
+        ${IMGUI_SOURCES}
+        ${SCRIPTS_SOURCES}
         Src/main.cpp
         include/gl/shaderClass.h
         Src/gl/shaderClass.cpp
@@ -51,14 +43,26 @@ add_executable(LSIM
         Src/geometry/terrain.cpp
         include/geometry/mesh.h
         Src/geometry/mesh.cpp
-        include/geometry/primitives.h
-        Src/geometry/primitives.cpp
+        include/geometry/primitive.h
+        Src/geometry/primitive.cpp
         include/geometry/model.h
         Src/geometry/model.cpp
-        ${IMGUI_SOURCES}
-        ${SCRIPTS_SOURCES}
         include/utils/fileIO.h
         Src/utils/fileIO.cpp
+        include/inputs/gui.h Src/inputs/gui.cpp
+        include/inputs/inputs.h Src/inputs/inputs.cpp
+        Src/main.cpp Src/main.cpp include/scene/light.h
+        include/scene/scene.h include/utils/defaults.h
+        include/utils/logging/log.h Src/utils/logging/log.cpp
+        include/utils/json.h Src/utils/json.cpp Src/utils/texture.cpp
+        include/utils/texture.h
+        include/scene/script.h
+        include/utils/meshPicking.h
+        include/LSIMtypes.h
+        include/editor/sharedState.h
+        Src/editor/sharedState.cpp
+        include/editor/meshInputs.h
+        Src/editor/meshInputs.cpp
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include

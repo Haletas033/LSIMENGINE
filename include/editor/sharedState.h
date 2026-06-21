@@ -2,6 +2,7 @@
 #define LSIM_SHAREDSTATE_H
 #include <set>
 
+#include "geometry/primitive.h"
 #include "scene/scene.h"
 #include "utils/logging/log.h"
 
@@ -14,11 +15,10 @@ public:
 		LIGHT_MODE
 	};
 private:
-
-
 	std::set<unsigned int> currentMeshes;
 	std::set<unsigned int> currentLights;
 	Mode currentMode = MESH_MODE;
+	Primitive::Type selectedMeshType = Primitive::CUBE;
 
 	static void safe_insert(std::set<unsigned>& field, const unsigned max, const std::set<unsigned int> &rhs, const std::string& type) {
 		for (const unsigned rh : rhs) {
@@ -34,6 +34,8 @@ private:
 		for (const unsigned rh : rhs) field.erase(rh);
 	}
 public:
+	static void InitSharedState();
+
 	[[nodiscard]] std::set<unsigned int> current_meshes() const { return currentMeshes; }
 	[[nodiscard]] std::set<unsigned int> current_lights() const { return currentLights; }
 	[[nodiscard]] Mode current_mode() const { return currentMode; }
@@ -65,6 +67,14 @@ public:
 	}
 
 	void set_current_mode(const Mode current_mode) { currentMode = current_mode; }
+
+	[[nodiscard]] Primitive::Type selected_mesh_type() const {
+		return selectedMeshType;
+	}
+
+	void set_selected_mesh_type(const Primitive::Type selected_mesh_type) {
+		selectedMeshType = selected_mesh_type;
+	}
 };
 
 #endif //LSIM_SHAREDSTATE_H
