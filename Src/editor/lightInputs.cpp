@@ -24,7 +24,7 @@ void LightInputs::Move(Scene &scene, const SharedState &sharedState, const Defau
 
 void LightInputs::Init(Scene &scene, const SharedState &sharedState, const Defaults &defaults, const Camera &camera, Inputs &inputs) {
 	Inputs::BindingTable lightInputs = {
-		2,
+		1,
 		false
 	};
 
@@ -55,5 +55,5 @@ void LightInputs::Init(Scene &scene, const SharedState &sharedState, const Defau
 	});
 
 	bindingTable = lightInputs;
-	inputs.addBindingTable(bindingTable);
+	inputs.addBindingTable(&bindingTable);
 }

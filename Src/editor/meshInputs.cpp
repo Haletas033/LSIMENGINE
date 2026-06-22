@@ -117,5 +117,5 @@ void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& de
 	}
 
 	bindingTable = meshInputs;
-	inputs.addBindingTable(bindingTable);
+	inputs.addBindingTable(&bindingTable);
 }

@@ -25,5 +25,5 @@ void IOInputs::Init(Scene &scene, const std::string &workingDir, Inputs &inputs)
 	});
 
 	bindingTable = ioInputs;
-	inputs.addBindingTable(ioInputs);
+	inputs.addBindingTable(&ioInputs);
 }

@@ -52,10 +52,10 @@ public:
     };
 private:
     GLFWwindow *window = nullptr;
-    std::vector<BindingTable> bindingTables;
+    std::vector<BindingTable*> bindingTables;
     std::unordered_map<int, bool> canPress;
 public:
-    void addBindingTable(const BindingTable& bindingTable);
+    void addBindingTable(BindingTable *bindingTable);
     bool isDown(int key, bool onlyOnPress);
     bool isDown(const BindingTable &bindingTable, const std::string &action);
     bool isDown(KeyCode key, bool onlyOnPress);

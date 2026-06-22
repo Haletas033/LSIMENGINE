@@ -16,10 +16,10 @@ void Inputs::InitInputs(GLFWwindow *_window) {
     window = _window;
 }
 
-void Inputs::addBindingTable(const BindingTable& bindingTable) {
+void Inputs::addBindingTable(BindingTable* bindingTable) {
     bindingTables.insert(
-        std::lower_bound(bindingTables.begin(), bindingTables.end(), bindingTable, [](const BindingTable &a, const BindingTable &b) {
-            return a.priority > b.priority;
+        std::lower_bound(bindingTables.begin(), bindingTables.end(), bindingTable, [](const BindingTable *a, const BindingTable *b) {
+            return a->priority > b->priority;
         }),
         bindingTable
     );
@@ -116,15 +116,15 @@ bool Inputs::isDown(const BindingTable &bindingTable, const std::string& action)
 
 void Inputs::handleInputs(const InputContext& context) {
     std::set<Key> consumed;
-    for (const BindingTable& bindingTable : bindingTables) {
-        if (!bindingTable.is_enabled) continue;
-        for (const auto&[action, function] : bindingTable.actionToFunction) {
+    for (BindingTable* bindingTable : bindingTables) {
+        if (!bindingTable->is_enabled) continue;
+        for (const auto&[action, function] : bindingTable->actionToFunction) {
             const auto& f = function;
 
             std::visit([&](auto&& arg) {
                 using T = std::decay_t<decltype(arg)>;
                 if constexpr (std::is_same_v<T, std::string>) {
-                    auto& keys = bindingTable.actionToKeys.at(arg);
+                    auto& keys = bindingTable->actionToKeys.at(arg);
                     for (const auto& key : keys) {
                         if (consumed.count(key) == 0) {
                             if (std::all_of(key.begin(), key.end(), [&](const std::pair<int, bool> &k) { return isDown(k.first, k.second); })) {
