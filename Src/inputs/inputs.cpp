@@ -146,12 +146,4 @@ void Inputs::handleInputs(const InputContext& context) {
             }, action);
         }
     }
-    if (isDown(GLFW_KEY_M, true, window)) {
-        currentMode = meshMode;
-        logger("stdInfo", "Switched to mesh mode");
-    }
-    if (isDown(GLFW_KEY_L, true, window)) {
-        currentMode = lightMode;
-        logger("stdInfo", "Switched to light mode");
-    }
 }

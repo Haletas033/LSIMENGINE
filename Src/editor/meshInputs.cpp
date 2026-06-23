@@ -33,16 +33,19 @@ void MeshInputs::Move(Scene &scene, const SharedState &sharedState, const Defaul
 
 	glm::vec3 Mesh::* field = TransformToMeshProperty(sharedState);
 
-	if (sharedState.current_transform() == SharedState::Transform::ROTATION)
+	if (sharedState.current_transform() == SharedState::Transform::ROTATION) {
 		std::swap(forward, side);
+		side = -side; // Flip left and right
+	}
 	glm::vec3 direction = forward;
 	if (directionType == Direction::SIDE) direction = side;
 	else if (directionType == Direction::UP) direction = glm::vec3(0,1,0);
 	if (sharedState.current_transform() == SharedState::Transform::SCALE && directionType != Direction::UP)
-		direction = -direction;
+		direction = -direction; // Flip for scale
 
+	const float speed = sharedState.current_transform() == SharedState::Transform::ROTATION ? defaults.rotationSpeed : defaults.transformSpeed;
 	for (const auto mesh : sharedState.current_meshes())
-		op(scene.meshes[mesh][0].get()->*field, direction * context.deltaTime * defaults.transformSpeed);
+		op(scene.meshes[mesh][0].get()->*field, direction * context.deltaTime * speed);
 }
 
 void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& defaults, const Camera& camera, Inputs &inputs) {
@@ -111,7 +114,7 @@ void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& de
 			true
 		);
 
-		meshInputs.addFunctionForAction(name, [&](const Inputs::InputContext& context) {
+		meshInputs.addFunctionForAction(name, [&, i](const Inputs::InputContext& context) {
 			sharedState.set_selected_mesh_type(MoveEnum(Primitive::CUBE, Primitive::CUBE, Primitive::MODEL, i, false));
 		});
 	}

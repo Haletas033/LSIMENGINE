@@ -19,6 +19,7 @@ private:
 			InputContext &context, Direction directionType, const std::function<void(glm::vec3 &, glm::vec3)> &op);
 public:
 	void Init(Scene &scene, SharedState &sharedState, const Defaults &defaults, const Camera &camera, Inputs &inputs);
+	void SetEnabled(const bool enabled) { bindingTable.is_enabled = enabled; }
 };
 
 #endif //LSIM_MESHINPUTS_H

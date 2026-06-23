@@ -73,6 +73,7 @@ Defaults JSONManager::LoadConfigDefaults(json &config) {
 
     // Input defaults
     safeLoad(defaults, "transformSpeed", configDefaults.transformSpeed);
+    safeLoad(defaults, "rotationSpeed", configDefaults.rotationSpeed);
 
     return configDefaults;
 }

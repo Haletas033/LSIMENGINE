@@ -30,7 +30,8 @@
     "speed": 1.0,
     "speedMultiplier": 50.0,
 
-    "transformSpeed": 5
+    "transformSpeed": 5,
+    "rotationSpeed": 20
   },
   "loggers": {
     "stdInfo": {

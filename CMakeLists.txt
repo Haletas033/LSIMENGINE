@@ -68,6 +68,8 @@ add_executable(LSIM
         include/editor/lightInputs.h
         include/editor/IOInputs.h
         Src/editor/IOInputs.cpp
+        include/editor/editorInputs.h
+        Src/editor/editorInputs.cpp
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include

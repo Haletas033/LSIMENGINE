@@ -78,6 +78,7 @@ public:
 
     static const CapacityBuffer<Logger>& GetLogs() { return logs; }
 
+    static void InitEngineLogger();
     explicit Logger(const std::string& subModule);
 
     Logger() = default;

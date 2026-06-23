@@ -21,8 +21,8 @@ public:
 		SCALE
 	};
 private:
-	std::set<unsigned int> currentMeshes;
-	std::set<unsigned int> currentLights;
+	std::set<unsigned int> currentMeshes = {0};
+	std::set<unsigned int> currentLights = {0};
 	Mode currentMode = Mode::MESH_MODE;
 	Transform currentTransform = Transform::POSITION;
 

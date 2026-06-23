@@ -15,6 +15,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "editor/editorInputs.h"
 #include "include/scene/script.h"
 #include "include/utils/texture.h"
 #include "utils/meshPicking.h"
@@ -24,8 +25,6 @@ double mouseX, mouseY;
 using json = nlohmann::ordered_json;
 
 json config;
-
-static Logger logger;
 
 //Callback function for window resizing
 void framebuffer_size_callback(GLFWwindow* window, const int width, const int height){
@@ -40,12 +39,12 @@ std::vector<GLuint> indices;
 
 std::vector<std::vector<std::unique_ptr<Mesh>>> meshes;
 
-void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType, int &lastClickMesh, const char* workingDir) {
+void AddMesh(Scene &scene, SharedState& sharedState, const Defaults &defaults, int &lastClickMesh, const char* workingDir) {
 	scene.addMeshSignal = false;
 
 	std::unique_ptr<Mesh> newMesh;
 
-	switch (selectedMeshType) {
+	switch (sharedState.selected_mesh_type()) {
 		case 0:
 			newMesh = std::make_unique<Mesh>(Primitive::GenerateCube(1));
 			newMesh->name = "Cube";
@@ -87,7 +86,7 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 		}
 		case 6: {
 			const auto filePath = IO::Dialog("Model Files\0*.gltf\0All Files\0*.*\0");
-			logger("stdInfo", filePath);
+			engineLogger("stdInfo", filePath);
 			Model model{(filePath.c_str())};
 
 			std::vector<std::unique_ptr<Mesh>> meshes;
@@ -116,7 +115,7 @@ void AddMesh(Scene &scene, const Defaults &defaults, const int selectedMeshType,
 
 	lastClickMesh = scene.meshes.size() - 1;
 
-	logger("stdInfo", "Successfully added mesh");
+	engineLogger("stdInfo", "Successfully added mesh");
 }
 
 void DeleteMesh(Scene &scene, std::vector<int>& currentMeshes, int &lastClickMesh) {
@@ -139,7 +138,7 @@ void DeleteMesh(Scene &scene, std::vector<int>& currentMeshes, int &lastClickMes
 	if (lastClickMesh > scene.meshes.size() -1)
 		lastClickMesh = scene.meshes.size() - 1;
 
-	logger("stdInfo", "Successfully deleted mesh");
+	engineLogger("stdInfo", "Successfully deleted mesh");
 }
 
 void AddLight(Scene &scene, int &currentLight) {
@@ -150,7 +149,7 @@ void AddLight(Scene &scene, int &currentLight) {
 
 	currentLight = scene.lights.size() - 1;
 
-	logger("stdInfo", "Successfully added light");
+	engineLogger("stdInfo", "Successfully added light");
 }
 
 void DeleteLight(Scene &scene, int &currentLight) {
@@ -163,7 +162,7 @@ void DeleteLight(Scene &scene, int &currentLight) {
 	}
 	currentLight = -1;
 
-	logger("stdInfo", "Successfully deleted light");
+	engineLogger("stdInfo", "Successfully deleted light");
 }
 
 void DrawLights(Shader &shader, Defaults defaults, Scene &scene) {
@@ -214,7 +213,8 @@ int main(int argc, char** argv) {
 	}
 	//Load config
 	engineDefaults = JSONManager::InitJSON(workingDir + "config/config.json", config);
-	logger = Logger("MAIN");
+	SharedState sharedState{};
+	Logger::InitEngineLogger();
 
 	//Load shaders
 
@@ -227,11 +227,13 @@ int main(int argc, char** argv) {
 	std::string skyboxVert = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.vert", config);
 	std::string skyboxFrag = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.frag", config);
 
+	Inputs inputs{};
+	EditorInputs editorInputs{};
+
 	IO::InitIO();
-	Inputs::InitInputs();
 	Texture::InitTextures();
 
-	logger("stdInfo", "starting L-SIMENGINE");
+	engineLogger("stdInfo", "starting L-SIMENGINE");
 
 	//Initialize GLFW
 	glfwInit();
@@ -249,16 +251,19 @@ int main(int argc, char** argv) {
 	//Create a GLFW window object of 800 by 800 pixels
 	window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, ("L-SIM ENGINE " + engineDefaults.version + " "+ workingDir).c_str(), nullptr, nullptr);
 
-	Script::InstantiateAll();
-
 	//Error check if the window fails to create
 	if (window == nullptr) {
-		logger("stdError", "Failed to create GLFW window");
+		engineLogger("stdError", "Failed to create GLFW window");
 		glfwTerminate();
 		return -1;
 	}
 
-	logger("stdInfo", "Successfully created the GLFW window");
+	inputs.InitInputs(window);
+	editorInputs.Init(scene, workingDir, sharedState, engineDefaults, camera, inputs);
+
+	Script::InstantiateAll();
+
+	engineLogger("stdInfo", "Successfully created the GLFW window");
 
 	//Introduce the window into the current context
 	glfwMakeContextCurrent(window);
@@ -284,9 +289,9 @@ int main(int argc, char** argv) {
 	meshes.back()[0]->name = "First Cube";
 	auto* node = new Gui::Node{ meshes.back()[0].get(), Gui::root, {} };
 	Gui::root->children.push_back(node);
-	logger("stdInfo", "Successfully created the default \"First Cube\"");
+	engineLogger("stdInfo", "Successfully created the default \"First Cube\"");
 
-	logger("stdInfo", "Successfully created the default \"First Cube\"");
+	engineLogger("stdInfo", "Successfully created the default \"First Cube\"");
 
 	//Enable the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
@@ -294,14 +299,7 @@ int main(int argc, char** argv) {
 	//Create camera object
 	camera = Camera(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, glm::vec3(0.0f, 0.0f, 2.0f));
 
-	logger("stdInfo", "Successfully created the camera object");
-
-	std::unordered_map<int, bool> canPress;
-
-	Inputs inputs;
-	inputs.defaults = engineDefaults;
-
-	inputs.canPress = canPress;
+	engineLogger("stdInfo", "Successfully created the camera object");
 
 	float deltaTime = 0.0f;
 	float lastTime = 0.0f;
@@ -309,12 +307,12 @@ int main(int argc, char** argv) {
 	int currentLight = 0;
 
 	scene = Scene{ std::move(meshes), std::move(lights) };
-	logger("stdInfo", "Successfully moved meshes and lights into the main scene");
+	engineLogger("stdInfo", "Successfully moved meshes and lights into the main scene");
 
 	if (!workingDir.empty()) {
 		for (const auto &file : std::filesystem::recursive_directory_iterator(workingDir)) {
 			if (file.path().extension().string() == ".lsim") {
-				logger("stdInfo", file.path().string());
+				engineLogger("stdInfo", file.path().string());
 				std::ifstream LSIMfile(file.path().string(), std::ios::binary);
 				scene = IO::loadFromFile(LSIMfile, workingDir);
 			}
@@ -344,7 +342,7 @@ int main(int argc, char** argv) {
 
 
 	//Main render loop
-	logger("stdInfo", "Starting main gameplay loop");
+	engineLogger("stdInfo", "Starting main gameplay loop");
 	while (!glfwWindowShouldClose(window))
 	{
 		//Update aspect ratio from current framebuffer size
@@ -355,7 +353,7 @@ int main(int argc, char** argv) {
 		//Check if the window is minimized if so skip render loop and just poll events
 		if (windowWidth <= 0 || windowHeight <= 0) {
 			glfwPollEvents();
-			logger("stdInfo", "Window minimized");
+			engineLogger("stdInfo", "Window minimized");
 			continue;
 		}
 
@@ -398,42 +396,33 @@ int main(int argc, char** argv) {
 
 
 		if (scene.addMeshSignal) {
-			AddMesh(scene, engineDefaults, selectedMeshType, lastClickMesh, workingDir.c_str());
-			logger("stdInfo", "Adding mesh");
+			AddMesh(scene, sharedState, engineDefaults, lastClickMesh, workingDir.c_str());
+			engineLogger("stdInfo", "Adding mesh");
 		}
 
 		if (scene.deleteMeshSignal) {
 			if (!scene.meshes.empty()) {
 				DeleteMesh(scene, currentMeshes, lastClickMesh);
-				logger("stdInfo", "Deleting mesh");
+				engineLogger("stdInfo", "Deleting mesh");
 			}
 		}
 
 		if (scene.addLightSignal && scene.lights.size() < engineDefaults.MAX_LIGHTS) {
 			AddLight(scene, currentLight);
-			logger("stdInfo", "Adding light");
+			engineLogger("stdInfo", "Adding light");
 		} else if (scene.addLightSignal) {
 			scene.addLightSignal = false;
-			logger("stdWarn", "Tried to create light but it would exceed the maximum number of lights (If you need more lights you can change MAX_LIGHTS in config.json)");
+			engineLogger("stdWarn", "Tried to create light but it would exceed the maximum number of lights (If you need more lights you can change MAX_LIGHTS in config.json)");
 		}
 
 		if (scene.deleteLightSignal) {
 			DeleteLight(scene, currentLight);
-			logger("stdInfo", "Deleting light");
+			engineLogger("stdInfo", "Deleting light");
 		}
 
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard) {
 			#ifndef GAME
-			if (currentMeshes.empty()) {
-				int falseMesh = 0;
-
-				inputs.InputHandler(window, scene, deltaTime, workingDir,
-				                    falseMesh, currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
-			} else {
-				for (int mesh : currentMeshes)
-					inputs.InputHandler(window, scene, deltaTime, workingDir,
-					                    mesh, currentLight, selectedMeshType, lastClickMesh, camera.Orientation);
-			}
+			inputs.handleInputs((Inputs::InputContext){scene, deltaTime});
 			#endif
 		}
 
@@ -588,7 +577,7 @@ int main(int argc, char** argv) {
 		//Take care of all GLFW events
 		glfwPollEvents();
 	}
-	logger("stdInfo", "Exiting L-SIMENGINE");
+	engineLogger("stdInfo", "Exiting L-SIMENGINE");
 
 	Gui::DeleteNodeRecursively(Gui::root);
 	Gui::CleanUp();
@@ -599,6 +588,6 @@ int main(int argc, char** argv) {
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
-	logger("stdInfo", "Successfully exited L-SIMENGINE");
+	engineLogger("stdInfo", "Successfully exited L-SIMENGINE");
 	return 0;
 }

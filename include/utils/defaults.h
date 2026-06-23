@@ -38,7 +38,8 @@ struct Defaults {
     float speedMultiplier = 50.0f;
 
     //Input defaults
-    float transformSpeed = 0.1f;
+    float transformSpeed = 5.0f;
+    float rotationSpeed = 20.0f;
 };
 
 #endif //DEFAULTS_H
