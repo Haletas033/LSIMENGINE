@@ -15,6 +15,7 @@
 #include <include/utils/logging/log.h>
 #include <include/utils/fileIO.h>
 
+#include "editor/sharedState.h"
 
 
 class Gui {
@@ -46,7 +47,8 @@ public:
                               const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes,
                               const std::vector<int> &currentMeshes, GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use);
 
-    static void Transform(const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
+    static void Transform(const Scene &scene, SharedState &sharedState, const std::string &workingDir, const std::vector<std::vector<std::
+                          unique_ptr<Mesh>>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
 
     static void Lighting(std::vector<Light> &lights, int &currentLight);
 
@@ -54,7 +56,7 @@ public:
 
     static void Console(int &selectedLogLevel);
 
-    static void Scene(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
+    static void SceneGUI(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
 
     static void DrawNode(Node *node, int &clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes);
 

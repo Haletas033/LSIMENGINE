@@ -6,8 +6,6 @@
 #include "scene/scene.h"
 #include "utils/logging/log.h"
 
-extern Logger logger;
-
 class SharedState {
 public:
 	enum class Mode {
@@ -28,15 +26,7 @@ private:
 
 	Primitive::Type selectedMeshType = Primitive::CUBE;
 
-	static void safe_insert(std::set<unsigned>& field, const unsigned max, const std::set<unsigned int> &rhs, const std::string& type) {
-		for (const unsigned rh : rhs) {
-			if (max == 0 || rh > max-1) {
-				logger("stdWarn", type + " HAS AN OUT OF BOUNDS INDEX");
-				continue;
-			}
-			field.insert(rh);
-		}
-	}
+	static void safe_insert(std::set<unsigned>& field, unsigned max, const std::set<unsigned int> &rhs, const std::string& type);
 
 	static void safe_remove(std::set<unsigned>& field, const std::set<unsigned int> &rhs) {
 		for (const unsigned rh : rhs) field.erase(rh);
@@ -44,8 +34,8 @@ private:
 public:
 	static void InitSharedState();
 
-	[[nodiscard]] std::set<unsigned int> current_meshes() const { return currentMeshes; }
-	[[nodiscard]] std::set<unsigned int> current_lights() const { return currentLights; }
+	[[nodiscard]] std::set<unsigned int>& current_meshes() { return currentMeshes; }
+	[[nodiscard]] std::set<unsigned int>& current_lights() { return currentLights; }
 	[[nodiscard]] Mode current_mode() const { return currentMode; }
 
 	void set_current_meshes(const Scene& scene, const std::set<unsigned int> &current_meshes) {
@@ -76,7 +66,7 @@ public:
 
 	void set_current_mode(const Mode current_mode) { currentMode = current_mode; }
 
-	[[nodiscard]] Primitive::Type selected_mesh_type() const {
+	[[nodiscard]] Primitive::Type& selected_mesh_type() {
 		return selectedMeshType;
 	}
 
@@ -84,7 +74,7 @@ public:
 		selectedMeshType = selected_mesh_type;
 	}
 
-	[[nodiscard]] Transform current_transform() const {
+	[[nodiscard]] Transform& current_transform() {
 		return currentTransform;
 	}
 

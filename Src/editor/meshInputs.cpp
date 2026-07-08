@@ -10,7 +10,7 @@ void MeshInputs::sub(glm::vec3& lhs, const glm::vec3 rhs) {
 	lhs -= rhs;
 }
 
-glm::vec3 Mesh::* TransformToMeshProperty(const SharedState& sharedState) {
+glm::vec3 Mesh::* TransformToMeshProperty(SharedState &sharedState) {
 	glm::vec3 Mesh::* field = &Mesh::position;
 	switch (sharedState.current_transform()) {
 		case SharedState::Transform::POSITION:
@@ -27,8 +27,8 @@ glm::vec3 Mesh::* TransformToMeshProperty(const SharedState& sharedState) {
 	return field;
 }
 
-void MeshInputs::Move(Scene &scene, const SharedState &sharedState, const Defaults& defaults, const Camera& camera,
-	const Inputs::InputContext& context,const Direction directionType, const std::function<void(glm::vec3&, glm::vec3)>& op) {
+void MeshInputs::Move(Scene &scene, SharedState &sharedState, const Defaults &defaults, const Camera &camera,
+	const Inputs::InputContext &context,const Direction directionType, const std::function<void(glm::vec3&, glm::vec3)>& op) {
 	auto [forward, side] = camera.getDirection();
 
 	glm::vec3 Mesh::* field = TransformToMeshProperty(sharedState);

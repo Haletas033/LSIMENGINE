@@ -118,23 +118,23 @@ void AddMesh(Scene &scene, SharedState& sharedState, const Defaults &defaults, i
 	engineLogger("stdInfo", "Successfully added mesh");
 }
 
-void DeleteMesh(Scene &scene, std::vector<int>& currentMeshes, int &lastClickMesh) {
+void DeleteMesh(Scene &scene, SharedState sharedState, int &lastClickMesh) {
 	scene.deleteMeshSignal = false;
 
-	std::sort(currentMeshes.begin(), currentMeshes.end());
-	std::reverse(currentMeshes.begin(), currentMeshes.end());
-	for (const int object : currentMeshes) {
+	for (auto it = sharedState.current_meshes().rbegin();
+	     it != sharedState.current_meshes().rend();
+	     ++it){
+		const unsigned object = *it;
 		for (const auto &mesh : scene.meshes[object]) {
 			const Mesh* meshToDelete = mesh.get();
 
-			if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete)) {
+			if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete))
 				Gui::DeleteNode(nodeToDelete); // This handles reparenting children
-			}
 		}
 
 		scene.meshes.erase(scene.meshes.begin() + object);
 	}
-	currentMeshes.clear();
+	sharedState.current_meshes().clear();
 	if (lastClickMesh > scene.meshes.size() -1)
 		lastClickMesh = scene.meshes.size() - 1;
 
@@ -402,7 +402,7 @@ int main(int argc, char** argv) {
 
 		if (scene.deleteMeshSignal) {
 			if (!scene.meshes.empty()) {
-				DeleteMesh(scene, currentMeshes, lastClickMesh);
+				DeleteMesh(scene, sharedState, lastClickMesh);
 				engineLogger("stdInfo", "Deleting mesh");
 			}
 		}
@@ -535,11 +535,11 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(workingDir, scene.meshes, currentMeshes, selectedMeshType, lastClickMesh);
+		Gui::Transform(scene, sharedState, workingDir, scene.meshes, currentMeshes, selectedMeshType, lastClickMesh);
 
 		Gui::Lighting(scene.lights, currentLight);
 
-		Gui::Scene(workingDir, skyboxTexId, scene.ambientLightColour, scene.ambientLightIntensity);
+		Gui::SceneGUI(workingDir, skyboxTexId, scene.ambientLightColour, scene.ambientLightIntensity);
 
 		Gui::Debug(mouseX, mouseY);
 

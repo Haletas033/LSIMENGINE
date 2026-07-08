@@ -2,6 +2,7 @@
 
 #include <iterator>
 
+#include "editor/sharedState.h"
 #include "gl/VAO.h"
 #include "gl/VAO.h"
 #include "gl/VAO.h"
@@ -87,7 +88,7 @@ void Gui::RemoveTexture(const char* name, const std::vector<std::vector<std::uni
     }
 }
 
-void Gui::Transform(const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
+void Gui::Transform(const Scene& scene, SharedState& sharedState, const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
 
@@ -192,7 +193,7 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::vector
 
 
 
-            static char meshSelectionBuffer[128] = "";
+            static char meshSelectionBuffer[128] = "0";
             static int lastClickedMesh = -1;
 
             if (clickedMesh != -1 && clickedMesh != lastClickedMesh) {
@@ -204,14 +205,14 @@ void Gui::Transform(const std::string &workingDir, const std::vector<std::vector
             ImGui::InputText("Current Meshes", meshSelectionBuffer,  IM_ARRAYSIZE(meshSelectionBuffer));
 
             // Parse the buffer into currentMeshes
-            currentMeshes.clear();
+            sharedState.current_meshes().clear();
             std::stringstream ss(meshSelectionBuffer);
             std::string token;
             while (std::getline(ss, token, ',')) {
                 try {
                     int idx = std::stoi(token);
                     if (idx >= 0 && idx < meshes.size()) {
-                        currentMeshes.push_back(idx);
+                        sharedState.current_meshes().insert(idx);
                     }
                 } catch (...) {
                     // ignore invalid input
@@ -307,7 +308,7 @@ void Gui::Console(int &selectedLogLevel) {
     }
 }
 
-void Gui::Scene(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity) {
+void Gui::SceneGUI(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity) {
     if (ImGui::CollapsingHeader("Scene")) {
         if (ImGui::Button("Set Skybox")) {
             std::array<std::string, 6> faces;

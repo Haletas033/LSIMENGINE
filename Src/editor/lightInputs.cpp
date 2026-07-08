@@ -8,7 +8,7 @@ void LightInputs::sub(glm::vec3& lhs, const glm::vec3 rhs) {
 	lhs -= rhs;
 }
 
-void LightInputs::Move(Scene &scene, const SharedState &sharedState, const Defaults& defaults, const Camera& camera,
+void LightInputs::Move(Scene &scene, SharedState &sharedState, const Defaults& defaults, const Camera& camera,
 	const Inputs::InputContext& context, const Direction directionType, const std::function<void(glm::vec3&, glm::vec3)>& op) {
 	auto [forward, side] = camera.getDirection();
 
@@ -22,7 +22,7 @@ void LightInputs::Move(Scene &scene, const SharedState &sharedState, const Defau
 		op(scene.lights[light].lightPos, direction * context.deltaTime * defaults.transformSpeed);
 }
 
-void LightInputs::Init(Scene &scene, const SharedState &sharedState, const Defaults &defaults, const Camera &camera, Inputs &inputs) {
+void LightInputs::Init(Scene &scene, SharedState &sharedState, const Defaults &defaults, const Camera &camera, Inputs &inputs) {
 	Inputs::BindingTable lightInputs = {
 		1,
 		false
