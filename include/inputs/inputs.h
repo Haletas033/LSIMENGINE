@@ -18,6 +18,7 @@
 class Inputs {
 public:
     enum class KeyCode {
+        #undef DELETE // Needed on Windows to avoid collision
         #include "keyDispatch.h"
         #include "keys.def"
         #include "keyDispatcherUndef.h"

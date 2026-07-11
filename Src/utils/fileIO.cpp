@@ -27,7 +27,7 @@ void IO::InitIO() {
 
 #ifdef _WIN32
 std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
-    Log("stdInfo", "Initializing file dialog");
+    logger("stdInfo", "Initializing file dialog");
     //Initialize OPENFILENAME
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
     ofn.lStructSize = sizeof(OPENFILENAME);
@@ -38,18 +38,18 @@ std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_OVERWRITEPROMPT;
 
-    //Display the dialog box
-    Log("stdInfo", "Displaying file dialog");
+    // Display the dialog box
+    logger("stdInfo", "Displaying file dialog");
     if (func(&ofn) == TRUE) {
         return ofn.lpstrFile;
     }
-    Log("stdInfo", "File dialog closed without selecting a file");
+    logger("stdInfo", "File dialog closed without selecting a file");
     return {};
 }
 
-//For directory
+// For directory
 std::string IO::DirectoryDialog() {
-    Log("stdInfo", "Initializing directory dialog");
+    logger("stdInfo", "Initializing directory dialog");
     //Initialize OPENFILENAME
     BROWSEINFOA bi = {nullptr};
     bi.lpszTitle = "Select Directory";
@@ -64,7 +64,7 @@ std::string IO::DirectoryDialog() {
         }
         CoTaskMemFree(pidl);
     }
-    Log("stdInfo", "Directory dialog closed without selecting a directory");
+    logger("stdInfo", "Directory dialog closed without selecting a directory");
     return {};
 }
 

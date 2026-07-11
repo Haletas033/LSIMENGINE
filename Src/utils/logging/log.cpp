@@ -53,7 +53,11 @@ Logger& Logger::AddSubModules(const std::vector<std::string>& sms) {
 std::string Logger::GetTimeStamp() {
     const time_t timestamp = time(nullptr);
     tm datetime;
+#ifdef __WIN32__
+    localtime_s(&datetime, &timestamp);
+#else
     localtime_r(&timestamp, &datetime);
+#endif
 
     char output[50];
 

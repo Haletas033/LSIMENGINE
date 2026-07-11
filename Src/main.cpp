@@ -85,7 +85,7 @@ void AddMesh(Scene &scene, SharedState& sharedState, const Defaults &defaults, i
 			break;
 		}
 		case 6: {
-			const auto filePath = IO::Dialog("Model Files\0*.gltf\0All Files\0*.*\0");
+			const auto filePath = IO::SaveDialog("Model Files\0*.gltf\0All Files\0*.*\0");
 			engineLogger("stdInfo", filePath);
 			Model model{(filePath.c_str())};
 
@@ -267,7 +267,7 @@ int main(int argc, char** argv) {
 
 	//Introduce the window into the current context
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(0);
+	glfwSwapInterval(1);
 
 	//Load GLAD so it configures OpenGL
 	gladLoadGL();
