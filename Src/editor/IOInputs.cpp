@@ -8,8 +8,8 @@ void IOInputs::Init(Scene &scene, const std::string &workingDir, Inputs &inputs)
 		true
 	};
 
-	ioInputs.addAction("save", Inputs::KeyCode::O, true);
-	ioInputs.addAction("load", Inputs::KeyCode::I, true);
+	ioInputs.addAction("save", Inputs::KeyCode::O, Inputs::KeyState::JUST_PRESSED);
+	ioInputs.addAction("load", Inputs::KeyCode::I, Inputs::KeyState::JUST_PRESSED);
 
 	ioInputs.addFunctionForAction("save", [&](const Inputs::InputContext& context) {
 		const std::string fileName = IO::SaveDialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0");
@@ -25,5 +25,5 @@ void IOInputs::Init(Scene &scene, const std::string &workingDir, Inputs &inputs)
 	});
 
 	bindingTable = ioInputs;
-	inputs.addBindingTable(&ioInputs);
+	inputs.addBindingTable(bindingTable);
 }

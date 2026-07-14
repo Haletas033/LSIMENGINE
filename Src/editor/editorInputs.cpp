@@ -1,7 +1,5 @@
 #include "../../include/editor/editorInputs.h"
 
-#include <algorithm>
-
 void EditorInputs::Init(Scene &scene, const std::string& workingDir, SharedState &sharedState,
 			const Defaults &defaults, const Camera &camera, Inputs &inputs) {
 	meshInputs.Init(scene, sharedState, defaults, camera, inputs);
@@ -13,8 +11,8 @@ void EditorInputs::Init(Scene &scene, const std::string& workingDir, SharedState
 		true
 	};
 
-	editorInputs.addAction("mesh_mode", Inputs::KeyCode::M, true);
-	editorInputs.addAction("light_mode", Inputs::KeyCode::L, true);
+	editorInputs.addAction("mesh_mode", Inputs::KeyCode::M, Inputs::KeyState::JUST_PRESSED);
+	editorInputs.addAction("light_mode", Inputs::KeyCode::L, Inputs::KeyState::JUST_PRESSED);
 
 	editorInputs.addFunctionForAction("mesh_mode", [&](const Inputs::InputContext& context) {
 		lightInputs.SetEnabled(false);
@@ -27,5 +25,5 @@ void EditorInputs::Init(Scene &scene, const std::string& workingDir, SharedState
 	});
 
 	bindingTable = editorInputs;
-	inputs.addBindingTable(&bindingTable);
+	inputs.addBindingTable(bindingTable);
 }

@@ -353,7 +353,6 @@ int main(int argc, char** argv) {
 		//Check if the window is minimized if so skip render loop and just poll events
 		if (windowWidth <= 0 || windowHeight <= 0) {
 			glfwPollEvents();
-			engineLogger("stdInfo", "Window minimized");
 			continue;
 		}
 

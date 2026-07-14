@@ -28,12 +28,12 @@ void LightInputs::Init(Scene &scene, SharedState &sharedState, const Defaults &d
 		false
 	};
 
-	lightInputs.addAction("move_lights_forward", Inputs::KeyCode::UP, false);
-	lightInputs.addAction("move_lights_backward", Inputs::KeyCode::DOWN, false);
-	lightInputs.addAction("move_lights_left", Inputs::KeyCode::LEFT, false);
-	lightInputs.addAction("move_lights_right", Inputs::KeyCode::RIGHT, false);
-	lightInputs.addAction("move_lights_up", Inputs::KeyCode::PAGE_UP, false);
-	lightInputs.addAction("move_lights_down", Inputs::KeyCode::PAGE_DOWN, false);
+	lightInputs.addAction("move_lights_forward", Inputs::KeyCode::UP, Inputs::KeyState::HELD);
+	lightInputs.addAction("move_lights_backward", Inputs::KeyCode::DOWN, Inputs::KeyState::HELD);
+	lightInputs.addAction("move_lights_left", Inputs::KeyCode::LEFT, Inputs::KeyState::HELD);
+	lightInputs.addAction("move_lights_right", Inputs::KeyCode::RIGHT, Inputs::KeyState::HELD);
+	lightInputs.addAction("move_lights_up", Inputs::KeyCode::PAGE_UP, Inputs::KeyState::HELD);
+	lightInputs.addAction("move_lights_down", Inputs::KeyCode::PAGE_DOWN, Inputs::KeyState::HELD);
 
 	lightInputs.addFunctionForAction("move_lights_forward", [&](const Inputs::InputContext& context) {
 		Move(scene, sharedState, defaults, camera, context, Direction::FORWARD, sub);
@@ -55,5 +55,5 @@ void LightInputs::Init(Scene &scene, SharedState &sharedState, const Defaults &d
 	});
 
 	bindingTable = lightInputs;
-	inputs.addBindingTable(&bindingTable);
+	inputs.addBindingTable(bindingTable);
 }

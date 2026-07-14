@@ -54,19 +54,19 @@ void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& de
 		true
 	};
 
-	meshInputs.addAction("move_meshes_forward", Inputs::KeyCode::UP, false);
-	meshInputs.addAction("move_meshes_backward", Inputs::KeyCode::DOWN, false);
-	meshInputs.addAction("move_meshes_left", Inputs::KeyCode::LEFT, false);
-	meshInputs.addAction("move_meshes_right", Inputs::KeyCode::RIGHT, false);
-	meshInputs.addAction("move_meshes_up", Inputs::KeyCode::PAGE_UP, false);
-	meshInputs.addAction("move_meshes_down", Inputs::KeyCode::PAGE_DOWN, false);
+	meshInputs.addAction("move_meshes_forward", Inputs::KeyCode::UP, Inputs::KeyState::HELD);
+	meshInputs.addAction("move_meshes_backward", Inputs::KeyCode::DOWN, Inputs::KeyState::HELD);
+	meshInputs.addAction("move_meshes_left", Inputs::KeyCode::LEFT, Inputs::KeyState::HELD);
+	meshInputs.addAction("move_meshes_right", Inputs::KeyCode::RIGHT, Inputs::KeyState::HELD);
+	meshInputs.addAction("move_meshes_up", Inputs::KeyCode::PAGE_UP, Inputs::KeyState::HELD);
+	meshInputs.addAction("move_meshes_down", Inputs::KeyCode::PAGE_DOWN, Inputs::KeyState::HELD);
 
-	meshInputs.addAction("select_move_mode", Inputs::KeyCode::G, true);
-	meshInputs.addAction("select_rotation_mode", Inputs::KeyCode::R, true);
-	meshInputs.addAction("select_scale_mode", Inputs::KeyCode::N, true);
+	meshInputs.addAction("select_move_mode", Inputs::KeyCode::G, Inputs::KeyState::JUST_PRESSED);
+	meshInputs.addAction("select_rotation_mode", Inputs::KeyCode::R, Inputs::KeyState::JUST_PRESSED);
+	meshInputs.addAction("select_scale_mode", Inputs::KeyCode::N, Inputs::KeyState::JUST_PRESSED);
 
-	meshInputs.addAction("add_mesh", Inputs::KeyCode::F, true);
-	meshInputs.addAction("delete_mesh", Inputs::KeyCode::DELETE, true);
+	meshInputs.addAction("add_mesh", Inputs::KeyCode::F, Inputs::KeyState::JUST_PRESSED);
+	meshInputs.addAction("delete_mesh", Inputs::KeyCode::DELETE, Inputs::KeyState::JUST_PRESSED);
 
 	meshInputs.addFunctionForAction("move_meshes_forward", [&](const Inputs::InputContext& context) {
 		Move(scene, sharedState, defaults, camera, context, Direction::FORWARD, sub);
@@ -111,7 +111,7 @@ void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& de
 		meshInputs.addAction(
 			name,
 			MoveEnum(Inputs::KeyCode::NUM_0, Inputs::KeyCode::NUM_0, Inputs::KeyCode::NUM_9,i, false),
-			true
+			Inputs::KeyState::JUST_PRESSED
 		);
 
 		meshInputs.addFunctionForAction(name, [&, i](const Inputs::InputContext& context) {
@@ -120,5 +120,5 @@ void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& de
 	}
 
 	bindingTable = meshInputs;
-	inputs.addBindingTable(&bindingTable);
+	inputs.addBindingTable(bindingTable);
 }
