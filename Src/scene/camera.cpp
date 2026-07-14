@@ -123,8 +123,8 @@ Camera::CameraDirection Camera::getDirection() const {
 
     if (yawDeg >= -45 && yawDeg <= 45) {
         // Facing left relative to word view
-        cameraDirection.forward = glm::vec3(1,0,0);
-        cameraDirection.side = glm::vec3(0,0,-1);
+        cameraDirection.forward = glm::vec3(-1,0,0);
+        cameraDirection.side = glm::vec3(0,0,1);
     }
     else if (yawDeg > 45 && yawDeg <= 135) {
         // Facing backwards relative to world view
@@ -133,8 +133,8 @@ Camera::CameraDirection Camera::getDirection() const {
     }
     else if (yawDeg > 135 || yawDeg <= -135) {
         // Facing right relative to world view
-        cameraDirection.forward = glm::vec3(-1,0,0);
-        cameraDirection.side = glm::vec3(0,0,1);
+        cameraDirection.forward = glm::vec3(1,0,0);
+        cameraDirection.side = glm::vec3(0,0,-1);
     }
     else {
         // Facing forward relative to world view
