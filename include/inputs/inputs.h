@@ -96,8 +96,8 @@ private:
     std::vector<std::reference_wrapper<BindingTable>> bindingTables;
     KeyStateArray currentKeyStates{};
     KeyStateArray lastKeyStates{};
-public:
     KeyStateArray poll() const;
+public:
     void addBindingTable(BindingTable &bindingTable);
 
     bool isDown(KeyCode key) const;
@@ -111,6 +111,8 @@ public:
     INPUT(justReleased)
 
     #undef INPUT
+
+    const KeyStateArray& getCurrentKeyStates() const { return currentKeyStates; }
 
     void InitInputs(GLFWwindow *_window);
     void handleInputs(const InputContext& context);
