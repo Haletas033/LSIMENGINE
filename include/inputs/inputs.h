@@ -56,26 +56,6 @@ public:
     using ActionToFunction = std::unordered_map<std::string, std::function<void(const InputContext&)>>;
     using KeyStateArray = std::array<bool, GLFW_KEY_LAST + 1>;
 
-    struct KeyHash {
-        std::size_t operator()(const Key& key) const noexcept {
-            std::size_t hash = 0;
-
-            for (const auto& [code, state] : key) {
-                hash ^= std::hash<int>{}(static_cast<int>(code))
-                        + 0x9e3779b9
-                        + (hash << 6)
-                        + (hash >> 2);
-
-                hash ^= std::hash<int>{}(static_cast<int>(state))
-                        + 0x9e3779b9
-                        + (hash << 6)
-                        + (hash >> 2);
-            }
-
-            return hash;
-        }
-    };
-
     struct BindingTable {
         uint32_t priority = 0;
         bool is_enabled = false;
