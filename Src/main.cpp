@@ -534,7 +534,7 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(scene, sharedState, workingDir, scene.meshes, currentMeshes, selectedMeshType, lastClickMesh);
+		Gui::Transform(sharedState, workingDir, scene.meshes, selectedMeshType, lastClickMesh);
 
 		Gui::Lighting(scene.lights, currentLight);
 

@@ -39,16 +39,17 @@ public:
     static void CleanUp();
 
     static void AddTexture(const char *name, std::string fileName,
-                           const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, const std::vector<int> &currentMeshes, const std::string
+                           const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, const std::set<unsigned int> &currentMeshes, const std::
+                           string
                            &workingDir,
                            GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use);
 
     static void RemoveTexture(const char *name,
                               const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes,
-                              const std::vector<int> &currentMeshes, GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use);
+                              const std::set<unsigned int> &currentMeshes, GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use);
 
-    static void Transform(const Scene &scene, SharedState &sharedState, const std::string &workingDir, const std::vector<std::vector<std::
-                          unique_ptr<Mesh>>> &meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh);
+    static void Transform(SharedState &sharedState, const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, int
+                          &selectedMeshType, int clickedMesh);
 
     static void Lighting(std::vector<Light> &lights, int &currentLight);
 

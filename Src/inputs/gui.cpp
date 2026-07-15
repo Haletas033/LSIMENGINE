@@ -57,7 +57,7 @@ void Gui::CleanUp() {
 }
 
 void Gui::AddTexture(const char* name, std::string fileName, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes,
-    const std::vector<int> &currentMeshes, const std::string &workingDir,GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use) {
+    const std::set<unsigned int> &currentMeshes, const std::string &workingDir,GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use) {
     if (ImGui::Button(name)) {
         const std::string filePath = IO::OpenDialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0");
 
@@ -69,7 +69,7 @@ void Gui::AddTexture(const char* name, std::string fileName, const std::vector<s
         std::filesystem::copy(filePath.c_str(), std::string(workingDir + "resources/") + fileName, std::filesystem::copy_options::overwrite_existing);
 
         const unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str(), GL_NEAREST);
-        for (const int mesh : currentMeshes) {
+        for (const unsigned mesh : currentMeshes) {
             if (use) meshes[mesh][0].get()->*use = true;
             meshes[mesh][0].get()->*id = texture;
             meshes[mesh][0].get()->*path = fileName;
@@ -77,10 +77,10 @@ void Gui::AddTexture(const char* name, std::string fileName, const std::vector<s
     }
 }
 
-void Gui::RemoveTexture(const char* name, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, const std::vector<int> &currentMeshes,
+void Gui::RemoveTexture(const char* name, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, const std::set<unsigned int> &currentMeshes,
     GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use) {
     if (ImGui::Button(name)) {
-        for (const int mesh : currentMeshes) {
+        for (const unsigned mesh : currentMeshes) {
             if (use) meshes[mesh][0].get()->*use = false;
             meshes[mesh][0].get()->*id = NULL;
             meshes[mesh][0].get()->*path = "";
@@ -88,13 +88,14 @@ void Gui::RemoveTexture(const char* name, const std::vector<std::vector<std::uni
     }
 }
 
-void Gui::Transform(const Scene& scene, SharedState& sharedState, const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, std::vector<int> &currentMeshes, int &selectedMeshType, int clickedMesh) {
+void Gui::Transform(SharedState& sharedState, const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, int &selectedMeshType, int clickedMesh) {
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
 
             Mesh* refMesh = nullptr;
+            auto currentMeshes = sharedState.current_meshes();
             if (!currentMeshes.empty()){
-                refMesh = meshes[currentMeshes[0]][0].get();
+                refMesh = meshes[*currentMeshes.begin()][0].get();
             }
 
             if (refMesh){
@@ -113,29 +114,29 @@ void Gui::Transform(const Scene& scene, SharedState& sharedState, const std::str
                 }
     
                 if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
-                    for (const int mesh : currentMeshes) meshes[mesh][0].get()->name = nameBuffer;
+                    for (const unsigned mesh : currentMeshes) meshes[mesh][0].get()->name = nameBuffer;
                 }
 
                 if (ImGui::InputFloat3("Position", glm::value_ptr(position))) {
-                    for (int idx : currentMeshes) {
+                    for (unsigned idx : currentMeshes) {
                         meshes[idx][0]->position = position;
                     }
                 }
                 if (ImGui::InputFloat3("Rotation", glm::value_ptr(rotation))) {
-                    for (int idx : currentMeshes) {
+                    for (unsigned idx : currentMeshes) {
                         meshes[idx][0]->rotation = rotation;
                     }
                 }
 
                 if (uniformScaleLock) {
                     if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
-                        for (int idx : currentMeshes) {
+                        for (unsigned idx : currentMeshes) {
                             meshes[idx][0]->scale = glm::vec3(uniformScale);
                         }
                     }
                 } else {
                     if (ImGui::InputFloat3("Scale", glm::value_ptr(scale))) {
-                        for (int idx : currentMeshes) {
+                        for (unsigned idx : currentMeshes) {
                             meshes[idx][0]->scale = scale;
                         }
                     }
@@ -148,7 +149,7 @@ void Gui::Transform(const Scene& scene, SharedState& sharedState, const std::str
                 //Show mesh colour if useTexture is enabled show the mesh colour otherwise show the add texture
                 if (!refMesh->useTexture) {
                     if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh->color))) {
-                        for (int mesh : currentMeshes) {
+                        for (unsigned mesh : currentMeshes) {
                             meshes[mesh][0].get()->useTexture = false;
                             meshes[mesh][0].get()->color = refMesh->color;
                         }
@@ -272,8 +273,8 @@ void Gui::Console(int &selectedLogLevel) {
     const char* logLevels[] = { "INFO", "WARNING", "ERROR" };
 
     std::vector<std::string> modules;
-    for (Logger log : Logger::GetLogs().buffer)
-        if (std::find(modules.begin(), modules.end(), log.GetModule()) == modules.end())
+    for (const Logger& log : Logger::GetLogs().buffer)
+        if (std::ranges::find(modules, log.GetModule()) == modules.end())
             modules.push_back(log.GetModule());
 
     std::vector<const char*> modulePtrs;
@@ -296,9 +297,9 @@ void Gui::Console(int &selectedLogLevel) {
         ImGui::EndCombo();
     }
 
-    for (Logger log : Logger::GetLogs().buffer) {
+    for (const Logger& log : Logger::GetLogs().buffer) {
         if (log.GetLevel() >= selectedLogLevel) {
-            auto it = std::find(modules.begin(), modules.end(), log.GetModule());
+            auto it = std::ranges::find(modules, log.GetModule());
 
             if (it != modules.end()) {
                 if (selectedItems[std::distance(modules.begin(), it)])
