@@ -1,6 +1,7 @@
 #ifndef LSIM_REGISTRY_H
 #define LSIM_REGISTRY_H
 #include <any>
+#include <assert.h>
 #include <optional>
 #include <ranges>
 #include <typeindex>
@@ -17,44 +18,95 @@ private:
         std::unordered_map<std::type_index, std::function<void(uint32_t)>> clearFuncs{};
 
 public:
+        template<typename T>
+        using Pool = std::vector<std::optional<std::decay_t<T>>>;
+
         template <typename T>
-        void addComponent(const Entity e, T component) {
-                auto &slot = pools[typeid(T)];
+        void addComponent(const Entity e, T&& component) {
+                assert(isAlive(e));
+                using Component = std::decay_t<T>;
+                const auto id = std::type_index(typeid(Component));
+
+                auto &slot = pools[id];
                 if (!slot.has_value()) {
-                        slot = std::vector<std::optional<T>>{};
+                        slot = Pool<Component>{};
 
                         // Function used to destroy all of an entities components
-                        clearFuncs[typeid(T)] = [this](uint32_t index) {
-                                auto &pool = std::any_cast<std::vector<std::optional<T>>&>(pools.at(typeid(T)));
+                        clearFuncs[id] = [this, id](uint32_t index) {
+                                auto &pool = std::any_cast<Pool<Component>&>(pools.at(id));
                                 if (index < pool.size()) pool[index] = std::nullopt;
                         };
                 }
-                auto &pool = std::any_cast<std::vector<std::optional<T>>&>(slot);
+                auto &pool = std::any_cast<Pool<Component>&>(slot);
                 if (e.getIndex() >= pool.size()) pool.resize(e.getIndex()+1);
-                pool[e.getIndex()] = component;
+                pool[e.getIndex()] = std::forward<T>(component);
         }
 
         template <typename T>
         bool hasComponent(const Entity e) const {
+                assert(isAlive(e));
+                using Component = std::decay_t<T>;
+                const auto id = std::type_index(typeid(Component));
 
-                if (!pools.contains(typeid(T))) return false;
-                auto &pool = std::any_cast<const std::vector<std::optional<T>>&>(pools.at(typeid(T)));
+                if (!pools.contains(id)) return false;
+                auto &pool = std::any_cast<const Pool<Component>&>(pools.at(id));
                 return pool.size() > e.getIndex() && pool[e.getIndex()];
         }
 
         template <typename T>
-        T* getComponent(const Entity e) {
-                if (!hasComponent<T>(e)) return nullptr;
-                return &std::any_cast<std::vector<std::optional<T>>&>(pools.at(typeid(T)))[e.getIndex()].value();
+        std::decay_t<T>* getComponent(const Entity e) {
+                assert(isAlive(e));
+                using Component = std::decay_t<T>;
+                const auto id = std::type_index(typeid(Component));
+
+                const auto it = pools.find(id);
+                if (it == pools.end()) return nullptr;
+
+                auto &pool = std::any_cast<Pool<Component>&>(it->second);
+
+                if (e.getIndex() >= pool.size()) return nullptr;
+                if (!pool[e.getIndex()]) return nullptr;
+
+                return &*pool[e.getIndex()];
+        }
+
+        template <typename T>
+        const std::decay_t<T>* getComponent(const Entity e) const {
+                assert(isAlive(e));
+                using Component = std::decay_t<T>;
+                const auto id = std::type_index(typeid(Component));
+
+                const auto it = pools.find(id);
+                if (it == pools.end()) return nullptr;
+
+                auto &pool = std::any_cast<const Pool<Component>&>(it->second);
+
+                if (e.getIndex() >= pool.size()) return nullptr;
+                if (!pool[e.getIndex()]) return nullptr;
+
+                return &*pool[e.getIndex()];
         }
 
         template <typename T>
         void removeComponent(const Entity e) {
-                if (!hasComponent<T>(e)) return;
-                std::any_cast<std::vector<std::optional<T>>&>(pools.at(typeid(T)))[e.getIndex()] = std::nullopt;
+                assert(isAlive(e));
+                using Component = std::decay_t<T>;
+                const auto id = std::type_index(typeid(Component));
+
+                const auto it = pools.find(id);
+                if (it == pools.end()) return;
+
+                auto &pool = std::any_cast<Pool<Component>&>(it->second);
+
+                if (e.getIndex() >= pool.size()) return;
+                if (!pool[e.getIndex()]) return;
+
+                pool[e.getIndex()] = std::nullopt;
         }
 
-        void destroyEntity(const Entity &e) {
+        void destroyEntity(const Entity e) {
+                assert(isAlive(e));
+
                 for (auto &func: clearFuncs | std::views::values) {
                         func(e.getIndex());
                 }
