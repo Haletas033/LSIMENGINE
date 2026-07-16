@@ -76,13 +76,13 @@ private:
     std::vector<std::reference_wrapper<BindingTable>> bindingTables;
     KeyStateArray currentKeyStates{};
     KeyStateArray lastKeyStates{};
-    KeyStateArray poll() const;
+    [[nodiscard]] KeyStateArray poll() const;
 public:
     void addBindingTable(BindingTable &bindingTable);
 
-    bool isDown(KeyCode key) const;
-    bool justPressed(KeyCode key) const;
-    bool justReleased(KeyCode key) const;
+    [[nodiscard]] bool isDown(KeyCode key) const;
+    [[nodiscard]] bool justPressed(KeyCode key) const;
+    [[nodiscard]] bool justReleased(KeyCode key) const;
 
     #define INPUT(func) bool func(const BindingTable &bindingTable, const std::string &action) const;
 
@@ -92,7 +92,7 @@ public:
 
     #undef INPUT
 
-    const KeyStateArray& getCurrentKeyStates() const { return currentKeyStates; }
+    [[nodiscard]] const KeyStateArray& getCurrentKeyStates() const { return currentKeyStates; }
 
     void InitInputs(GLFWwindow *_window);
     void handleInputs(const InputContext& context);

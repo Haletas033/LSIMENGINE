@@ -22,6 +22,7 @@ set(IMGUI_SOURCES
         external/imgui/imgui_demo.cpp
         external/imgui/backends/imgui_impl_glfw.cpp
         external/imgui/backends/imgui_impl_opengl3.cpp
+        include/ECS/entityManager.h
 )
 add_executable(LSIM
         ${IMGUI_SOURCES}
@@ -71,6 +72,8 @@ add_executable(LSIM
         include/editor/editorInputs.h
         Src/editor/editorInputs.cpp
         include/ECS/entity.h
+        Src/ECS/entityManager.cpp
+        include/ECS/registry.h
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include

@@ -26,7 +26,7 @@ void Inputs::addBindingTable(BindingTable& bindingTable) {
 }
 
 void Inputs::BindingTable::addFunctionForAction(const std::string& action, const std::function<void(const InputContext&)>& function) {
-    if (actionToKeys.find(action) == actionToKeys.end()) {
+    if (!actionToKeys.contains(action)) {
         logger("stdWarning", "FAILED TO ADD FUNCTION TO ACTION \"" + action + "\": DOES NOT EXIST");
         return;
     }
@@ -38,12 +38,12 @@ void Inputs::BindingTable::removeFunctionForAction(const std::string &action) {
 }
 
 void Inputs::BindingTable::addAction(const std::string &action, Key keys) {
-    if (actionToKeys.find(action) != actionToKeys.end()) {
+    if (actionToKeys.contains(action)) {
         logger("stdWarning", "FAILED TO ADD ACTION \"" + action + "\": ALREADY EXISTS");
         return;
     }
 
-    std::sort(keys.begin(), keys.end());
+    std::ranges::sort(keys);
 
     this->actionToKeys.insert({action, {std::move(keys)}});
 }
@@ -58,7 +58,7 @@ void Inputs::BindingTable::removeAction(const std::string &action) {
 }
 
 void Inputs::BindingTable::changeActionForFunction(const std::string &oldAction, const std::string &newAction) {
-    if (actionToKeys.find(oldAction) == actionToKeys.end()) {
+    if (!actionToKeys.contains(oldAction)) {
         logger("stdWarning", "FAILED TO CHANGE FUNCTION TO ACTION \"" + oldAction + "\": DOES NOT EXIST");
         return;
     }
