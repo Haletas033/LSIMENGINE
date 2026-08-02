@@ -70,7 +70,6 @@ add_executable(LSIM
         Src/editor/IOInputs.cpp
         include/editor/editorInputs.h
         Src/editor/editorInputs.cpp
-        include/ECS/entity.h
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include
