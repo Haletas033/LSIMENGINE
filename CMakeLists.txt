@@ -74,6 +74,8 @@ add_executable(LSIM
         include/ECS/entity.h
         Src/ECS/entityManager.cpp
         include/ECS/registry.h
+        include/geometry/transform.h
+        Src/geometry/transform.cpp
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include

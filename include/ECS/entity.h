@@ -27,6 +27,4 @@ struct std::hash<Entity> {
         }
 };
 
-
-
 #endif //LSIM_ENTITY_H
