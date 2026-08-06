@@ -76,6 +76,10 @@ add_executable(LSIM
         include/ECS/registry.h
         include/geometry/transform.h
         Src/geometry/transform.cpp
+        include/rendering/material.h
+        include/resources/resourceManager.h
+        Src/rendering/material.cpp
+        Src/resources/resourceManager.cpp
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include
