@@ -22,6 +22,7 @@ public:
 
     [[nodiscard]] const glm::vec3& getPosition() const { return position; }
     [[nodiscard]] const glm::quat& getRotation() const { return rotation; }
+    [[nodiscard]] const glm::vec3 getRotationEuler() const { return glm::eulerAngles(rotation); }
     [[nodiscard]] const glm::vec3& getScale() const { return scale; }
     [[nodiscard]] const glm::mat4& getModelMatrix() const { return modelMatrix; }
 

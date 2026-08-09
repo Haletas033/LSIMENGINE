@@ -259,7 +259,7 @@ int main(int argc, char** argv) {
 	}
 
 	inputs.InitInputs(window);
-	editorInputs.Init(scene, workingDir, sharedState, engineDefaults, camera, inputs);
+	editorInputs.Init(TODO, TODO, scene, workingDir, sharedState, engineDefaults, camera, inputs);
 
 	Script::InstantiateAll();
 
@@ -534,7 +534,7 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(sharedState, workingDir, scene.meshes, selectedMeshType, lastClickMesh);
+		Gui::Transform(TODO, sharedState, workingDir, scene.meshes, selectedMeshType, lastClickMesh);
 
 		Gui::Lighting(scene.lights, currentLight);
 

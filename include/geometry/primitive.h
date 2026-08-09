@@ -1,10 +1,7 @@
 #ifndef PRIMITIVES_CLASS_H
 #define PRIMITIVES_CLASS_H
 
-#include<vector>
-#include<glad/glad.h>
-
-#include "mesh.h"
+#include "meshData.h"
 
 class Primitive {
 public:
@@ -18,11 +15,11 @@ public:
         MODEL
     };
 
-    static Mesh GeneratePlane(float tileScale);
-    static Mesh GenerateCube(float tileScale);
-    static Mesh GeneratePyramid(float tileScale);
-    static Mesh GenerateSphere(int stacks, int slices, float tileScale);
-    static Mesh GenerateTorus(int ringSegments, int tubeSegments, float ringRadius, float tubeRadius, float tileScale);
+    static MeshData GeneratePlane(float tileScale);
+    static MeshData GenerateCube(float tileScale);
+    static MeshData GeneratePyramid(float tileScale);
+    static MeshData GenerateSphere(int stacks, int slices, float tileScale);
+    static MeshData GenerateTorus(int ringSegments, int tubeSegments, float ringRadius, float tubeRadius, float tileScale);
 };
 
 #endif //PRIMITIVES_CLASS_H

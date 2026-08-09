@@ -71,7 +71,6 @@ add_executable(LSIM
         Src/editor/IOInputs.cpp
         include/editor/editorInputs.h
         Src/editor/editorInputs.cpp
-        include/ECS/entity.h
         Src/ECS/entityManager.cpp
         include/ECS/registry.h
         include/geometry/transform.h
@@ -80,6 +79,17 @@ add_executable(LSIM
         include/resources/resourceManager.h
         Src/rendering/material.cpp
         Src/resources/resourceManager.cpp
+        include/rendering/meshRenderer.h
+        include/ECS/handle.h
+        include/geometry/meshPool.h
+        include/geometry/meshData.h
+        Src/geometry/meshPool.cpp
+        include/ECS/system.h
+        include/rendering/renderSystem.h
+        Src/rendering/renderSystem.cpp
+        Src/geometry/meshData.cpp
+        include/geometry/transformSystem.h
+        include/ECS/name.h
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include

@@ -1,8 +1,8 @@
 #include "../../include/editor/editorInputs.h"
 
-void EditorInputs::Init(Scene &scene, const std::string& workingDir, SharedState &sharedState,
+void EditorInputs::Init(Registry& registry, MeshPool& meshPool, Scene &scene, const std::string& workingDir, SharedState &sharedState,
 			const Defaults &defaults, const Camera &camera, Inputs &inputs) {
-	meshInputs.Init(scene, sharedState, defaults, camera, inputs);
+	meshInputs.Init(registry, meshPool, sharedState, defaults, camera, inputs);
 	lightInputs.Init(scene, sharedState, defaults, camera, inputs);
 	ioInputs.Init(scene, workingDir, inputs);
 

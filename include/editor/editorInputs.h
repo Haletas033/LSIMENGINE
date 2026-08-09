@@ -14,8 +14,9 @@ private:
 	LightInputs lightInputs;
 	IOInputs ioInputs;
 public:
-	void Init(Scene &scene, const std::string &workingDir, SharedState &sharedState, const Defaults &defaults, const Camera &camera, Inputs
-		&inputs);
+	void Init(Registry &registry, MeshPool &meshPool, Scene &scene, const std::string &workingDir, SharedState &sharedState, const
+	          Defaults &defaults, const Camera &camera, Inputs
+	          &inputs);
 };
 
 #endif //LSIM_EDITORINPUTS_H

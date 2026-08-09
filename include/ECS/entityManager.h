@@ -3,7 +3,11 @@
 
 #include <vector>
 
-#include "entity.h"
+#include "handle.h"
+
+struct EntityTag {};
+
+using EntityHandle = Handle<EntityTag>;
 
 class EntityManager {
 private:
@@ -14,11 +18,12 @@ private:
         uint32_t nextFreeHead = SENTINEL;
         uint32_t nextFreeTail = SENTINEL;
 
-        void destroy(const Entity &e);
         friend class Registry;
 
-        Entity create();
-        [[nodiscard]] bool isAlive(const Entity e) const { return alive[e.getIndex()] && e.getGeneration() == generations[e.getIndex()]; }
+        EntityHandle create();
+        void destroy(const EntityHandle &e);
+        [[nodiscard]] bool isAlive(const EntityHandle e) const { return alive[e.getIndex()] && e.getGeneration() == generations[e.getIndex()]; }
+        [[nodiscard]] std::vector<EntityHandle> getAllAlive() const;
 };
 
 #endif //LSIM_ENTITYMANAGER_H

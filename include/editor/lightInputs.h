@@ -1,6 +1,7 @@
 #ifndef LSIM_LIGHTINPUTS_H
 #define LSIM_LIGHTINPUTS_H
 #include "sharedState.h"
+#include "scene/camera.h"
 #include "inputs/inputs.h"
 
 class LightInputs {

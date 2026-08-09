@@ -2,14 +2,13 @@
 #define LSIM_REGISTRY_H
 #include <any>
 #include <assert.h>
+#include <functional>
 #include <optional>
 #include <ranges>
 #include <typeindex>
 #include <unordered_map>
 
-#include "entity.h"
 #include "entityManager.h"
-
 
 class Registry {
 private:
@@ -22,7 +21,7 @@ public:
         using Pool = std::vector<std::optional<std::decay_t<T>>>;
 
         template <typename T>
-        void addComponent(const Entity e, T&& component) {
+        void addComponent(const EntityHandle e, T component) {
                 assert(isAlive(e));
                 using Component = std::decay_t<T>;
                 const auto id = std::type_index(typeid(Component));
@@ -39,11 +38,11 @@ public:
                 }
                 auto &pool = std::any_cast<Pool<Component>&>(slot);
                 if (e.getIndex() >= pool.size()) pool.resize(e.getIndex()+1);
-                pool[e.getIndex()] = std::forward<T>(component);
+                pool[e.getIndex()].emplace(std::forward<T>(component));
         }
 
         template <typename T>
-        bool hasComponent(const Entity e) const {
+        bool hasComponent(const EntityHandle e) const {
                 assert(isAlive(e));
                 using Component = std::decay_t<T>;
                 const auto id = std::type_index(typeid(Component));
@@ -54,7 +53,7 @@ public:
         }
 
         template <typename T>
-        std::decay_t<T>* getComponent(const Entity e) {
+        std::decay_t<T>* getComponent(const EntityHandle e) {
                 assert(isAlive(e));
                 using Component = std::decay_t<T>;
                 const auto id = std::type_index(typeid(Component));
@@ -71,7 +70,7 @@ public:
         }
 
         template <typename T>
-        const std::decay_t<T>* getComponent(const Entity e) const {
+        const std::decay_t<T>* getComponent(const EntityHandle e) const {
                 assert(isAlive(e));
                 using Component = std::decay_t<T>;
                 const auto id = std::type_index(typeid(Component));
@@ -88,7 +87,7 @@ public:
         }
 
         template <typename T>
-        void removeComponent(const Entity e) {
+        void removeComponent(const EntityHandle e) {
                 assert(isAlive(e));
                 using Component = std::decay_t<T>;
                 const auto id = std::type_index(typeid(Component));
@@ -104,7 +103,7 @@ public:
                 pool[e.getIndex()] = std::nullopt;
         }
 
-        void destroyEntity(const Entity e) {
+        void destroyEntity(const EntityHandle e) {
                 assert(isAlive(e));
 
                 for (auto &func: clearFuncs | std::views::values) {
@@ -113,8 +112,16 @@ public:
                 entityManager.destroy(e);
         }
 
-        Entity create() { return entityManager.create(); }
-        [[nodiscard]] bool isAlive(const Entity e) const { return entityManager.isAlive(e); }
+        EntityHandle create() { return entityManager.create(); }
+        [[nodiscard]] bool isAlive(const EntityHandle e) const { return entityManager.isAlive(e); }
+        [[nodiscard]] std::vector<EntityHandle> getAllAlive() const {
+                return entityManager.getAllAlive();
+        }
+
+        static Registry& getDefaultRegistry() {
+                static Registry instance;
+                return instance;
+        }
 };
 
 #endif //LSIM_REGISTRY_H

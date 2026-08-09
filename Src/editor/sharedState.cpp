@@ -15,3 +15,13 @@ void SharedState::safe_insert(std::set<unsigned int> &field, const unsigned max,
 		field.insert(rh);
 	}
 }
+
+void SharedState::safe_insert(std::set<EntityHandle>& target, const Registry& registry, const std::set<EntityHandle>& source, const std::string& context) {
+	for (const EntityHandle& e : source) {
+		if (registry.isAlive(e)) {
+			target.insert(e);
+		} else {
+			engineLogger("stdError", context + ": invalid entity, skipped.");
+		}
+	}
+}

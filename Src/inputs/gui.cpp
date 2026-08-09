@@ -2,6 +2,7 @@
 
 #include <iterator>
 
+#include "ECS/name.h"
 #include "editor/sharedState.h"
 #include "gl/VAO.h"
 #include "gl/VAO.h"
@@ -56,9 +57,10 @@ void Gui::CleanUp() {
     ImGui::DestroyContext();
 }
 
-void Gui::AddTexture(const char* name, std::string fileName, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes,
-    const std::set<unsigned int> &currentMeshes, const std::string &workingDir,GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use) {
-    if (ImGui::Button(name)) {
+void Gui::AddTexture(const std::string &slotName, std::string &fileName,
+                        Registry &registry, const std::set<EntityHandle> &currentMeshes,
+                        const std::string &workingDir) {
+    if (ImGui::Button(slotName.c_str())) {
         const std::string filePath = IO::OpenDialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0");
 
         //Get just the fileName
@@ -69,75 +71,89 @@ void Gui::AddTexture(const char* name, std::string fileName, const std::vector<s
         std::filesystem::copy(filePath.c_str(), std::string(workingDir + "resources/") + fileName, std::filesystem::copy_options::overwrite_existing);
 
         const unsigned int texture = Texture::GetTexId((std::string(workingDir + "resources/") + fileName).c_str(), GL_NEAREST);
-        for (const unsigned mesh : currentMeshes) {
-            if (use) meshes[mesh][0].get()->*use = true;
-            meshes[mesh][0].get()->*id = texture;
-            meshes[mesh][0].get()->*path = fileName;
+        for (const EntityHandle& mesh : currentMeshes) {
+            auto* material = registry.getComponent<Material>(mesh);
+            if (!material) continue;
+            material->setTexture(slotName, workingDir + "resources/" + fileName);
         }
     }
 }
 
-void Gui::RemoveTexture(const char* name, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, const std::set<unsigned int> &currentMeshes,
-    GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use) {
-    if (ImGui::Button(name)) {
-        for (const unsigned mesh : currentMeshes) {
-            if (use) meshes[mesh][0].get()->*use = false;
-            meshes[mesh][0].get()->*id = NULL;
-            meshes[mesh][0].get()->*path = "";
+void Gui::RemoveTexture(const std::string &slotName, Registry &registry, const std::set<EntityHandle> &currentMeshes) {
+    if (ImGui::Button(slotName.c_str())) {
+        for (const EntityHandle& mesh : currentMeshes) {
+            auto* material = registry.getComponent<Material>(mesh);
+            if (!material) continue;
+            material->removeTexture(slotName);
         }
     }
 }
 
-void Gui::Transform(SharedState& sharedState, const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes, int &selectedMeshType, int clickedMesh) {
+void Gui::Transform(Registry& registry, SharedState& sharedState, const std::string &workingDir, const std::vector<EntityHandle>& meshes, int &selectedMeshType, int clickedMesh) {
     if (ImGui::CollapsingHeader("Transform")){
         if (!meshes.empty()) {
+            std::optional<EntityHandle> refMesh;
 
-            Mesh* refMesh = nullptr;
             auto currentMeshes = sharedState.current_meshes();
-            if (!currentMeshes.empty()){
-                refMesh = meshes[*currentMeshes.begin()][0].get();
+            if (!currentMeshes.empty()) {
+                refMesh = *currentMeshes.begin();
             }
 
             if (refMesh){
-                glm::vec3 position = refMesh->position;
-                glm::vec3 rotation = refMesh->rotation;
-                glm::vec3 scale = refMesh->scale;
+                auto* refName = registry.getComponent<Name>(refMesh.value());
+                auto* refMaterial = registry.getComponent<Material>(refMesh.value());
+                auto* refTransform = registry.getComponent<::Transform>(refMesh.value());
+
+                glm::vec3 position = refTransform->getPosition();
+                glm::vec3 rotation = refTransform->getRotationEuler();
+                glm::vec3 scale = refTransform->getScale();
     
                 static bool uniformScaleLock = true;
-                static float uniformScale = refMesh->scale.x;  // Initial uniform scale
+                static float uniformScale = refTransform->getScale().x;  // Initial uniform scale
     
                 static char nameBuffer[128];
     
                 if (!currentMeshes.empty()) {
-                    strncpy(nameBuffer, refMesh->name.c_str(), sizeof(nameBuffer));
+                    strncpy(nameBuffer, refName->value.c_str(), sizeof(nameBuffer));
                     nameBuffer[sizeof(nameBuffer)-1] = '\0';
                 }
     
                 if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
-                    for (const unsigned mesh : currentMeshes) meshes[mesh][0].get()->name = nameBuffer;
+                    for (EntityHandle e : currentMeshes) {
+                        if (auto* name = registry.getComponent<Name>(e))
+                        name->value = nameBuffer;
+                    }
                 }
 
                 if (ImGui::InputFloat3("Position", glm::value_ptr(position))) {
-                    for (unsigned idx : currentMeshes) {
-                        meshes[idx][0]->position = position;
+                    for (EntityHandle e : currentMeshes) {
+                        if (auto* transform = registry.getComponent<::Transform>(e)) {
+                            transform->setPosition(position);
+                        }
                     }
                 }
                 if (ImGui::InputFloat3("Rotation", glm::value_ptr(rotation))) {
-                    for (unsigned idx : currentMeshes) {
-                        meshes[idx][0]->rotation = rotation;
+                    for (EntityHandle e : currentMeshes) {
+                        if (auto* transform = registry.getComponent<::Transform>(e)) {
+                            transform->setRotation(rotation);
+                        }
                     }
                 }
 
                 if (uniformScaleLock) {
                     if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
-                        for (unsigned idx : currentMeshes) {
-                            meshes[idx][0]->scale = glm::vec3(uniformScale);
+                        for (EntityHandle e : currentMeshes) {
+                            if (auto* transform = registry.getComponent<::Transform>(e)) {
+                                transform->setScale(glm::vec3(uniformScale));
+                            }
                         }
                     }
                 } else {
                     if (ImGui::InputFloat3("Scale", glm::value_ptr(scale))) {
-                        for (unsigned idx : currentMeshes) {
-                            meshes[idx][0]->scale = scale;
+                        for (EntityHandle e : currentMeshes) {
+                            if (auto* transform = registry.getComponent<::Transform>(e)) {
+                                transform->setScale(scale);
+                            }
                         }
                     }
                 }

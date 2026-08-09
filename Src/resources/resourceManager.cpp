@@ -9,8 +9,14 @@ uint32_t ResourceManager::addTexture(const std::string &name, const std::string 
     return tex;
 }
 
-uint32_t ResourceManager::addShader(const std::string &name, const Shader &shaderObj) {
-    const uint32_t shader = shaderObj.GetID();
-    shaders[name] = shader;
-    return shader;
+Shader& ResourceManager::addShader(const std::string &name, Shader &&shaderObj) {
+    auto [it, inserted] = shaders.emplace(name, std::move(shaderObj));
+    if (inserted)
+        shadersById[it->second.GetID()] = &it->second;
+    return it->second;
+}
+
+Shader *ResourceManager::getShaderById(const uint32_t id) {
+    const auto it = shadersById.find(id);
+    return it != shadersById.end() ? it->second : nullptr;
 }

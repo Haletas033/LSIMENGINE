@@ -1,6 +1,7 @@
 #include "../../include/editor/meshInputs.h"
 
 #include "LSIMhelpers.h"
+#include "geometry/mesh.h"
 
 void MeshInputs::add(glm::vec3& lhs, const glm::vec3 rhs) {
 	lhs += rhs;
@@ -10,28 +11,26 @@ void MeshInputs::sub(glm::vec3& lhs, const glm::vec3 rhs) {
 	lhs -= rhs;
 }
 
-glm::vec3 Mesh::* TransformToMeshProperty(SharedState &sharedState) {
-	glm::vec3 Mesh::* field = &Mesh::position;
+TransformAccessor MeshInputs::TransformToProperty(Transform& transform, SharedState& sharedState) {
 	switch (sharedState.current_transform()) {
 		case SharedState::Transform::POSITION:
-			field = &Mesh::position;
-			break;
+			return { [&transform]{ return transform.getPosition(); },
+				 [&transform](const glm::vec3& v){ transform.setPosition(v); } };
 		case SharedState::Transform::ROTATION:
-			field = &Mesh::rotation;
-			break;
+			return { [&transform]{ return glm::eulerAngles(transform.getRotation()); },
+				 [&transform](const glm::vec3& v){ transform.setRotation(v); } };
 		case SharedState::Transform::SCALE:
-			field = &Mesh::scale;
-			break;
-		default: break;
+			return { [&transform]{ return transform.getScale(); },
+				 [&transform](const glm::vec3& v){ transform.setScale(v); } };
+		default:
+			return { [&transform]{ return transform.getPosition(); },
+				 [&transform](const glm::vec3& v){ transform.setPosition(v); } };
 	}
-	return field;
 }
 
-void MeshInputs::Move(Scene &scene, SharedState &sharedState, const Defaults &defaults, const Camera &camera,
+void MeshInputs::Move(Registry& registry, SharedState &sharedState, const Defaults &defaults, const Camera &camera,
 	const Inputs::InputContext &context,const Direction directionType, const std::function<void(glm::vec3&, glm::vec3)>& op) {
 	auto [forward, side] = camera.getDirection();
-
-	glm::vec3 Mesh::* field = TransformToMeshProperty(sharedState);
 
 	if (sharedState.current_transform() == SharedState::Transform::ROTATION) {
 		std::swap(forward, side);
@@ -44,11 +43,19 @@ void MeshInputs::Move(Scene &scene, SharedState &sharedState, const Defaults &de
 		direction = -direction; // Flip for scale
 
 	const float speed = sharedState.current_transform() == SharedState::Transform::ROTATION ? defaults.rotationSpeed : defaults.transformSpeed;
-	for (const auto mesh : sharedState.current_meshes())
-		op(scene.meshes[mesh][0].get()->*field, direction * context.deltaTime * speed);
+	const glm::vec3 delta = direction * context.deltaTime * speed;
+
+	for (const EntityHandle& e : sharedState.current_meshes()) {
+		auto* transform = registry.getComponent<Transform>(e);
+		if (!transform) continue;
+		auto [get, set] = TransformToProperty(*transform, sharedState);
+		glm::vec3 value = get();
+		op(value, delta);
+		set(value);
+	}
 }
 
-void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& defaults, const Camera& camera, Inputs &inputs) {
+void MeshInputs::Init(Registry& registry, MeshPool& meshPool, SharedState &sharedState, const Defaults& defaults, const Camera& camera, Inputs &inputs) {
 	Inputs::BindingTable meshInputs = {
 		1,
 		true
@@ -69,22 +76,22 @@ void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& de
 	meshInputs.addAction("delete_mesh", Inputs::KeyCode::DELETE, Inputs::KeyState::JUST_PRESSED);
 
 	meshInputs.addFunctionForAction("move_meshes_forward", [&](const Inputs::InputContext& context) {
-		Move(scene, sharedState, defaults, camera, context, Direction::FORWARD, sub);
+		Move(registry, sharedState, defaults, camera, context, Direction::FORWARD, sub);
 	});
 	meshInputs.addFunctionForAction("move_meshes_backward", [&](const Inputs::InputContext& context) {
-		Move(scene, sharedState, defaults, camera, context, Direction::FORWARD, add);
+		Move(registry, sharedState, defaults, camera, context, Direction::FORWARD, add);
 	});
 	meshInputs.addFunctionForAction("move_meshes_left", [&](const Inputs::InputContext& context) {
-		Move(scene, sharedState, defaults, camera, context, Direction::SIDE, sub);
+		Move(registry, sharedState, defaults, camera, context, Direction::SIDE, sub);
 	});
 	meshInputs.addFunctionForAction("move_meshes_right", [&](const Inputs::InputContext& context) {
-		Move(scene, sharedState, defaults, camera, context, Direction::SIDE, add);
+		Move(registry, sharedState, defaults, camera, context, Direction::SIDE, add);
 	});
 	meshInputs.addFunctionForAction("move_meshes_up", [&](const Inputs::InputContext& context) {
-		Move(scene, sharedState, defaults, camera, context, Direction::UP, add);
+		Move(registry, sharedState, defaults, camera, context, Direction::UP, add);
 	});
 	meshInputs.addFunctionForAction("move_meshes_down", [&](const Inputs::InputContext& context) {
-		Move(scene, sharedState, defaults, camera, context, Direction::UP, sub);
+		Move(registry, sharedState, defaults, camera, context, Direction::UP, sub);
 	});
 
 	meshInputs.addFunctionForAction("select_move_mode", [&](const Inputs::InputContext& context) {
@@ -98,11 +105,13 @@ void MeshInputs::Init(Scene &scene, SharedState &sharedState, const Defaults& de
 	});
 
 	meshInputs.addFunctionForAction("add_mesh", [&](const Inputs::InputContext& context) {
-		scene.addMeshSignal = true;
+	    Mesh::create(sharedState.selected_mesh_type(), MeshMode::STATIC, registry, meshPool);
 	});
 
 	meshInputs.addFunctionForAction("delete_mesh", [&](const Inputs::InputContext& context) {
-		scene.deleteMeshSignal = true;
+	    for (const EntityHandle& e : sharedState.current_meshes()) {
+		registry.destroyEntity(e);
+	    }
 	});
 
 	// Generate 0-9 bindings

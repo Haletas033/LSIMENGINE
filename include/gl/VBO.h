@@ -5,13 +5,12 @@
 #include<glm/glm.hpp>
 #include<vector>
 
-
 class VBO {
 private:
     GLuint ID = 0;
     void Delete();
 public:
-    explicit VBO(const std::vector<GLfloat>& vertices);
+    explicit VBO(const std::vector<GLfloat>& vertices, GLenum mode);
     VBO(const VBO&) = delete;
     VBO& operator=(const VBO&) = delete;
     VBO(VBO &&other) noexcept;

@@ -1,4 +1,5 @@
 #include "../../include/scene/camera.h"
+#include "gl/shaderClass.h"
 
 extern Defaults engineDefaults;
 
