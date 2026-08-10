@@ -36,7 +36,7 @@ void Gui::Initialize(GLFWwindow *window) {
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-    root = new Node{nullptr, nullptr, {}};
+    root = new Node{std::nullopt, nullptr, {}};
 }
 
 
@@ -89,9 +89,10 @@ void Gui::RemoveTexture(const std::string &slotName, Registry &registry, const s
     }
 }
 
-void Gui::Transform(Registry& registry, SharedState& sharedState, const std::string &workingDir, const std::vector<EntityHandle>& meshes, int &selectedMeshType, int clickedMesh) {
+void Gui::Transform(Registry& registry, SharedState& sharedState, const std::string &workingDir, int &selectedMeshType) {
     if (ImGui::CollapsingHeader("Transform")){
-        if (!meshes.empty()) {
+        auto currentMeshes = sharedState.current_meshes();
+        if (!currentMeshes.empty()) {
             std::optional<EntityHandle> refMesh;
 
             auto currentMeshes = sharedState.current_meshes();
@@ -160,80 +161,80 @@ void Gui::Transform(Registry& registry, SharedState& sharedState, const std::str
     
                 ImGui::Checkbox("Uniform Scale", &uniformScaleLock);
 
-                ImGui::Checkbox("Use Texture", &refMesh->useTexture);
-
-                //Show mesh colour if useTexture is enabled show the mesh colour otherwise show the add texture
-                if (!refMesh->useTexture) {
-                    if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh->color))) {
-                        for (unsigned mesh : currentMeshes) {
-                            meshes[mesh][0].get()->useTexture = false;
-                            meshes[mesh][0].get()->color = refMesh->color;
-                        }
-                    }
-                } else {
-                    static std::string fileName = "No texture";
-
-                    //Texture
-                    AddTexture("Add Texture", fileName, meshes, currentMeshes, workingDir,
-                        &Mesh::texId, &Mesh::texturePath, nullptr);
-
-                    //Specular Map
-                    AddTexture("Add Specular Map", fileName, meshes, currentMeshes, workingDir,
-                        &Mesh::specMapId, &Mesh::specMapPath, nullptr);
-
-                    ImGui::SameLine();
-
-                    RemoveTexture("Remove Specular Map", meshes, currentMeshes, &Mesh::specMapId, &Mesh::specMapPath, nullptr);
-
-                    //Normal Map
-                    AddTexture("Add Normal Map", fileName, meshes, currentMeshes, workingDir,
-                        &Mesh::normalMapId, &Mesh::normalMapPath, &Mesh::useNormalMap);
-
-                    ImGui::SameLine();
-
-                    RemoveTexture("Remove Normal Map", meshes, currentMeshes, &Mesh::normalMapId, &Mesh::normalMapPath, &Mesh::useNormalMap);
-
-                    //Emissive Map
-                    AddTexture("Add Emissive Map", fileName, meshes, currentMeshes, workingDir,
-                        &Mesh::emissiveMapId, &Mesh::emissiveMapPath, nullptr);
-
-                    ImGui::SameLine();
-
-                    RemoveTexture("Remove Emissive Map", meshes, currentMeshes, &Mesh::emissiveMapId, &Mesh::emissiveMapPath, nullptr);
-                }
-
-                ImGui::InputFloat("Emissive Intensity", &refMesh->emissiveIntensity);
-
-                ImGui::SliderFloat("Roughness", &refMesh->roughness, 0, 1);
-                ImGui::SliderFloat("F0", &refMesh->F0, 0, 1);
-            }
-
-
-
-            static char meshSelectionBuffer[128] = "0";
-            static int lastClickedMesh = -1;
-
-            if (clickedMesh != -1 && clickedMesh != lastClickedMesh) {
-                snprintf(meshSelectionBuffer, sizeof(meshSelectionBuffer), "%d", clickedMesh);
-                lastClickedMesh = clickedMesh;
-            }
-
-            // Draw the input box
-            ImGui::InputText("Current Meshes", meshSelectionBuffer,  IM_ARRAYSIZE(meshSelectionBuffer));
-
-            // Parse the buffer into currentMeshes
-            sharedState.current_meshes().clear();
-            std::stringstream ss(meshSelectionBuffer);
-            std::string token;
-            while (std::getline(ss, token, ',')) {
-                try {
-                    int idx = std::stoi(token);
-                    if (idx >= 0 && idx < meshes.size()) {
-                        sharedState.current_meshes().insert(idx);
-                    }
-                } catch (...) {
-                    // ignore invalid input
-                }
+        //         ImGui::Checkbox("Use Texture", &refMesh->useTexture);
+        //
+        //         //Show mesh colour if useTexture is enabled show the mesh colour otherwise show the add texture
+        //         if (!refMesh->useTexture) {
+        //             if (ImGui::ColorEdit4("Mesh Color", glm::value_ptr(refMesh->color))) {
+        //                 for (unsigned mesh : currentMeshes) {
+        //                     meshes[mesh][0].get()->useTexture = false;
+        //                     meshes[mesh][0].get()->color = refMesh->color;
+        //                 }
+        //             }
+        //         } else {
+        //             static std::string fileName = "No texture";
+        //
+        //             //Texture
+        //             AddTexture("Add Texture", fileName, meshes, currentMeshes, workingDir,
+        //                 &Mesh::texId, &Mesh::texturePath, nullptr);
+        //
+        //             //Specular Map
+        //             AddTexture("Add Specular Map", fileName, meshes, currentMeshes, workingDir,
+        //                 &Mesh::specMapId, &Mesh::specMapPath, nullptr);
+        //
+        //             ImGui::SameLine();
+        //
+        //             RemoveTexture("Remove Specular Map", meshes, currentMeshes, &Mesh::specMapId, &Mesh::specMapPath, nullptr);
+        //
+        //             //Normal Map
+        //             AddTexture("Add Normal Map", fileName, meshes, currentMeshes, workingDir,
+        //                 &Mesh::normalMapId, &Mesh::normalMapPath, &Mesh::useNormalMap);
+        //
+        //             ImGui::SameLine();
+        //
+        //             RemoveTexture("Remove Normal Map", meshes, currentMeshes, &Mesh::normalMapId, &Mesh::normalMapPath, &Mesh::useNormalMap);
+        //
+        //             //Emissive Map
+        //             AddTexture("Add Emissive Map", fileName, meshes, currentMeshes, workingDir,
+        //                 &Mesh::emissiveMapId, &Mesh::emissiveMapPath, nullptr);
+        //
+        //             ImGui::SameLine();
+        //
+        //             RemoveTexture("Remove Emissive Map", meshes, currentMeshes, &Mesh::emissiveMapId, &Mesh::emissiveMapPath, nullptr);
+        //         }
+        //
+        //         ImGui::InputFloat("Emissive Intensity", &refMesh->emissiveIntensity);
+        //
+        //         ImGui::SliderFloat("Roughness", &refMesh->roughness, 0, 1);
+        //         ImGui::SliderFloat("F0", &refMesh->F0, 0, 1);
+        //     }
+        //
+        //
+        //
+        //     static char meshSelectionBuffer[128] = "0";
+        //     static int lastClickedMesh = -1;
+        //
+        //     if (clickedMesh != -1 && clickedMesh != lastClickedMesh) {
+        //         snprintf(meshSelectionBuffer, sizeof(meshSelectionBuffer), "%d", clickedMesh);
+        //         lastClickedMesh = clickedMesh;
+        //     }
+        //
+        //     // Draw the input box
+        //     ImGui::InputText("Current Meshes", meshSelectionBuffer,  IM_ARRAYSIZE(meshSelectionBuffer));
+        //
+        //     // Parse the buffer into currentMeshes
+        //     sharedState.current_meshes().clear();
+        //     std::stringstream ss(meshSelectionBuffer);
+        //     std::string token;
+        //     while (std::getline(ss, token, ',')) {
+        //         try {
+        //             int idx = std::stoi(token);
+        //             if (idx >= 0 && idx < meshes.size()) {
+        //                 sharedState.current_meshes().insert(idx);
+        //             }
+        //         } catch (...) {
+        //             // ignore invalid input
+        //         }
             }
         }
 
@@ -351,54 +352,37 @@ void Gui::SceneGUI(const std::string &workingDir, unsigned int &skyboxTexId, glm
     }
 }
 
-void Gui::DrawNode(Node* node, int& clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes) {
+void Gui::DrawNode(Node* node, std::optional<EntityHandle>& clickedMesh, Registry& registry) {
     if (!node) return;
-
-    auto nodeName = "Game";
-    if (node->mesh) nodeName = node->mesh->name.empty() ? "Unnamed" : node->mesh->name.c_str();
-
-    // Create cool hierarchy tree
-    if (ImGui::TreeNode(nodeName)) {
-
-        // Deal with clicking
-        if (node->mesh) {
-            int index = -1;
-            for (int i = 0; i < meshes.size(); i++) {
-                if (meshes[i][0].get() == node->mesh) {
-                    index = i;
-                    break;
-                }
-            }
-            if (index != -1 && ImGui::IsItemClicked()) clickedMesh = index;
+    std::string nodeName = "Game";
+    if (node->mesh) {
+        auto* name = registry.getComponent<Name>(*node->mesh);
+        nodeName = (name && !name->value.empty()) ? name->value : "Unnamed";
+    }
+    if (ImGui::TreeNode(nodeName.c_str())) {
+        if (node->mesh && ImGui::IsItemClicked()) {
+            clickedMesh = node->mesh;
         }
-
-        // First we drag then we drop
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
             ImGui::SetDragDropPayload("DND_NODE", &node, sizeof(Node*));
-            ImGui::Text("Moving: %s", nodeName);
+            ImGui::Text("Moving: %s", nodeName.c_str());
             ImGui::EndDragDropSource();
         }
-
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_NODE")) {
-                Node* payloadNode = *static_cast<Node **>(payload->Data);
-
+                Node* payloadNode = *static_cast<Node**>(payload->Data);
                 if (payloadNode->parent) {
                     auto& siblings = payloadNode->parent->children;
-                    siblings.erase(std::remove(siblings.begin(), siblings.end(), payloadNode), siblings.end());
+                    std::erase(siblings, payloadNode);
                 }
-
                 payloadNode->parent = node;
                 node->children.push_back(payloadNode);
             }
             ImGui::EndDragDropTarget();
         }
-
-        // Draw children recursively
         for (Node* child : node->children) {
-            DrawNode(child, clickedMesh, meshes);
+            DrawNode(child, clickedMesh, registry);
         }
-
         ImGui::TreePop();
     }
 }
@@ -439,30 +423,19 @@ void Gui::ClearRoot() {
     root->children.clear();
 }
 
-Gui::Node* Gui::FindNodeByMesh(Node* node, const Mesh* mesh) {
+Gui::Node* Gui::FindNodeByMesh(Node* node, const EntityHandle& mesh) {
     if (!node) return nullptr;
-    if (node->mesh == mesh) return node;
+    if (node->mesh && *node->mesh == mesh) return node;
     for (Node* child : node->children) {
-        Node* result = FindNodeByMesh(child, mesh);
-        if (result) return result;
+        if (Node* result = FindNodeByMesh(child, mesh)) return result;
     }
     return nullptr;
 }
 
-Gui::Node *Gui::FindNodeByMeshID(Node *node, const uint16_t meshID) {
-    if (!node) return nullptr;
-    if (node->mesh && node->mesh->meshID == meshID) return node;
-    for (Node* child : node->children) {
-        Node* result = FindNodeByMeshID(child, meshID);
-        if (result) return result;
-    }
-    return nullptr;
-}
-
-int Gui::Hierarchy(const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes) {
-    int clickedMesh = -1;
+std::optional<EntityHandle> Gui::Hierarchy(Registry& registry) {
+    std::optional<EntityHandle> clickedMesh;
     if (root) {
-        DrawNode(root, clickedMesh, meshes);
+        DrawNode(root, clickedMesh, registry);
     }
     return clickedMesh;
 }

@@ -4,8 +4,8 @@
 
 class System {
 public:
-        virtual void update(Registry& registry, float deltaTime);
-        virtual ~System();
+        virtual void update(Registry& registry, float deltaTime) = 0;
+        virtual ~System() = default;
 };
 
 #endif //LSIM_SYSTEM_H

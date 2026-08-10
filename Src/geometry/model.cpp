@@ -9,7 +9,7 @@
 
 extern Scene scene;
 
-Model::Model(const char *file) {
+Model::Model(Registry& registry, const char *file) {
     std::string text = IO::GetFileContents(file);
     JSON = json::parse(text);
 
@@ -20,7 +20,7 @@ Model::Model(const char *file) {
     const unsigned int sceneIndex = JSON.value("scene", 0);
     json sceneNodes = JSON["scenes"][sceneIndex]["nodes"];
     for (const auto &nodeIndex : sceneNodes) {
-        TraverseNode(nodeIndex, glm::mat4(1.0f));
+        TraverseNode(registry, nodeIndex, glm::mat4(1.0f));
     }
 }
 
@@ -128,8 +128,8 @@ std::vector<glm::vec4> Model::groupFloatsVec4(const std::vector<float> &floatVec
     return vectors;
 }
 
-std::vector<Mesh> Model::loadMesh(const unsigned int indMesh) {
-    std::vector<Mesh> models;
+std::vector<EntityHandle> Model::loadMesh(Registry& registry, const unsigned int indMesh) {
+    std::vector<EntityHandle> models;
     json primitives = JSON["meshes"][indMesh]["primitives"];
     for (unsigned int i = 0; i < primitives.size(); i++) {
         const unsigned int posAccInd = primitives[i]["attributes"]["POSITION"];
@@ -160,15 +160,14 @@ std::vector<Mesh> Model::loadMesh(const unsigned int indMesh) {
             vertices.push_back(texUVs[j].y);
         }
 
-        Mesh model{vertices, indices};
-        model.name = "Model_" + std::to_string(i);
-        getTextures(model);
-        models.push_back(std::move(model));
+        EntityHandle model = Mesh::create(vertices, indices, MeshMode::STATIC);
+        getTextures(registry, model);
+        models.push_back(model);
     }
     return models;
 }
 
-void Model::TraverseNode(const unsigned int nextNode, const glm::mat4 &matrix) {
+void Model::TraverseNode(Registry& registry, const unsigned int nextNode, const glm::mat4 &matrix) {
     json node = JSON["nodes"][nextNode];
 
     //Load translation
@@ -229,13 +228,13 @@ void Model::TraverseNode(const unsigned int nextNode, const glm::mat4 &matrix) {
 
     if (node.find("mesh") != node.end())
     {
-        auto models = loadMesh(node["mesh"]);
+        auto models = loadMesh(registry, node["mesh"]);
         for (auto &model : models) {
-            model.position = translation;
-
+            auto* transform = registry.getComponent<Transform>(model);
             const auto euler = glm::degrees(glm::eulerAngles(rotation));
-            model.rotation = glm::vec3(euler.z, euler.y, euler.x); //Flip rotation
-            model.scale = scale;
+            transform->setPosition(translation);
+            transform->setRotation(glm::vec3(euler.z, euler.y, euler.x));
+            transform->setScale(scale);
             meshes.push_back(std::move(model));
         }
     }
@@ -243,43 +242,28 @@ void Model::TraverseNode(const unsigned int nextNode, const glm::mat4 &matrix) {
     if (node.find("children") != node.end())
     {
         for (const auto & i : node["children"])
-            TraverseNode(i, matNextNode);
+            TraverseNode(registry, i, matNextNode);
     }
 }
 
-void Model::getTextures(Mesh &model)
-{
+void Model::getTextures(Registry& registry, EntityHandle &model) {
+    auto* material = registry.getComponent<Material>(model);
+
     std::string fileStr = std::string(file);
     std::string fileDirectory = fileStr.substr(0, fileStr.find_last_of('\\') + 1);
-
     // Go over all images
     for (unsigned int i = 0; i < JSON["images"].size(); i++)
     {
-        // uri of current texture
         std::string texPath = JSON["images"][i]["uri"];
-
-        //Load diffuse texture
-        if (texPath.find("Color") != std::string::npos)
-        {
-            model.useTexture = true;
-            std::cout << fileDirectory + texPath.c_str();
-            model.texturePath = fileDirectory + texPath.c_str();
-            model.texId = Texture::GetTexId(model.texturePath.c_str(), GL_NEAREST);
+        if (texPath.find("Color") != std::string::npos) {
+            material->setTexture("albedo", fileDirectory + texPath);
         }
-        //Load specular texture
-        else if (texPath.find("Roughness") != std::string::npos)
-        {
-            model.specMapPath = fileDirectory + texPath.c_str();
-            model.specMapId = Texture::GetTexId(model.specMapPath.c_str(), GL_NEAREST);
+        else if (texPath.find("Roughness") != std::string::npos) {
+            material->setTexture("specular", fileDirectory + texPath);
         }
-        //Load normal map
-        else if (texPath.find("Normal") != std::string::npos)
-        {
-            model.normalMapPath = fileDirectory + texPath.c_str();
-            model.normalMapId = Texture::GetTexId(model.normalMapPath.c_str(), GL_NEAREST);
-            model.useNormalMap = true;
+        else if (texPath.find("Normal") != std::string::npos) {
+            material->setTexture("normal", fileDirectory + texPath);
         }
-
     }
 }
 

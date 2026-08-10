@@ -27,10 +27,10 @@ EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, 
                 case Primitive::MODEL:
                         break; // TODO
         }
-        return create(meshData.vertices, mode, meshData.indices, registry, meshPool, material, transform);
+        return create(meshData.vertices, meshData.indices, mode, registry, meshPool, material, transform);
 }
 
-EntityHandle Mesh::create(const std::vector<float>& vertices, const MeshMode mode, const std::vector<uint32_t>& indices,
+EntityHandle Mesh::create(const std::vector<float>& vertices, const std::vector<uint32_t>& indices, const MeshMode mode,
         Registry &registry, MeshPool &meshPool, const Material &material, const Transform &transform)
 {
         const EntityHandle e = registry.create();
@@ -40,5 +40,6 @@ EntityHandle Mesh::create(const std::vector<float>& vertices, const MeshMode mod
         registry.addComponent<Material>(e, material);
         registry.addComponent<MeshRenderer>(e, MeshRenderer{handle, mode});
         registry.addComponent<Transform>(e, transform);
+
         return e;
 }

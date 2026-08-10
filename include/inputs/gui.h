@@ -23,7 +23,7 @@ private:
     static std::unordered_map<std::string, ImColor> colourMap;
 public:
     struct Node {
-        Mesh* mesh;
+        std::optional<EntityHandle> mesh;
         Node* parent;
         std::vector<Node*> children;
     };
@@ -44,8 +44,8 @@ public:
     static void RemoveTexture(const std::string &slotName,
                                Registry &registry, const std::set<EntityHandle> &currentMeshes);
 
-    static void Transform(Registry &registry, SharedState &sharedState, const std::string &workingDir, const std::vector<EntityHandle> &meshes, int
-                          &selectedMeshType, int clickedMesh);
+    static void Transform(Registry &registry, SharedState &sharedState, const std::string &workingDir, int
+                          &selectedMeshType);
 
     static void Lighting(std::vector<Light> &lights, int &currentLight);
 
@@ -55,7 +55,7 @@ public:
 
     static void SceneGUI(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
 
-    static void DrawNode(Node *node, int &clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes);
+    static void DrawNode(Node *node, std::optional<EntityHandle> &clickedMesh, Registry &registry);
 
     static void DeleteNode(Node *node);
 
@@ -63,11 +63,11 @@ public:
 
     static void ClearRoot();
 
-    static Node *FindNodeByMesh(Node *node, const Mesh *mesh);
+    static Node *FindNodeByMesh(Node *node, const EntityHandle &mesh);
 
     static Node *FindNodeByMeshID(Node *node, uint16_t meshID);
 
-    static int Hierarchy(const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes);
+    static std::optional<EntityHandle> Hierarchy(Registry &registry);
 
 
 };

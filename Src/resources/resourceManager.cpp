@@ -3,6 +3,10 @@
 #include "gl/shaderClass.h"
 #include "utils/texture.h"
 
+std::unordered_map<std::string, uint32_t> ResourceManager::textures;
+std::unordered_map<std::string, Shader> ResourceManager::shaders;
+std::unordered_map<uint32_t, Shader*> ResourceManager::shadersById;
+
 uint32_t ResourceManager::addTexture(const std::string &name, const std::string &path) {
     const uint32_t tex = Texture::GetTexId(path.c_str(), GL_NEAREST);
     textures[name] = tex;

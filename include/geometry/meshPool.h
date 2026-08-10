@@ -8,6 +8,7 @@
 #include "gl/EBO.h"
 #include "gl/VBO.h"
 #include "gl/VAO.h"
+#include "utils/logging/log.h"
 
 struct MeshTag {};
 
@@ -25,21 +26,18 @@ struct GPUMeshBuffer {
     uint32_t indexCount;
     MeshMode mode;
 
-    GPUMeshBuffer(const std::vector<float>& vertices, const std::vector<uint32_t>& indices, const MeshMode mode) : vbo(vertices, mode == MeshMode::STATIC ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW),
-        ebo(indices), indexCount(indices.size()), mode(mode)
-    {
+    GPUMeshBuffer(const std::vector<float>& vertices, const std::vector<uint32_t>& indices, const MeshMode mode) : vbo(vertices, mode == MeshMode::STATIC ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW), indexCount(indices.size()), mode(mode) {
         vao.Bind();
         vbo.Bind();
-        ebo.Bind();
+        ebo.Upload(indices);
 
         vao.LinkAttrib(0, 3, GL_FLOAT, 11 * sizeof(float), nullptr);
         vao.LinkAttrib(1, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
         vao.LinkAttrib(2, 2, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
         vao.LinkAttrib(3, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void*>(8 * sizeof(float)));
 
-        VAO::Unbind();
         VBO::Unbind();
-        EBO::Unbind();
+        VAO::Unbind();
     }
 };
 

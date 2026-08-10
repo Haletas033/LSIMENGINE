@@ -10,6 +10,7 @@ private:
     GLuint ID = 0;
     void Delete();
 public:
+    [[nodiscard]] GLuint GetID() const { return ID; }
     explicit VBO(const std::vector<GLfloat>& vertices, GLenum mode);
     VBO(const VBO&) = delete;
     VBO& operator=(const VBO&) = delete;

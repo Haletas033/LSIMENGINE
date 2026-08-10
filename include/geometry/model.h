@@ -20,9 +20,9 @@ private:
     std::vector<float> getFloats(json accessor);
     std::vector<GLuint> getIndices(json accessor);
 
-    void TraverseNode(const unsigned int nextNode, const glm::mat4 &matrix);
+    void TraverseNode(Registry &registry, unsigned int nextNode, const glm::mat4 &matrix);
 
-    void getTextures(Mesh &model);
+    void getTextures(Registry &registry, EntityHandle &model);
 
     static std::vector<glm::vec2> groupFloatsVec2(const std::vector<float> &floatVec);
 
@@ -32,15 +32,15 @@ private:
 
 
 public:
-    std::vector<Mesh> meshes;
+    std::vector<EntityHandle> meshes;
 
-    explicit Model(const char* file);
+    explicit Model(Registry& registry, const char *file);
     Model(Model&&) = default;
     Model& operator=(Model&&) = default;
     Model(const Model&) = delete;
     Model& operator=(const Model&) = delete;
 
-    std::vector<Mesh> loadMesh(unsigned int indMesh);
+    std::vector<EntityHandle> loadMesh(Registry &registry, unsigned int indMesh);
 
 
 };

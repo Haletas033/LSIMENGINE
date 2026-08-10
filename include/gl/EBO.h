@@ -9,7 +9,11 @@ private:
     GLuint ID = 0;
     void Delete();
 public:
-    explicit EBO(const std::vector<GLuint>& indices);
+    [[nodiscard]] GLuint GetID() const { return ID; }
+    explicit EBO();
+
+    void Upload(const std::vector<GLuint> &indices) const;
+
     EBO(const EBO&) = delete;
     EBO& operator=(const EBO&) = delete;
     EBO(EBO &&other) noexcept;

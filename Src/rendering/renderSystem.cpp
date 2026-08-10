@@ -19,6 +19,7 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                 glm::mat4 model = transform->getModelMatrix();
 
                 const Shader *shader = ResourceManager::getShaderById(material->getShader());
+                shader->Activate();
 
                 GLuint modelLoc = shader->GetLocation("model");
                 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -27,8 +28,6 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                 glUniformMatrix3fv(normalLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
                 GLuint viewPosLoc = shader->GetLocation("viewPos");
                 glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera.Position));
-
-                shader->Activate();
 
                 int unit = 0;
                 for (const auto& [name, texId] : material->getTextures()) {

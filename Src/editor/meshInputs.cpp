@@ -17,8 +17,9 @@ TransformAccessor MeshInputs::TransformToProperty(Transform& transform, SharedSt
 			return { [&transform]{ return transform.getPosition(); },
 				 [&transform](const glm::vec3& v){ transform.setPosition(v); } };
 		case SharedState::Transform::ROTATION:
-			return { [&transform]{ return glm::eulerAngles(transform.getRotation()); },
-				 [&transform](const glm::vec3& v){ transform.setRotation(v); } };
+			return { [&transform] {
+				return glm::degrees(glm::eulerAngles(transform.getRotation())); },
+			[&transform](const glm::vec3& v) { transform.setRotation(v); } };
 		case SharedState::Transform::SCALE:
 			return { [&transform]{ return transform.getScale(); },
 				 [&transform](const glm::vec3& v){ transform.setScale(v); } };
@@ -105,7 +106,7 @@ void MeshInputs::Init(Registry& registry, MeshPool& meshPool, SharedState &share
 	});
 
 	meshInputs.addFunctionForAction("add_mesh", [&](const Inputs::InputContext& context) {
-	    Mesh::create(sharedState.selected_mesh_type(), MeshMode::STATIC, registry, meshPool);
+		sharedState.current_meshes() = {Mesh::create(sharedState.selected_mesh_type(), MeshMode::STATIC, registry, meshPool)};
 	});
 
 	meshInputs.addFunctionForAction("delete_mesh", [&](const Inputs::InputContext& context) {

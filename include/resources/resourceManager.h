@@ -18,6 +18,12 @@ public:
     static std::unordered_map<std::string, Shader>& getShaders() { return shaders; }
     static Shader &addShader(const std::string &name, Shader &&shaderObj);
     static Shader* getShaderById(uint32_t id);
+
+    static void clear() {
+        shadersById.clear();
+        shaders.clear();
+        textures.clear();
+    }
 };
 
 #endif //LSIM_RESOURCEMANAGER_H

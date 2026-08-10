@@ -11,6 +11,7 @@
 
 #include "geometry/mesh.h"
 #include "glm/ext/matrix_projection.hpp"
+#include "rendering/meshRenderer.h"
 
 class meshPicking {
 public:
@@ -77,27 +78,31 @@ public:
     }
 
 
-    static int pickMesh(const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes,
-                        const glm::vec3 &rayOrigin,
-                        const glm::vec3 &rayDir,
-                        const bool useSizeFunc = false,
-                        const std::function<glm::vec3(Mesh*)> &sizeFunc = nullptr) {
-        int selectedIndex = -1;
-        float closetDistance = std::numeric_limits<float>::max();
+    static std::optional<EntityHandle> pickMesh(Registry& registry,
+                    const glm::vec3 &rayOrigin,
+                    const glm::vec3 &rayDir,
+                    const bool useSizeFunc = false,
+                    const std::function<glm::vec3(EntityHandle)> &sizeFunc = nullptr) {
+        std::optional<EntityHandle> selected;
+        float closestDistance = std::numeric_limits<float>::max();
 
-         for (int i = 0; i < meshes.size(); ++i) {
-             float distance;
+        for (const EntityHandle& e : registry.getAllAlive()) {
+            if (!registry.hasComponent<Transform>(e)) continue;
+            if (!registry.hasComponent<MeshRenderer>(e)) continue;
 
-             if (RayIntersectsBoundingBox(rayOrigin, rayDir, meshes[i][0]->position, useSizeFunc ? sizeFunc(meshes[i][0].get()) : meshes[i][0]->scale, distance)) {
+            auto* transform = registry.getComponent<Transform>(e);
 
-                 if (distance < closetDistance) {
-                     selectedIndex = i;
-                     closetDistance = distance;
-                 }
-             }
-         }
+            float distance;
+            glm::vec3 size = useSizeFunc ? sizeFunc(e) : transform->getScale();
 
-        return selectedIndex;
+            if (RayIntersectsBoundingBox(rayOrigin, rayDir, transform->getPosition(), size, distance)) {
+                if (distance < closestDistance) {
+                    selected = e;
+                    closestDistance = distance;
+                }
+            }
+        }
+        return selected;
     }
 };
 

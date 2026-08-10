@@ -15,9 +15,13 @@
 
 #include <nlohmann/json.hpp>
 
+#include "ECS/name.h"
+#include "ECS/system.h"
 #include "editor/editorInputs.h"
+#include "geometry/transformSystem.h"
 #include "include/scene/script.h"
 #include "include/utils/texture.h"
+#include "rendering/renderSystem.h"
 #include "utils/meshPicking.h"
 
 double mouseX, mouseY;
@@ -29,116 +33,6 @@ json config;
 //Callback function for window resizing
 void framebuffer_size_callback(GLFWwindow* window, const int width, const int height){
 	glViewport(0, 0, width, height);
-}
-
-//Vertices coordinates
-std::vector<GLfloat> vertices;
-
-//Indices for vertices order
-std::vector<GLuint> indices;
-
-std::vector<std::vector<std::unique_ptr<Mesh>>> meshes;
-
-void AddMesh(Scene &scene, SharedState& sharedState, const Defaults &defaults, int &lastClickMesh, const char* workingDir) {
-	scene.addMeshSignal = false;
-
-	std::unique_ptr<Mesh> newMesh;
-
-	switch (sharedState.selected_mesh_type()) {
-		case 0:
-			newMesh = std::make_unique<Mesh>(Primitive::GenerateCube(1));
-			newMesh->name = "Cube";
-			break;
-		case 1:
-			newMesh = std::make_unique<Mesh>(Primitive::GeneratePyramid(1));
-			newMesh->name = "Pyramid";
-			break;
-		case 2:
-			newMesh = std::make_unique<Mesh>(Primitive::GeneratePlane(1));
-			newMesh->name = "Plane";
-			break;
-		case 3:
-			newMesh = std::make_unique<Mesh>(Primitive::GenerateSphere(defaults.sphereStacks, defaults.sphereSlices, 1));
-			newMesh->name = "Sphere";
-			break;
-		case 4:
-			newMesh = std::make_unique<Mesh>(Primitive::GenerateTorus(defaults.torusRingSegments, defaults.torusTubeSegments,
-			                                                           defaults.torusRingRadius, defaults.torusTubeRadius, 1));
-
-			newMesh->name = "Torus";
-			break;
-		case 5: {
-			std::vector<std::vector<float>> noiseMap = Terrain::GenerateNoiseMap(defaults.size, defaults.size, static_cast<int>(time(nullptr)),
-				defaults.scale, defaults.octaves, defaults.persistence, defaults.lacunarity);
-
-			const auto uID = static_cast<long long>(glfwGetTime() * 1'000'000'000LL);
-			const char* outputPath = (std::string(workingDir) + "resources/" + std::to_string(uID) + "terrain.png").c_str();
-			const GLuint noiseMapTexture = Terrain::noiseMapToTexture(noiseMap, outputPath);
-
-			Terrain::noiseMapToMesh(noiseMap, vertices, indices, defaults.heightScale, defaults.gridScale);
-
-			newMesh = std::make_unique<Mesh>(vertices, indices);
-			newMesh->name = "Terrain";
-			newMesh->useTexture = true;
-			newMesh->texturePath = std::to_string(uID) + "terrain.png";
-			newMesh->texId = noiseMapTexture;
-			break;
-		}
-		case 6: {
-			const auto filePath = IO::SaveDialog("Model Files\0*.gltf\0All Files\0*.*\0");
-			engineLogger("stdInfo", filePath);
-			Model model{(filePath.c_str())};
-
-			std::vector<std::unique_ptr<Mesh>> meshes;
-
-			for (auto &mesh : model.meshes) {
-				auto uniqueMesh = std::make_unique<Mesh>(std::move(mesh));
-				meshes.push_back(std::move(uniqueMesh));
-			}
-
-			auto* node = new Gui::Node{ meshes[0].get(), Gui::root, {} };
-			Gui::root->children.push_back(node);
-
-			scene.meshes.push_back(std::move(meshes));
-		}
-		default:
-			break;
-	}
-
-	if (newMesh) {
-		auto* node = new Gui::Node{ newMesh.get(), Gui::root, {} };
-		Gui::root->children.push_back(node);
-
-		scene.meshes.push_back(std::vector<std::unique_ptr<Mesh>>());
-		scene.meshes.back().push_back(std::move(newMesh));
-	}
-
-	lastClickMesh = scene.meshes.size() - 1;
-
-	engineLogger("stdInfo", "Successfully added mesh");
-}
-
-void DeleteMesh(Scene &scene, SharedState sharedState, int &lastClickMesh) {
-	scene.deleteMeshSignal = false;
-
-	for (auto it = sharedState.current_meshes().rbegin();
-	     it != sharedState.current_meshes().rend();
-	     ++it){
-		const unsigned object = *it;
-		for (const auto &mesh : scene.meshes[object]) {
-			const Mesh* meshToDelete = mesh.get();
-
-			if (Gui::Node* nodeToDelete = Gui::FindNodeByMesh(Gui::root, meshToDelete))
-				Gui::DeleteNode(nodeToDelete); // This handles reparenting children
-		}
-
-		scene.meshes.erase(scene.meshes.begin() + object);
-	}
-	sharedState.current_meshes().clear();
-	if (lastClickMesh > scene.meshes.size() -1)
-		lastClickMesh = scene.meshes.size() - 1;
-
-	engineLogger("stdInfo", "Successfully deleted mesh");
 }
 
 void AddLight(Scene &scene, int &currentLight) {
@@ -201,6 +95,9 @@ Scene scene {};
 Camera camera {};
 GLFWwindow* window;
 std::string workingDir;
+Registry registry;
+MeshPool meshPool;
+std::vector<std::unique_ptr<System>> systems;
 
 int main(int argc, char** argv) {
 	if (argc >= 2) {
@@ -259,7 +156,7 @@ int main(int argc, char** argv) {
 	}
 
 	inputs.InitInputs(window);
-	editorInputs.Init(TODO, TODO, scene, workingDir, sharedState, engineDefaults, camera, inputs);
+	editorInputs.Init(registry, meshPool, scene, workingDir, sharedState, engineDefaults, camera, inputs);
 
 	Script::InstantiateAll();
 
@@ -278,17 +175,22 @@ int main(int argc, char** argv) {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	Shader shaderProgram({vertexShader, fragmentShader});
+	ResourceManager::addShader("PBRShader", std::move(shaderProgram));
+
 	Shader instanceShaderProgram({instanceVertexShader, fragmentShader});
 	Shader skyboxShaderProgram({skyboxVert, skyboxFrag});
 
+	systems.push_back(std::make_unique<TransformSystem>());
+	systems.push_back(std::make_unique<RenderSystem>(meshPool, camera));
+
 	Gui::Initialize(window);
 
-	meshes.emplace_back();
-	meshes.back().push_back(std::make_unique<Mesh>(Primitive::GenerateCube(1)));
-
-	meshes.back()[0]->name = "First Cube";
-	auto* node = new Gui::Node{ meshes.back()[0].get(), Gui::root, {} };
+	EntityHandle firstCube = Mesh::create(Primitive::CUBE, MeshMode::STATIC, registry, meshPool, Material::createStandardPBR(), Transform());
+	sharedState.current_meshes() = {firstCube};
+	registry.addComponent<Name>(firstCube, Name{"First Cube"});
+	auto* node = new Gui::Node{ firstCube, Gui::root, {} };
 	Gui::root->children.push_back(node);
+
 	engineLogger("stdInfo", "Successfully created the default \"First Cube\"");
 
 	engineLogger("stdInfo", "Successfully created the default \"First Cube\"");
@@ -303,10 +205,10 @@ int main(int argc, char** argv) {
 
 	float deltaTime = 0.0f;
 	float lastTime = 0.0f;
-	int lastClickMesh = -1;
+	std::optional<EntityHandle> lastClickMesh;
 	int currentLight = 0;
 
-	scene = Scene{ std::move(meshes), std::move(lights) };
+	scene = Scene{ std::move(lights) };
 	engineLogger("stdInfo", "Successfully moved meshes and lights into the main scene");
 
 	if (!workingDir.empty()) {
@@ -320,7 +222,7 @@ int main(int argc, char** argv) {
 	}
 
 	//Create skybox
-	std::unique_ptr<Mesh> skybox = std::make_unique<Mesh>(Primitive::GenerateCube(1));
+	// std::unique_ptr<Mesh> skybox = std::make_unique<Mesh>(Primitive::GenerateCube(1));
 
 	//Skybox faces
 	std::array<std::string, 6> faces = {
@@ -390,20 +292,7 @@ int main(int argc, char** argv) {
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
 			auto viewport = glm::vec4(0.0f, 0.0f, windowWidth, windowHeight);
 			auto rayDir = meshPicking::GetMouseRay(mouseX, mouseY, camera.projection, camera.view, viewport);
-			lastClickMesh = meshPicking::pickMesh(scene.meshes, camera.Position, rayDir);
-		}
-
-
-		if (scene.addMeshSignal) {
-			AddMesh(scene, sharedState, engineDefaults, lastClickMesh, workingDir.c_str());
-			engineLogger("stdInfo", "Adding mesh");
-		}
-
-		if (scene.deleteMeshSignal) {
-			if (!scene.meshes.empty()) {
-				DeleteMesh(scene, sharedState, lastClickMesh);
-				engineLogger("stdInfo", "Deleting mesh");
-			}
+			lastClickMesh = meshPicking::pickMesh(registry, camera.Position, rayDir);
 		}
 
 		if (scene.addLightSignal && scene.lights.size() < engineDefaults.MAX_LIGHTS) {
@@ -428,56 +317,35 @@ int main(int argc, char** argv) {
 		shaderProgram.Activate();
 
 		//Draw all meshes
-		if (!scene.meshes.empty()) {
-			for (auto& objectPtr : scene.meshes) {
-				glm::mat4 finalMatrix = objectPtr[0]->modelMatrix;
+		for (auto& sys : systems) sys->update(registry, deltaTime);
 
-				for (auto& meshPtr : objectPtr) {
-					Mesh& mesh = *meshPtr;
-
-					GLint useTexLoc = shaderProgram.GetLocation("useTexture");
-					GLint useNormalMapLoc = shaderProgram.GetLocation("useNormalMap");
-					glUniform1i(useTexLoc, mesh.useTexture);
-					glUniform1i(useNormalMapLoc, mesh.useNormalMap);
-
-					shaderProgram.SetVec4("meshColor", 1, glm::value_ptr(mesh.color));
-
-					shaderProgram.SetFloat("roughness", mesh.roughness);
-					shaderProgram.SetVec3("F0", 1, glm::value_ptr(glm::vec3(mesh.F0)));
-
-					auto updatedMatrix = meshPtr->modelMatrix == finalMatrix ? finalMatrix : finalMatrix * meshPtr->modelMatrix;
-					mesh.Draw(shaderProgram, camera, updatedMatrix);
-				}
-			}
-		}
-
-		//Switch to instanceShaderProgram to draw instances
-		instanceShaderProgram.Activate();
-
-		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, instanceShaderProgram, "camMatrix", aspect);
-
-		DrawLights(instanceShaderProgram, engineDefaults, scene);
-
-		//Draw all instanced meshes
-		for (auto& instance : scene.instancedMeshes) {
-			Mesh& mesh = *instance->mesh;
-
-			instanceShaderProgram.SetInt("tex0", 0);
-			instanceShaderProgram.SetInt("normal0", 1);
-
-			GLint useTexLoc = shaderProgram.GetLocation("useTexture");
-			GLint useNormalMapLoc = shaderProgram.GetLocation("useNormalMap");
-			glUniform1i(useTexLoc, mesh.useTexture);
-			glUniform1i(useNormalMapLoc, mesh.useNormalMap);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, mesh.texId);
-
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, mesh.normalMapId);
-
-			instance->DrawInstances(instanceShaderProgram, camera);
-		}
+		// //Switch to instanceShaderProgram to draw instances
+		// instanceShaderProgram.Activate();
+		//
+		// camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, instanceShaderProgram, "camMatrix", aspect);
+		//
+		// DrawLights(instanceShaderProgram, engineDefaults, scene);
+		//
+		// //Draw all instanced meshes
+		// for (auto& instance : scene.instancedMeshes) {
+		// 	Mesh& mesh = *instance->mesh;
+		//
+		// 	instanceShaderProgram.SetInt("tex0", 0);
+		// 	instanceShaderProgram.SetInt("normal0", 1);
+		//
+		// 	GLint useTexLoc = shaderProgram.GetLocation("useTexture");
+		// 	GLint useNormalMapLoc = shaderProgram.GetLocation("useNormalMap");
+		// 	glUniform1i(useTexLoc, mesh.useTexture);
+		// 	glUniform1i(useNormalMapLoc, mesh.useNormalMap);
+		//
+		// 	glActiveTexture(GL_TEXTURE0);
+		// 	glBindTexture(GL_TEXTURE_2D, mesh.texId);
+		//
+		// 	glActiveTexture(GL_TEXTURE1);
+		// 	glBindTexture(GL_TEXTURE_2D, mesh.normalMapId);
+		//
+		// 	instance->DrawInstances(instanceShaderProgram, camera);
+		// }
 
 		//Draw skybox
 		glDepthFunc(GL_LEQUAL);
@@ -497,19 +365,13 @@ int main(int argc, char** argv) {
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexId);
 		skyboxShaderProgram.SetInt("skybox", 0);
 
-		skybox->Draw(skyboxShaderProgram, camera, skybox->modelMatrix);
+		// skybox->Draw(skyboxShaderProgram, camera, skybox->modelMatrix);
 
 		glDepthFunc(GL_LESS);
 
 		//Run Update() function for all scripts
 		for (auto script : Script::GetAllScripts()) {
 			script->Update(deltaTime);
-		}
-
-		//Update every mesh
-		for (const auto &object : scene.meshes) {
-			for (const auto &mesh : object)
-				mesh.get()->ApplyTransformations();
 		}
 
 		//Update every light
@@ -534,7 +396,7 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(TODO, sharedState, workingDir, scene.meshes, selectedMeshType, lastClickMesh);
+		Gui::Transform(registry, sharedState, workingDir,selectedMeshType);
 
 		Gui::Lighting(scene.lights, currentLight);
 
@@ -552,7 +414,7 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Hierarchy", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		if (int clickedMesh = Gui::Hierarchy(scene.meshes); clickedMesh != -1) lastClickMesh = clickedMesh;
+		if (std::optional<EntityHandle> clickedMesh = Gui::Hierarchy(registry); clickedMesh) lastClickMesh = clickedMesh;
 
 		ImGui::End();
 
@@ -581,8 +443,10 @@ int main(int argc, char** argv) {
 	Gui::DeleteNodeRecursively(Gui::root);
 	Gui::CleanUp();
 
-	scene.meshes.clear();
-	scene.instancedMeshes.clear();
+	systems.clear();
+	registry = Registry{};
+	meshPool = MeshPool{};
+	ResourceManager::clear();
 
 	glfwDestroyWindow(window);
 	glfwTerminate();

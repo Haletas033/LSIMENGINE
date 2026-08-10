@@ -14,11 +14,10 @@
 namespace Mesh {
     EntityHandle create(Primitive::Type primitive, MeshMode mode,
                         Registry &registry = Registry::getDefaultRegistry(), MeshPool &meshPool = MeshPool::getDefaultMeshPool(), const
-                        Material &material = Material(), const Transform &transform
-                                        = Transform());
+                        Material &material = Material::createStandardPBR(), const Transform &transform = Transform());
 
-    EntityHandle create(const std::vector<float> &vertices, MeshMode mode, const std::vector<uint32_t> &indices,
+    EntityHandle create(const std::vector<float> &vertices, const std::vector<uint32_t> &indices, MeshMode mode,
                         Registry &registry = Registry::getDefaultRegistry(), MeshPool &meshPool = MeshPool::getDefaultMeshPool(), const
-                        Material &material = Material(), const Transform &transform = Transform());
+                        Material &material = Material::createStandardPBR(), const Transform &transform = Transform());
 }
 #endif //MESH_CLASS_H
