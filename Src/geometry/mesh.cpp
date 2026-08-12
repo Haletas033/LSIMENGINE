@@ -2,6 +2,7 @@
 
 #include "ECS/name.h"
 #include "geometry/terrain.h"
+#include "inputs/gui.h"
 #include "rendering/meshRenderer.h"
 
 extern Defaults engineDefaults;
@@ -45,12 +46,17 @@ EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, 
                         mat->setProperty("useTexture", 1);
                         // newMesh->texturePath = std::to_string(uID) + "terrain.png";
                         mat->addProperty<int>("texId", static_cast<int>(noiseMapTexture));
+                        auto* node = new Gui::Node{ mesh, Gui::root, {} };
+                        Gui::root->children.push_back(node);
                         return mesh;
                 }
                 case Primitive::MODEL:
                         break; // TODO
         }
-        return create(meshData.vertices, meshData.indices, mode, registry, meshPool, material, transform);
+        EntityHandle mesh = create(meshData.vertices, meshData.indices, mode, registry, meshPool, material, transform);
+        auto* node = new Gui::Node{ mesh, Gui::root, {} };
+        Gui::root->children.push_back(node);
+        return mesh;
 }
 
 EntityHandle Mesh::create(const std::vector<float>& vertices, const std::vector<uint32_t>& indices, const MeshMode mode,
