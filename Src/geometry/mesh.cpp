@@ -1,6 +1,7 @@
 #include <geometry/mesh.h>
 
 #include "ECS/name.h"
+#include "geometry/model.h"
 #include "geometry/terrain.h"
 #include "inputs/gui.h"
 #include "rendering/meshRenderer.h"
@@ -50,8 +51,13 @@ EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, 
                         Gui::root->children.push_back(node);
                         return mesh;
                 }
-                case Primitive::MODEL:
-                        break; // TODO
+                case Primitive::MODEL: {
+                        const auto filePath = IO::OpenDialog("Model Files\0*.gltf\0All Files\0*.*\0");
+                        engineLogger("stdInfo", filePath);
+
+                        const Model model{registry, meshPool, filePath.c_str()};
+                        return model.meshes[0];
+                }
         }
         EntityHandle mesh = create(meshData.vertices, meshData.indices, mode, registry, meshPool, material, transform);
         auto* node = new Gui::Node{ mesh, Gui::root, {} };

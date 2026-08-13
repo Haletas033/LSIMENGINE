@@ -9,7 +9,7 @@
 
 extern Scene scene;
 
-Model::Model(Registry& registry, const char *file) {
+Model::Model(Registry& registry, MeshPool& meshPool, const char *file) {
     std::string text = IO::GetFileContents(file);
     JSON = json::parse(text);
 
@@ -20,7 +20,7 @@ Model::Model(Registry& registry, const char *file) {
     const unsigned int sceneIndex = JSON.value("scene", 0);
     json sceneNodes = JSON["scenes"][sceneIndex]["nodes"];
     for (const auto &nodeIndex : sceneNodes) {
-        TraverseNode(registry, nodeIndex, glm::mat4(1.0f));
+        TraverseNode(registry, meshPool, nodeIndex, glm::mat4(1.0f));
     }
 }
 
@@ -28,11 +28,11 @@ std::vector<unsigned char> Model::getData() {
     const std::string uri = JSON["buffers"][0]["uri"];
 
     const auto fileStr = std::string(file);
-    const std::string fileDir = fileStr.substr(0, fileStr.find_last_of('\\') + 1);
-    std::string bytesText = IO::GetFileContents(fileDir + uri);
+    const std::string fileDir = std::filesystem::path(fileStr).parent_path().string();
+    std::string bytesText = IO::GetFileContents(std::filesystem::path(fileDir) / uri);
 
-    std::vector<unsigned char> data(bytesText.begin(), bytesText.end());
-    return data;
+    std::vector<unsigned char> fileData(bytesText.begin(), bytesText.end());
+    return fileData;
 }
 
 
@@ -128,7 +128,7 @@ std::vector<glm::vec4> Model::groupFloatsVec4(const std::vector<float> &floatVec
     return vectors;
 }
 
-std::vector<EntityHandle> Model::loadMesh(Registry& registry, const unsigned int indMesh) {
+std::vector<EntityHandle> Model::loadMesh(Registry& registry, MeshPool& meshPool, const unsigned int indMesh) {
     std::vector<EntityHandle> models;
     json primitives = JSON["meshes"][indMesh]["primitives"];
     for (unsigned int i = 0; i < primitives.size(); i++) {
@@ -160,14 +160,16 @@ std::vector<EntityHandle> Model::loadMesh(Registry& registry, const unsigned int
             vertices.push_back(texUVs[j].y);
         }
 
-        EntityHandle model = Mesh::create(vertices, indices, MeshMode::STATIC);
+        EntityHandle model = Mesh::create(vertices, indices, MeshMode::STATIC, registry, meshPool);
+        auto* node = new Gui::Node{ model, Gui::root, {} };
+        Gui::root->children.push_back(node);
         getTextures(registry, model);
         models.push_back(model);
     }
     return models;
 }
 
-void Model::TraverseNode(Registry& registry, const unsigned int nextNode, const glm::mat4 &matrix) {
+void Model::TraverseNode(Registry& registry, MeshPool& meshPool, const unsigned int nextNode, const glm::mat4 &matrix) {
     json node = JSON["nodes"][nextNode];
 
     //Load translation
@@ -228,7 +230,7 @@ void Model::TraverseNode(Registry& registry, const unsigned int nextNode, const 
 
     if (node.find("mesh") != node.end())
     {
-        auto models = loadMesh(registry, node["mesh"]);
+        auto models = loadMesh(registry, meshPool, node["mesh"]);
         for (auto &model : models) {
             auto* transform = registry.getComponent<Transform>(model);
             const auto euler = glm::degrees(glm::eulerAngles(rotation));
@@ -242,7 +244,7 @@ void Model::TraverseNode(Registry& registry, const unsigned int nextNode, const 
     if (node.find("children") != node.end())
     {
         for (const auto & i : node["children"])
-            TraverseNode(registry, i, matNextNode);
+            TraverseNode(registry, meshPool, i, matNextNode);
     }
 }
 
