@@ -193,8 +193,6 @@ int main(int argc, char** argv) {
 
 	engineLogger("stdInfo", "Successfully created the default \"First Cube\"");
 
-	engineLogger("stdInfo", "Successfully created the default \"First Cube\"");
-
 	//Enable the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
@@ -205,7 +203,6 @@ int main(int argc, char** argv) {
 
 	float deltaTime = 0.0f;
 	float lastTime = 0.0f;
-	std::optional<EntityHandle> lastClickMesh;
 	int currentLight = 0;
 
 	scene = Scene{ std::move(lights) };
@@ -292,7 +289,9 @@ int main(int argc, char** argv) {
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
 			auto viewport = glm::vec4(0.0f, 0.0f, windowWidth, windowHeight);
 			auto rayDir = meshPicking::GetMouseRay(mouseX, mouseY, camera.projection, camera.view, viewport);
-			lastClickMesh = meshPicking::pickMesh(registry, camera.Position, rayDir);
+			if (const auto e = meshPicking::pickMesh(registry, camera.Position, rayDir); e.has_value()) {
+				sharedState.current_meshes() = {e.value()};
+			}
 		}
 
 		if (scene.addLightSignal && scene.lights.size() < engineDefaults.MAX_LIGHTS) {
@@ -414,7 +413,7 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Hierarchy", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		if (std::optional<EntityHandle> clickedMesh = Gui::Hierarchy(registry); clickedMesh) lastClickMesh = clickedMesh;
+		if (std::optional<EntityHandle> clickedMesh = Gui::Hierarchy(registry); clickedMesh) sharedState.current_meshes() = {clickedMesh.value()};
 
 		ImGui::End();
 
