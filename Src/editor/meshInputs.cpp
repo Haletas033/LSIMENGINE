@@ -2,6 +2,7 @@
 
 #include "LSIMhelpers.h"
 #include "geometry/mesh.h"
+#include "inputs/gui.h"
 
 void MeshInputs::add(glm::vec3& lhs, const glm::vec3 rhs) {
 	lhs += rhs;
@@ -106,12 +107,18 @@ void MeshInputs::Init(Registry& registry, MeshPool& meshPool, SharedState &share
 	});
 
 	meshInputs.addFunctionForAction("add_mesh", [&](const Inputs::InputContext& context) {
-		sharedState.current_meshes() = {Mesh::create(sharedState.selected_mesh_type(), MeshMode::STATIC, registry, meshPool)};
+		const EntityHandle mesh = Mesh::create(sharedState.selected_mesh_type(), MeshMode::STATIC, registry, meshPool);
+		sharedState.current_meshes() = {mesh};
+		auto* node = new Gui::Node{ mesh, Gui::root, {} };
+		Gui::root->children.push_back(node);
 	});
 
 	meshInputs.addFunctionForAction("delete_mesh", [&](const Inputs::InputContext& context) {
 	    for (const EntityHandle& e : sharedState.current_meshes()) {
-		registry.destroyEntity(e);
+	    	if (Gui::Node *node = Gui::FindNodeByMesh(Gui::root, e); node != nullptr) {
+	    		std::erase(node->parent->children, node);
+	    		Gui::DeleteNodeRecursively(registry, node);
+	    	}
 	    }
 	});
 

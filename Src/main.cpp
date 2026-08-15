@@ -188,6 +188,8 @@ int main(int argc, char** argv) {
 	EntityHandle firstCube = Mesh::create(Primitive::CUBE, MeshMode::STATIC, registry, meshPool, Material::createStandardPBR(), Transform());
 	sharedState.current_meshes() = {firstCube};
 	registry.addComponent<Name>(firstCube, Name{"First Cube"});
+	auto* node = new Gui::Node{ firstCube, Gui::root, {} };
+	Gui::root->children.push_back(node);
 
 	engineLogger("stdInfo", "Successfully created the default \"First Cube\"");
 
@@ -438,7 +440,7 @@ int main(int argc, char** argv) {
 	}
 	engineLogger("stdInfo", "Exiting L-SIMENGINE");
 
-	Gui::DeleteNodeRecursively(Gui::root);
+	Gui::DeleteNodeRecursively(registry, Gui::root);
 	Gui::CleanUp();
 
 	systems.clear();

@@ -59,9 +59,9 @@ public:
 
     static void DeleteNode(Node *node);
 
-    static void DeleteNodeRecursively(Node *node);
+    static void DeleteNodeRecursively(Registry &registry, Node *node);
 
-    static void ClearRoot();
+    static void ClearRoot(Registry &registry);
 
     static Node *FindNodeByMesh(Node *node, const EntityHandle &mesh);
 
