@@ -90,6 +90,7 @@ add_executable(LSIM
         Src/geometry/meshData.cpp
         include/geometry/transformSystem.h
         include/ECS/name.h
+        include/ECS/componentTraits.h
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include
