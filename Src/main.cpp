@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
 
 	EntityHandle firstCube = Mesh::create(Primitive::CUBE, MeshMode::STATIC, registry, meshPool, Material::createStandardPBR(), Transform());
 	sharedState.current_meshes() = {firstCube};
-	registry.addComponent<Name>(firstCube, Name{"First Cube"});
+	registry.getComponent<Name>(firstCube)->value = "First Cube";
 	auto* node = new Gui::Node{ firstCube, Gui::root, {} };
 	Gui::root->children.push_back(node);
 

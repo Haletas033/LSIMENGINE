@@ -6,6 +6,11 @@
 #include "inputs/gui.h"
 #include "rendering/meshRenderer.h"
 
+#include "ECS/name.traits.h"
+#include "rendering/material.traits.h"
+#include "rendering/meshRenderer.traits.h"
+#include "geometry/transform.traits.h"
+
 extern Defaults engineDefaults;
 extern std::string workingDir;
 
@@ -68,9 +73,9 @@ EntityHandle Mesh::create(const std::vector<float>& vertices, const std::vector<
         MeshData data{ vertices, {}, indices };
         const MeshHandle handle = meshPool.upload(data, mode);
         registry.addComponent<Name>(e, {"Mesh"});
+        registry.addComponent<Transform>(e, transform);
         registry.addComponent<Material>(e, material);
         registry.addComponent<MeshRenderer>(e, MeshRenderer{handle, mode});
-        registry.addComponent<Transform>(e, transform);
 
         return e;
 }
