@@ -395,7 +395,7 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(registry, sharedState, workingDir,selectedMeshType);
+		Gui::Transform(registry, sharedState);
 
 		Gui::Lighting(scene.lights, currentLight);
 

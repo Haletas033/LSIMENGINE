@@ -44,8 +44,7 @@ public:
     static void RemoveTexture(const std::string &slotName,
                                Registry &registry, const std::set<EntityHandle> &currentMeshes);
 
-    static void Transform(Registry &registry, SharedState &sharedState, const std::string &workingDir, int
-                          &selectedMeshType);
+    static void Transform(Registry &registry, SharedState &sharedState);
 
     static void Lighting(std::vector<Light> &lights, int &currentLight);
 
