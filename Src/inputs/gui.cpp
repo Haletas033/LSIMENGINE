@@ -101,8 +101,7 @@ void Gui::Transform(Registry &registry, SharedState &sharedState) {
                 const std::optional refMesh = *currentMeshes.begin();
 
                 for (const auto component: registry.getComponentTypes(refMesh.value())) {
-                        std::any refComponent = registry.getComponent(refMesh.value(), component);
-                        registry.getInspectFunc(component)(registry, sharedState, refComponent);
+                        registry.getInspectFunc(component)(registry, sharedState, refMesh.value());
                 }
         }
 }

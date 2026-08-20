@@ -1,10 +1,10 @@
 #include <ECS/name.traits.h>
 
-void ComponentTraits<Name>::inspect(Registry& registry, SharedState sharedState, const std::any &self) {
-        const auto &[name] = std::any_cast<Name>(self);
+void ComponentTraits<Name>::inspect(Registry& registry, SharedState sharedState, const EntityHandle self) {
+        const auto name = registry.getComponent<Name>(self);
 
         static char nameBuffer[128];
-        strncpy(nameBuffer, name.c_str(), sizeof(nameBuffer));
+        strncpy(nameBuffer, name->value.c_str(), sizeof(nameBuffer));
         nameBuffer[sizeof(nameBuffer)-1] = '\0';
 
         if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {

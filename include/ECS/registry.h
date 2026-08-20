@@ -21,7 +21,7 @@ private:
         std::unordered_map<EntityHandle, std::vector<std::type_index>> componentTypes{};
         std::unordered_map<std::type_index, std::function<void(uint32_t)>> clearFuncs{};
         std::unordered_map<std::type_index, std::function<std::any(uint32_t)>> getComponentFuncs{};
-        std::unordered_map<std::type_index, std::function<void(Registry&, SharedState, const std::any&)>> inspectFuncs{};
+        std::unordered_map<std::type_index, std::function<void(Registry&, SharedState, EntityHandle)>> inspectFuncs{};
 
 public:
         template<typename T>
@@ -36,7 +36,7 @@ public:
                 auto &slot = pools[id];
                 componentTypes[e].emplace_back(id);
                 if (!slot.has_value()) {
-                        inspectFuncs[id] = ComponentTraits<T>::inspect;
+                        inspectFuncs[id] = ComponentTraits<Component>::inspect;
 
                         slot = Pool<Component>{};
 
@@ -59,11 +59,11 @@ public:
         }
 
         template <typename T>
-        void registerInspect(std::function<void(Registry&, SharedState, const std::any&)> fn) {
+        void registerInspect(std::function<void(Registry&, SharedState, EntityHandle)> fn) {
                 inspectFuncs[std::type_index(typeid(T))] = std::move(fn);
         }
 
-        std::function<void(Registry&, SharedState, const std::any&)> getInspectFunc(const std::type_index id) {
+        std::function<void(Registry&, SharedState, EntityHandle)> getInspectFunc(const std::type_index id) {
                 return inspectFuncs[id];
         }
 

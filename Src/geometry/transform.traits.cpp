@@ -5,16 +5,16 @@
 #include "editor/sharedState.h"
 #include "glm/gtc/type_ptr.hpp"
 
-void ComponentTraits<Transform>::inspect(Registry& registry, SharedState sharedState, const std::any &self) {
+void ComponentTraits<Transform>::inspect(Registry& registry, SharedState sharedState, const EntityHandle self) {
         if (ImGui::CollapsingHeader("Transform")) {
-                const auto &transform = std::any_cast<Transform>(self);
+                const auto transform = registry.getComponent<Transform>(self);
 
                 static bool uniformScaleLock = true;
-                float uniformScale = transform.getScale().x;
+                float uniformScale = transform->getScale().x;
 
-                glm::vec3 position = transform.getPosition();
-                glm::vec3 rotation = transform.getRotationEuler();
-                glm::vec3 scale = transform.getScale();
+                glm::vec3 position = transform->getPosition();
+                glm::vec3 rotation = transform->getRotationEuler();
+                glm::vec3 scale = transform->getScale();
 
                 const auto currentMeshes = sharedState.current_meshes();
 

@@ -7,7 +7,7 @@
 
 template <>
 struct ComponentTraits<Material> {
-        static void inspect(Registry &registry, SharedState sharedState, const std::any &self);
+        static void inspect(Registry &registry, SharedState sharedState, EntityHandle self);
         static void serialize(const std::any &transform);
         static void deserialize(const std::any &transform);
 };
