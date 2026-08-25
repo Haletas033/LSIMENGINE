@@ -1,7 +1,3 @@
-//
-// Created by halet on 9/10/2025.
-//
-
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 

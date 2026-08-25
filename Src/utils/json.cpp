@@ -1,7 +1,3 @@
-//
-// Created by halet on 9/7/2025.
-//
-
 #include <include/utils/json.h>
 
 // Map for colour macros

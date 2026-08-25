@@ -1,20 +1,16 @@
 #include "../../include/inputs/gui.h"
 
 #include <iterator>
+#include <memory>
+#include <algorithm>
 
 #include "ECS/name.h"
 #include "editor/sharedState.h"
 #include "geometry/transform.traits.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
-#include "gl/VAO.h"
+
 #include "include/utils/texture.h"
 
 Gui::Node *Gui::root = nullptr;
-
-#include <memory>
-#include <algorithm>
 
 //Map ANSI codes to there RGB values
 std::unordered_map<std::string, ImColor> Gui::colourMap = {

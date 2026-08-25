@@ -65,5 +65,6 @@ void ComponentTraits<Material>::inspect(Registry& registry, SharedState sharedSt
                                 }
                         }, property.second);
                 }
+
         }
 }

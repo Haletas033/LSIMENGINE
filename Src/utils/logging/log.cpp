@@ -1,7 +1,3 @@
-//
-// Created by halet on 9/7/2025.
-//
-
 #include <include/utils/logging/log.h>
 
 #include "utils/json.h"

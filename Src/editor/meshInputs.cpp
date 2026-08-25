@@ -114,12 +114,13 @@ void MeshInputs::Init(Registry& registry, MeshPool& meshPool, SharedState &share
 	});
 
 	meshInputs.addFunctionForAction("delete_mesh", [&](const Inputs::InputContext& context) {
-	    for (const EntityHandle& e : sharedState.current_meshes()) {
-	    	if (Gui::Node *node = Gui::FindNodeByMesh(Gui::root, e); node != nullptr) {
-	    		std::erase(node->parent->children, node);
-	    		Gui::DeleteNodeRecursively(registry, node);
-	    	}
-	    }
+		for (const EntityHandle& e : sharedState.current_meshes()) {
+	    		if (Gui::Node *node = Gui::FindNodeByMesh(Gui::root, e); node != nullptr) {
+	    			std::erase(node->parent->children, node);
+	    			Gui::DeleteNodeRecursively(registry, node);
+	    		}
+		}
+		sharedState.current_meshes() = {};
 	});
 
 	// Generate 0-9 bindings
