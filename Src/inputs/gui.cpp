@@ -13,16 +13,13 @@
 Gui::Node *Gui::root = nullptr;
 
 //Map ANSI codes to there RGB values
+#define COL(NAME, CODE, RGB) { Ansi::NAME, ImColor RGB },
+
 std::unordered_map<std::string, ImColor> Gui::colourMap = {
-        {Ansi::BLACK, ImColor(12, 12, 12)}, {Ansi::RED, ImColor(197, 15, 31)}, {Ansi::GREEN, ImColor(19, 161, 14)},
-        {Ansi::YELLOW, ImColor(193, 156, 0)}, {Ansi::BLUE, ImColor(0, 55, 218)}, {Ansi::MAGENTA, ImColor(136, 23, 152)},
-        {Ansi::CYAN, ImColor(58, 150, 221)}, {Ansi::WHITE, ImColor(204, 204, 204)},
-        {Ansi::BRIGHT_RED, ImColor(255, 0, 0)}, {Ansi::BRIGHT_GREEN, ImColor(0, 255, 0)},
-        {Ansi::BRIGHT_YELLOW, ImColor(255, 255, 0)}, {Ansi::BRIGHT_BLUE, ImColor(0, 0, 255)},
-        {Ansi::BRIGHT_MAGENTA, ImColor(255, 0, 255)}, {Ansi::BRIGHT_CYAN, ImColor(0, 255, 255)},
-        {Ansi::BRIGHT_WHITE, ImColor(255, 255, 255)}, {Ansi::INFO_COLOUR, ImColor(0, 55, 218)},
-        {Ansi::WARNING_COLOUR, ImColor(193, 156, 0)}, {Ansi::ERROR_COLOUR, ImColor(197, 15, 31)}
+        #include "include/utils/logging/colorCodes.def"
 };
+
+#undef COL
 
 void Gui::Initialize(GLFWwindow *window) {
         IMGUI_CHECKVERSION();

@@ -3,16 +3,11 @@
 // Map for colour macros
 
 using json = nlohmann::ordered_json;
+
+#define COL(NAME, CODE, RGB) {#NAME, Ansi::NAME},
+
 std::unordered_map<std::string, const char*> JSONManager::colourMap = {
-    {"RED", Ansi::RED},                         {"BLUE", Ansi::BLUE},
-    {"BLACK", Ansi::BLACK},                     {"GREEN", Ansi::GREEN},
-    {"YELLOW", Ansi::YELLOW},                   {"MAGENTA", Ansi::MAGENTA},
-    {"CYAN", Ansi::CYAN},                       {"WHITE", Ansi::WHITE},
-    {"BRIGHT_RED", Ansi::BRIGHT_RED},           {"BRIGHT_GREEN", Ansi::BRIGHT_GREEN},
-    {"BRIGHT_YELLOW", Ansi::BRIGHT_YELLOW},     {"BRIGHT_BLUE", Ansi::BRIGHT_BLUE},
-    {"BRIGHT_MAGENTA", Ansi::BRIGHT_MAGENTA},   {"BRIGHT_CYAN", Ansi::BRIGHT_CYAN},
-    {"BRIGHT_WHITE", Ansi::BRIGHT_WHITE},       {"INFO_COLOUR", Ansi::INFO_COLOUR},
-    {"WARNING_COLOUR", Ansi::WARNING_COLOUR},   {"ERROR_COLOUR", Ansi::ERROR_COLOUR}
+    #include <utils/logging/colorCodes.def>
 };
 
 void JSONManager::LoadJSON(const std::string &path, json &config) {

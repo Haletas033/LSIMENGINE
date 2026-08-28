@@ -36,19 +36,19 @@
   "loggers": {
     "stdInfo": {
       "hasTimeStamp": true,
-      "colour": "INFO_COLOUR",
+      "colour": "INFO_COLOR",
       "type": "INFO",
       "level": 0
     },
     "stdWarn": {
       "hasTimeStamp": true,
-      "colour": "WARNING_COLOUR",
+      "colour": "WARNING_COLOR",
       "type": "WARNING",
       "level": 1
     },
     "stdError": {
       "hasTimeStamp": true,
-      "colour": "ERROR_COLOUR",
+      "colour": "ERROR_COLOR",
       "type": "ERROR",
       "level": 2
     }
