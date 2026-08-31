@@ -67,6 +67,8 @@ target_include_directories(LSIM
 file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/skybox DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/resources")
+
 target_link_libraries(LSIM PRIVATE glfw glm::glm-header-only glad)
 option(GAME "Build LSIM in GAME mode" OFF)
 if(GAME)
