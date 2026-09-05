@@ -117,7 +117,14 @@ void main(){
         vec3 H = normalize(V + L);
 
         vec3 nMap = useNormalMap ? texture(normal, texCoord).rgb * 2.0 - 1.0 : vec3(0.0,0.0,1.0);
-        vec3 N = normalize(TBN * nMap);
+        vec3 N;
+
+        if (useNormalMap) {
+            vec3 nMap = texture(normal, texCoord).rgb * 2.0 - 1.0;
+            N = normalize(TBN * nMap);
+        } else {
+            N = normalize(Normal);
+        }
 
         float NdotL = max(dot(N, L), 0.0);
 
