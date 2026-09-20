@@ -5,7 +5,6 @@
 #include "rendering/meshRenderer.h"
 #include "resources/resourceManager.h"
 
-
 void RenderSystem::update(Registry &registry, float deltaTime) {
         for (const EntityHandle& e : registry.getAllAlive()) {
                 if (!registry.hasComponent<MeshRenderer>(e)) continue;
@@ -18,7 +17,7 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
 
                 glm::mat4 model = transform->getModelMatrix();
 
-                const Shader *shader = ResourceManager::getShaderById(material->getShader());
+                const Shader* shader = ResourceManager::getShader(material->getShader());
                 shader->Activate();
 
                 GLuint modelLoc = shader->GetLocation("model");
@@ -30,7 +29,9 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                 glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera.Position));
 
                 int unit = 0;
-                for (const auto& [name, texId] : material->getTextures()) {
+                for (const auto& [name, resourceName] : material->getTextures()) {
+                        const uint32_t texId = ResourceManager::getTexture(resourceName);
+
                         glActiveTexture(GL_TEXTURE0 + unit);
                         glBindTexture(GL_TEXTURE_2D, texId);
                         shader->SetInt(name, unit);

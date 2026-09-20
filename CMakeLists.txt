@@ -98,6 +98,7 @@ add_executable(LSIM
         include/rendering/material.traits.h
         Src/rendering/material.traits.cpp
         include/rendering/meshRenderer.traits.h
+        Src/rendering/meshRenderer.traits.cpp
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include

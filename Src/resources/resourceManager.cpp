@@ -7,6 +7,15 @@ std::unordered_map<std::string, uint32_t> ResourceManager::textures;
 std::unordered_map<std::string, Shader> ResourceManager::shaders;
 std::unordered_map<uint32_t, Shader*> ResourceManager::shadersById;
 
+uint32_t ResourceManager::getTexture(const std::string& name) {
+    const auto it = textures.find(name);
+
+    if (it == textures.end())
+        return 0;
+
+    return it->second;
+}
+
 uint32_t ResourceManager::addTexture(const std::string &name, const std::string &path) {
     const uint32_t tex = Texture::GetTexId(path.c_str(), GL_NEAREST);
     textures[name] = tex;
@@ -23,4 +32,13 @@ Shader& ResourceManager::addShader(const std::string &name, Shader &&shaderObj) 
 Shader *ResourceManager::getShaderById(const uint32_t id) {
     const auto it = shadersById.find(id);
     return it != shadersById.end() ? it->second : nullptr;
+}
+
+Shader* ResourceManager::getShader(const std::string& name) {
+    const auto it = shaders.find(name);
+
+    if (it == shaders.end())
+        return nullptr;
+
+    return &it->second;
 }

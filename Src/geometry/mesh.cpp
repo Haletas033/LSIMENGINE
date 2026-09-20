@@ -75,7 +75,7 @@ EntityHandle Mesh::create(const std::vector<float>& vertices, const std::vector<
         registry.addComponent<Name>(e, {"Mesh"});
         registry.addComponent<Transform>(e, transform);
         registry.addComponent<Material>(e, material);
-        registry.addComponent<MeshRenderer>(e, MeshRenderer{handle, mode});
+        registry.addComponent<MeshRenderer>(e, MeshRenderer{handle, vertices, indices, mode});
 
         return e;
 }

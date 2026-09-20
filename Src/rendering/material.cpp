@@ -15,9 +15,10 @@ void Material::addTexture(const std::string &name, const std::string &path) {
 void Material::setTexture(const std::string &name, const std::string &path) {
     const auto &tex = ResourceManager::getTextures();
     if (const auto it = tex.find(name); it != tex.end()) {
-        textures[name] = it->second;
+        textures[name] = it->first;
     } else {
-        textures[name] = ResourceManager::addTexture(name, path);
+        ResourceManager::addTexture(name, path);
+        textures[name] = path;
     }
 }
 
@@ -29,14 +30,14 @@ void Material::addTexture(const std::string &name) {
 
     const auto &tex = ResourceManager::getTextures();
     if (const auto it = tex.find(name); it != tex.end()) {
-        textures[name] = it->second;
+        textures[name] = it->first;
     } else {
         engineLogger("stdError", "No texture named: \"" + name + "\" exists.");
     }
 }
 
 void Material::addShader(const std::string& name, Shader&& shaderObj) {
-    if (shader != 0) {
+    if (!shader.empty()) {
         engineLogger("stdError", "Material already has a shader.");
         return;
     }
@@ -45,25 +46,30 @@ void Material::addShader(const std::string& name, Shader&& shaderObj) {
 }
 
 void Material::setShader(const std::string &name, Shader&& shaderObj) {
-    const auto &program = ResourceManager::getShaders();
-    if (const auto it = program.find(name); it != program.end()) {
-        shader = it->second.GetID();
-    } else {
-        shader = ResourceManager::addShader(name, std::move(shaderObj)).GetID();
+    const auto& shaders = ResourceManager::getShaders();
+
+    if (!shaders.contains(name)) {
+        ResourceManager::addShader(name, std::move(shaderObj));
     }
+
+    shader = name;
 }
 
 void Material::addShader(const std::string &name) {
-    if (shader != 0) {
+    if (!shader.empty()) {
         engineLogger("stdError", "\"" + name + "\" already exists.");
         return;
     }
 
-    const auto &program = ResourceManager::getShaders();
-    if (const auto it = program.find(name); it != program.end()) {
-        shader = it->second.GetID();
+    const auto& shaders = ResourceManager::getShaders();
+
+    if (shaders.contains(name)) {
+        shader = name;
     } else {
-        engineLogger("stdError", "No shader named: \"" + name + "\" exists.");
+        engineLogger(
+            "stdError",
+            "No shader named: \"" + name + "\" exists."
+        );
     }
 }
 

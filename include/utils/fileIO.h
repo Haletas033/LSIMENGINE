@@ -39,7 +39,7 @@ public:
 
     static std::string GetFileContents(const std::string& filePath);
 
-    static void saveToFile(std::ofstream &file, const Scene &scene);
+    static void saveToFile(std::ofstream &file, Registry &registry);
     static Scene loadFromFile(std::ifstream &file, const std::string &workingDir);
 };
 

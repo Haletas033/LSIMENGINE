@@ -2,7 +2,7 @@
 #include "utils/fileIO.h"
 
 
-void IOInputs::Init(Scene &scene, const std::string &workingDir, Inputs &inputs) {
+void IOInputs::Init(Registry &registry, const std::string &workingDir, Inputs &inputs) {
 	Inputs::BindingTable ioInputs = {
 		1,
 		true
@@ -14,15 +14,15 @@ void IOInputs::Init(Scene &scene, const std::string &workingDir, Inputs &inputs)
 	ioInputs.addFunctionForAction("save", [&](const Inputs::InputContext& context) {
 		const std::string fileName = IO::SaveDialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0");
 		if (std::ofstream file(fileName, std::ios::out | std::ios::binary); file.is_open()) {
-		    IO::saveToFile(file, scene);
+		    IO::saveToFile(file, registry);
 		}
 	});
-	ioInputs.addFunctionForAction("load", [&](const Inputs::InputContext& context) {
-		const std::string fileName = IO::OpenDialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0");
-		if (std::ifstream file(fileName, std::ios::in | std::ios::binary); file.is_open()) {
-		    scene = IO::loadFromFile(file, workingDir);
-		}
-	});
+	// ioInputs.addFunctionForAction("load", [&](const Inputs::InputContext& context) {
+	// 	const std::string fileName = IO::OpenDialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0");
+	// 	if (std::ifstream file(fileName, std::ios::in | std::ios::binary); file.is_open()) {
+	// 	    scene = IO::loadFromFile(file, workingDir);
+	// 	}
+	// });
 
 	bindingTable = ioInputs;
 	inputs.addBindingTable(bindingTable);

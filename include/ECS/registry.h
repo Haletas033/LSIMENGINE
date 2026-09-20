@@ -19,9 +19,19 @@ private:
         EntityManager entityManager{};
         std::unordered_map<std::type_index, std::any> pools{};
         std::unordered_map<EntityHandle, std::vector<std::type_index>> componentTypes{};
+        std::unordered_map<std::type_index, std::string> componentIds{};
         std::unordered_map<std::type_index, std::function<void(uint32_t)>> clearFuncs{};
         std::unordered_map<std::type_index, std::function<std::any(uint32_t)>> getComponentFuncs{};
-        std::unordered_map<std::type_index, std::function<void(Registry&, SharedState, EntityHandle)>> inspectFuncs{};
+        std::unordered_map<std::type_index, std::function<void(Registry&, SharedState&, EntityHandle)>> inspectFuncs{};
+        std::unordered_map<
+                std::type_index,
+                std::function<std::vector<uint8_t>(Registry&, EntityHandle)>
+        > serializeFuncs{};
+
+        std::unordered_map<
+                std::string,
+                std::function<void(Registry&, EntityHandle, const std::vector<uint8_t>&)>
+        > deserializeFuncs{};
 
 public:
         template<typename T>
@@ -36,7 +46,25 @@ public:
                 auto &slot = pools[id];
                 componentTypes[e].emplace_back(id);
                 if (!slot.has_value()) {
+                        componentIds[id] = ComponentTraits<Component>::id;
+
                         inspectFuncs[id] = ComponentTraits<Component>::inspect;
+
+                        serializeFuncs[id] = ComponentTraits<Component>::serialize;
+
+                        deserializeFuncs[ComponentTraits<Component>::id] =
+                                [](Registry& registry,
+                                const EntityHandle entity,
+                                const std::vector<uint8_t>& data)
+                                {
+                                        size_t ptr = 0;
+                                        auto deserializeComponent = ComponentTraits<Component>::deserialize(data, ptr);
+
+                                        registry.addComponent<Component>(
+                                        entity,
+                                        std::any_cast<Component>(std::move(deserializeComponent))
+                                        );
+                                };
 
                         slot = Pool<Component>{};
 
@@ -58,13 +86,40 @@ public:
                 pool[e.getIndex()].emplace(std::forward<T>(component));
         }
 
+        [[nodiscard]] const std::string& getComponentId(const std::type_index type) const {
+                return componentIds.at(type);
+        }
+
         template <typename T>
-        void registerInspect(std::function<void(Registry&, SharedState, EntityHandle)> fn) {
+        void registerInspect(std::function<void(Registry&, SharedState&, EntityHandle)> fn) {
                 inspectFuncs[std::type_index(typeid(T))] = std::move(fn);
         }
 
-        std::function<void(Registry&, SharedState, EntityHandle)> getInspectFunc(const std::type_index id) {
+        std::function<void(Registry&, SharedState&, EntityHandle)> getInspectFunc(const std::type_index id) {
                 return inspectFuncs[id];
+        }
+
+        std::vector<uint8_t> serializeComponent(
+            const EntityHandle entity,
+            const std::type_index type
+        ) {
+                const auto it = serializeFuncs.find(type);
+                if (it == serializeFuncs.end()) return {};
+
+                return it->second(*this, entity);
+        }
+
+        void deserializeComponent(
+            const EntityHandle entity,
+            const std::string& id,
+            const std::vector<uint8_t>& data
+        ) {
+                const auto it = deserializeFuncs.find(id);
+                if (it == deserializeFuncs.end()) {
+                        throw std::runtime_error("No deserializer registered for component");
+                }
+
+                it->second(*this, entity, data);
         }
 
         template <typename T>

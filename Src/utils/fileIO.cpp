@@ -113,125 +113,61 @@ std::string IO::GetFileContents(const std::string& filePath) {
     };
 }
 
-void IO::saveToFile(std::ofstream &file, const Scene& scene) {
-    // std::cout << std::endl;
-    // logger("stdInfo", "Beginning to write to file");
-    //
-    // auto safeWrite = [&](const auto* data, const std::streamsize size, const char* errorMsg) {
-    //     if (!file.write(reinterpret_cast<const char*>(data), size)) {
-    //         throw std::ios_base::failure(errorMsg);
-    //     }
-    //
-    // };
-    //
-    // try {
-    //     const int versionLen = engineDefaults.version.length();
-    //     safeWrite(&versionLen, sizeof(versionLen), "Failed to read versionLen");
-    //
-    //     safeWrite(engineDefaults.version.data(), versionLen * sizeof(char), "Failed to read version");
-    //
-    //     const int objectCount = scene.meshes.size();
-    //     safeWrite(&objectCount, sizeof(objectCount), "Failed to write object count");
-    //
-    //     uint16_t NextMeshID = 0;
-    //     for (auto &object : scene.meshes) {
-    //         //Write meshCount
-    //         const int meshCount = object.size();
-    //         safeWrite(&meshCount, sizeof(meshCount), "Failed to write mesh count");
-    //
-    //         for (auto& mesh : object) {
-    //             mesh->meshID = NextMeshID;
-    //             NextMeshID++;
-    //         }
-    //
-    //         for (const auto& mesh : object) {
-    //             int nameLen = mesh->name.size();
-    //             int verticesLen = mesh->vertices.size();
-    //             int indicesLen = mesh->indices.size();
-    //             int texturePathLen = mesh->texturePath.size();
-    //             int specMapPathLen = mesh->specMapPath.size();
-    //             int normalMapPathLen = mesh->normalMapPath.size();
-    //
-    //             safeWrite(&nameLen, sizeof(nameLen), "Failed to write name length");
-    //
-    //             //Write name
-    //             safeWrite(mesh->name.c_str(), mesh->name.size() * sizeof(char), "Failed to write namee");
-    //
-    //             //Write vertices
-    //             safeWrite(&verticesLen, sizeof(verticesLen), "Failed to write verticesLen");
-    //             safeWrite(mesh->vertices.data(), verticesLen * sizeof(mesh->vertices[0]), "Failed to write vertices");
-    //
-    //             //Write indices
-    //             safeWrite(&indicesLen, sizeof(indicesLen), "Failed to write indicesLen");
-    //             safeWrite(mesh->indices.data(), indicesLen * sizeof(mesh->indices[0]), "Failed to write indices");
-    //
-    //             //Write useTexture
-    //             safeWrite(&mesh->useTexture, sizeof(mesh->useTexture), "Failed to write useTexture");
-    //
-    //             //Write useNormalMap
-    //             safeWrite(&mesh->useNormalMap, sizeof(mesh->useNormalMap), "Failed to write useNormalMap");
-    //
-    //             //Write texturePath
-    //             safeWrite(&texturePathLen, sizeof(texturePathLen), "Failed to write texturePathLen");
-    //             safeWrite(mesh->texturePath.data(), texturePathLen * sizeof(char), "Failed to write texturePath");
-    //
-    //             //Write specMapPath
-    //             safeWrite(&specMapPathLen, sizeof(specMapPathLen), "Failed to write specMapPathLen");
-    //             safeWrite(mesh->specMapPath.data(), specMapPathLen * sizeof(char), "Failed to write specMapPath");
-    //
-    //             //Write normalMapPath
-    //             safeWrite(&normalMapPathLen, sizeof(normalMapPathLen), "Failed to write normalMapPathLen");
-    //             safeWrite(mesh->normalMapPath.data(), normalMapPathLen * sizeof(char), "Failed to write normalMapPath");
-    //
-    //             //Write color
-    //             safeWrite(&mesh->color, sizeof(mesh->color), "Failed to write colour");
-    //
-    //             //Write roughness
-    //             safeWrite(&mesh->roughness, sizeof(float), "Failed to write roughness");
-    //
-    //             //Write F0
-    //             safeWrite(&mesh->F0, sizeof(float), "Failed to write F0");
-    //
-    //             //Write meshID
-    //             safeWrite(&mesh->meshID, sizeof(mesh->meshID), "Failed to write meshID");
-    //
-    //             //Write the meshID of the parent node
-    //             uint16_t parentID = -1;
-    //             if (const Gui::Node* node = Gui::FindNodeByMesh(Gui::root, mesh.get());
-    //                 node && node->parent && node->parent != Gui::root) {
-    //                     parentID = node->parent->mesh->meshID;
-    //                 }
-    //
-    //             safeWrite(&parentID, sizeof(parentID), "Failed to write parentID");
-    //
-    //             //Write the transformation matrix
-    //             safeWrite(&mesh->position, sizeof(mesh->position), "Failed to write position");
-    //             safeWrite(&mesh->rotation, sizeof(mesh->rotation), "Failed to write rotation");
-    //             safeWrite(&mesh->scale, sizeof(mesh->scale), "Failed to write scale");
-    //
-    //             //Write the model matrix
-    //             safeWrite(&mesh->modelMatrix, sizeof(mesh->modelMatrix), "Failed to write model matrix");
-    //         }
-    //     }
-    //         const int lightCount = scene.lights.size();
-    //         safeWrite(&lightCount, sizeof(lightCount), "Failed to write lightCount");
-    //
-    //         for (Light light : scene.lights) {
-    //             safeWrite(&light.lightType, sizeof(light.lightType), "Failed to write light type");
-    //             safeWrite(&light.lightPos, sizeof(light.lightPos), "Failed to write light position");
-    //             safeWrite(&light.lightColor, sizeof(light.lightColor), "Failed to write light colour");
-    //             safeWrite(&light.lightDir, sizeof(light.lightDir), "Failed to write light direction");
-    //             safeWrite(&light.spotAngle, sizeof(light.spotAngle), "Failed to write spotlight angle");
-    //             safeWrite(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to write attenuation scale");
-    //             safeWrite(&light.intensity, sizeof(light.intensity), "Failed to write intensity");
-    //         }
-    //
-    // } catch (std::ios_base::failure &e) {
-    //     logger("stdError", e.what());
-    // }
-    //
-    // logger("stdInfo", "Successfully wrote to file");
-    // std::cout << std::endl;
+void IO::saveToFile(std::ofstream &file, Registry& registry) {
+    logger("stdInfo", "Beginning to write to file");
+
+    const auto entities = registry.getAllAlive();
+
+    // Number of entities
+    const auto entityCount = static_cast<std::uint32_t>(entities.size());
+    file.write(
+        reinterpret_cast<const char*>(&entityCount),
+        sizeof(entityCount)
+    );
+
+    for (const auto& e : entities) {
+        // Entity marker
+        constexpr std::string_view entityId = "engine.entity";
+
+        constexpr auto entityIdSize = static_cast<std::uint32_t>(entityId.size());
+
+        file.write(
+            reinterpret_cast<const char*>(&entityIdSize),
+            sizeof(entityIdSize)
+        );
+
+        file.write(
+            entityId.data(),
+            entityId.size()
+        );
+
+        for (const auto& type : registry.getComponentTypes(e)) {
+            const auto& componentId = registry.getComponentId(type);
+            const auto data = registry.serializeComponent(e, type);
+
+            const auto idSize =
+                static_cast<std::uint32_t>(componentId.size());
+
+            file.write(
+                reinterpret_cast<const char*>(&idSize),
+                sizeof(idSize)
+            );
+
+            file.write(
+                componentId.data(),
+                static_cast<std::streamsize>(componentId.size())
+            );
+
+            if (!data.empty()) {
+                file.write(
+                    reinterpret_cast<const char*>(data.data()),
+                    static_cast<std::streamsize>(data.size())
+                );
+            }
+        }
+    }
+
+    logger("stdInfo", "Successfully wrote to file");
 }
 
 Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {

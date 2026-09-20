@@ -12,24 +12,33 @@
 
 using MaterialProperty = std::variant<int, float, glm::vec3, glm::vec4, glm::mat3, glm::mat4>;
 
+enum class PropertyType {
+    INT,
+    FLOAT,
+    VEC3,
+    VEC4,
+    MAT3,
+    MAT4
+};
+
 class Material {
 private:
-    std::unordered_map<std::string, uint32_t> textures;
+    std::unordered_map<std::string, std::string> textures;
     std::unordered_map<std::string, MaterialProperty> properties;
-    uint32_t shader{};
+    std::string shader;
 
 public:
     void addTexture(const std::string &name, const std::string &path);
     void setTexture(const std::string &name, const std::string &path);
     void addTexture(const std::string &name);
-    [[nodiscard]] std::unordered_map<std::string, uint32_t> getTextures() const { return textures; }
+    [[nodiscard]] const std::unordered_map<std::string, std::string>& getTextures() const { return textures; }
     void removeTexture(const std::string &name) { textures.erase(name); }
 
     void addShader(const std::string &name, Shader &&shaderObj);
     void setShader(const std::string &name, Shader &&shaderObj);
     void addShader(const std::string &name);
-    [[nodiscard]] uint32_t getShader() const { return shader; }
-    void removeShader() { shader = 0; }
+    [[nodiscard]] const std::string& getShader() const { return shader; }
+    void removeShader() { shader = ""; }
 
     template <typename T>
     void addProperty(const std::string& name, T object) {

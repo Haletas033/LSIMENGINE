@@ -7,7 +7,7 @@ class IOInputs {
 private:
 	Inputs::BindingTable bindingTable;
 public:
-	void Init(Scene &scene, const std::string &workingDir, Inputs &inputs);
+	void Init(Registry &registry, const std::string &workingDir, Inputs &inputs);
 };
 
 #endif //LSIM_IOINPUTS_H

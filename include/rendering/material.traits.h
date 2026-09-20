@@ -7,9 +7,8 @@
 
 template <>
 struct ComponentTraits<Material> {
-        static void inspect(Registry &registry, SharedState sharedState, EntityHandle self);
-        static void serialize(const std::any &transform);
-        static void deserialize(const std::any &transform);
+        static constexpr std::string_view id = "engine.material";
+        static void inspect(Registry &registry, SharedState &sharedState, EntityHandle self);
 
         template <typename T, typename Func>
         static void addPropertyField(const T &arg, Material *material, const std::string &property, Func func) {
@@ -18,6 +17,9 @@ struct ComponentTraits<Material> {
                         material->setProperty(property, v);
                 }
         }
+
+        static std::vector<uint8_t> serialize(Registry &registry, EntityHandle self);
+        static std::any deserialize(const std::vector<uint8_t> &data, uint64_t &ptr);
 };
 
 #endif //LSIM_MATERIAL_TRAITS_H
