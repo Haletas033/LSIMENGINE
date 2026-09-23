@@ -109,8 +109,10 @@ void MeshInputs::Init(Registry& registry, MeshPool& meshPool, SharedState &share
 	meshInputs.addFunctionForAction("add_mesh", [&](const Inputs::InputContext& context) {
 		const EntityHandle mesh = Mesh::create(sharedState.selected_mesh_type(), MeshMode::STATIC, registry, meshPool);
 		sharedState.current_meshes() = {mesh};
-		auto* node = new Gui::Node{ mesh, Gui::root, {} };
-		Gui::root->children.push_back(node);
+		if (sharedState.selected_mesh_type() != Primitive::MODEL) {
+			auto* node = new Gui::Node{ mesh, Gui::root, {} };
+			Gui::root->children.push_back(node);
+		}
 	});
 
 	meshInputs.addFunctionForAction("delete_mesh", [&](const Inputs::InputContext& context) {

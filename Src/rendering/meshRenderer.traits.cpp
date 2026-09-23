@@ -96,10 +96,10 @@ std::any ComponentTraits<MeshRenderer>::deserialize(
         };
 
         const MeshHandle meshHandle =
-                        MeshPool::getDefaultMeshPool().upload(
-                                meshData,
-                                mode
-                        );
+                MeshPool::getDefaultMeshPool().upload(
+                        meshData,
+                        mode
+                );
 
         return MeshRenderer{
                 .meshHandle = meshHandle,
