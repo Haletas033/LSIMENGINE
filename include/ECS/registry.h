@@ -30,7 +30,7 @@ private:
 
         std::unordered_map<
                 std::string,
-                std::function<void(Registry&, EntityHandle, const std::vector<uint8_t>&)>
+                std::function<void(Registry&, EntityHandle, size_t&, const std::vector<uint8_t>&)>
         > deserializeFuncs{};
 
 public:
@@ -52,12 +52,12 @@ public:
 
                         serializeFuncs[id] = ComponentTraits<Component>::serialize;
 
-                        deserializeFuncs[ComponentTraits<Component>::id] =
+                        deserializeFuncs[std::string(ComponentTraits<Component>::id)] =
                                 [](Registry& registry,
                                 const EntityHandle entity,
+                                size_t &ptr,
                                 const std::vector<uint8_t>& data)
                                 {
-                                        size_t ptr = 0;
                                         auto deserializeComponent = ComponentTraits<Component>::deserialize(data, ptr);
 
                                         registry.addComponent<Component>(
@@ -111,15 +111,16 @@ public:
 
         void deserializeComponent(
             const EntityHandle entity,
-            const std::string& id,
+            const std::string_view& id,
+            size_t &ptr,
             const std::vector<uint8_t>& data
         ) {
-                const auto it = deserializeFuncs.find(id);
+                const auto it = deserializeFuncs.find(std::string(id));
                 if (it == deserializeFuncs.end()) {
                         throw std::runtime_error("No deserializer registered for component");
                 }
 
-                it->second(*this, entity, data);
+                it->second(*this, entity, ptr, data);
         }
 
         template <typename T>

@@ -4,7 +4,7 @@ void EditorInputs::Init(Registry& registry, MeshPool& meshPool, Scene &scene, co
 			const Defaults &defaults, const Camera &camera, Inputs &inputs) {
 	meshInputs.Init(registry, meshPool, sharedState, defaults, camera, inputs);
 	lightInputs.Init(scene, sharedState, defaults, camera, inputs);
-	ioInputs.Init(registry, workingDir, inputs);
+	ioInputs.Init(registry, sharedState, workingDir, inputs);
 
 	Inputs::BindingTable editorInputs = {
 		std::numeric_limits<uint32_t>::max(),

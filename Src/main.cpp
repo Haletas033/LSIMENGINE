@@ -95,8 +95,6 @@ Scene scene {};
 Camera camera {};
 GLFWwindow* window;
 std::string workingDir;
-Registry registry;
-MeshPool meshPool;
 std::vector<std::unique_ptr<System>> systems;
 
 int main(int argc, char** argv) {
@@ -146,7 +144,7 @@ int main(int argc, char** argv) {
 	lights.push_back(light1);
 
 	//Create a GLFW window object of 800 by 800 pixels
-	window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, ("L-SIM ENGINE " + engineDefaults.version + " "+ workingDir).c_str(), nullptr, nullptr);
+	window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, ("L-SIM ENGINE " + engineDefaults.version + " " + workingDir).c_str(), nullptr, nullptr);
 
 	//Error check if the window fails to create
 	if (window == nullptr) {
@@ -156,7 +154,7 @@ int main(int argc, char** argv) {
 	}
 
 	inputs.InitInputs(window);
-	editorInputs.Init(registry, meshPool, scene, workingDir, sharedState, engineDefaults, camera, inputs);
+	editorInputs.Init(Registry::getDefaultRegistry(), MeshPool::getDefaultMeshPool(), scene, workingDir, sharedState, engineDefaults, camera, inputs);
 
 	Script::InstantiateAll();
 
@@ -181,13 +179,13 @@ int main(int argc, char** argv) {
 	Shader skyboxShaderProgram({skyboxVert, skyboxFrag});
 
 	systems.push_back(std::make_unique<TransformSystem>());
-	systems.push_back(std::make_unique<RenderSystem>(meshPool, camera));
+	systems.push_back(std::make_unique<RenderSystem>(MeshPool::getDefaultMeshPool(), camera));
 
 	Gui::Initialize(window);
 
-	EntityHandle firstCube = Mesh::create(Primitive::CUBE, MeshMode::STATIC, registry, meshPool, Material::createStandardPBR(), Transform());
+	EntityHandle firstCube = Mesh::create(Primitive::CUBE, MeshMode::STATIC, Registry::getDefaultRegistry(), MeshPool::getDefaultMeshPool(), Material::createStandardPBR(), Transform());
 	sharedState.current_meshes() = {firstCube};
-	registry.getComponent<Name>(firstCube)->value = "First Cube";
+	Registry::getDefaultRegistry().getComponent<Name>(firstCube)->value = "First Cube";
 	auto* node = new Gui::Node{ firstCube, Gui::root, {} };
 	Gui::root->children.push_back(node);
 
@@ -213,7 +211,7 @@ int main(int argc, char** argv) {
 			if (file.path().extension().string() == ".lsim") {
 				engineLogger("stdInfo", file.path().string());
 				std::ifstream LSIMfile(file.path().string(), std::ios::binary);
-				scene = IO::loadFromFile(LSIMfile, workingDir);
+				IO::loadFromFile(LSIMfile, Registry::getDefaultRegistry(), sharedState, workingDir);
 			}
 		}
 	}
@@ -289,7 +287,7 @@ int main(int argc, char** argv) {
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
 			auto viewport = glm::vec4(0.0f, 0.0f, windowWidth, windowHeight);
 			auto rayDir = meshPicking::GetMouseRay(mouseX, mouseY, camera.projection, camera.view, viewport);
-			if (const auto e = meshPicking::pickMesh(registry, camera.Position, rayDir); e.has_value()) {
+			if (const auto e = meshPicking::pickMesh(Registry::getDefaultRegistry(), camera.Position, rayDir); e.has_value()) {
 				sharedState.current_meshes() = {e.value()};
 			}
 		}
@@ -316,7 +314,7 @@ int main(int argc, char** argv) {
 		shaderProgram.Activate();
 
 		//Draw all meshes
-		for (auto& sys : systems) sys->update(registry, deltaTime);
+		for (auto& sys : systems) sys->update(Registry::getDefaultRegistry(), deltaTime);
 
 		// //Switch to instanceShaderProgram to draw instances
 		// instanceShaderProgram.Activate();
@@ -395,7 +393,7 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(registry, sharedState);
+		Gui::Transform(Registry::getDefaultRegistry(), sharedState);
 
 		Gui::Lighting(scene.lights, currentLight);
 
@@ -413,7 +411,7 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Hierarchy", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		if (std::optional<EntityHandle> clickedMesh = Gui::Hierarchy(registry); clickedMesh) sharedState.current_meshes() = {clickedMesh.value()};
+		if (std::optional<EntityHandle> clickedMesh = Gui::Hierarchy(Registry::getDefaultRegistry()); clickedMesh) sharedState.current_meshes() = {clickedMesh.value()};
 
 		ImGui::End();
 
@@ -439,12 +437,12 @@ int main(int argc, char** argv) {
 	}
 	engineLogger("stdInfo", "Exiting L-SIMENGINE");
 
-	Gui::DeleteNodeRecursively(registry, Gui::root);
+	Gui::DeleteNodeRecursively(Registry::getDefaultRegistry(), Gui::root);
 	Gui::CleanUp();
 
 	systems.clear();
-	registry = Registry{};
-	meshPool = MeshPool{};
+	Registry::getDefaultRegistry() = Registry{};
+	MeshPool::getDefaultMeshPool() = MeshPool{};
 	ResourceManager::clear();
 
 	glfwDestroyWindow(window);

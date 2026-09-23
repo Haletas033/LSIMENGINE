@@ -170,178 +170,66 @@ void IO::saveToFile(std::ofstream &file, Registry& registry) {
     logger("stdInfo", "Successfully wrote to file");
 }
 
-Scene IO::loadFromFile(std::ifstream &file, const std::string &workingDir) {
-    // std::cout << std::endl;
-    // logger("stdInfo", "beginning to read from file");
-    //
-    // Gui::ClearRoot();
-    //
-    // std::vector<std::vector<std::unique_ptr<Mesh>>> objects;
-    // std::vector<Light> lights;
-    //
-    // float versionNumeric = 0.0f;
-    //
-    // auto safeRead = [&](auto* data, const std::streamsize size, const char* errorMsg, const char* addedIn, const char* removedIn = "v0.0"){
-    //     const float addedInNumeric = std::stof(std::string(addedIn).substr(1));
-    //     const float removedInNumeric = std::stof(std::string(removedIn).substr(1));
-    //     if ((versionNumeric == 0.0f || addedInNumeric <= versionNumeric) && (removedInNumeric == 0.0f || versionNumeric < removedInNumeric)) {
-    //         if (!file.read(reinterpret_cast<char*>(data), size)) {
-    //             throw std::ios_base::failure(errorMsg);
-    //         }
-    //     }
-    // };
-    //
-    // try {
-    //     int versionLen;
-    //     safeRead(&versionLen, sizeof(versionLen), "Failed to read versionLen", "v1.0");
-    //
-    //     std::string version(versionLen, '\0');
-    //     safeRead(version.data(), versionLen * sizeof(char), "Failed to read version", "v1.0");
-    //
-    //     versionNumeric = std::stof(version.substr(1));
-    //
-    //     int objectCount = 1;
-    //     safeRead(&objectCount, sizeof(objectCount), "Failed to read object count", "v1.1");
-    //
-    //     for (int i = 0; i < objectCount; ++i) {
-    //         int meshCount;
-    //         int nameLen;
-    //         int verticesLen;
-    //         int indicesLen;
-    //         int texturePathLen;
-    //         int specMapPathLen;
-    //         int normalMapPathLen;
-    //
-    //         std::vector<std::unique_ptr<Mesh>> meshes;
-    //
-    //         safeRead(&meshCount, sizeof(meshCount), "Failed to read mesh count", "v1.0");
-    //
-    //         for (int m = 0; m < meshCount; ++m) {
-    //             //Get name length
-    //             safeRead(&nameLen, sizeof(nameLen), "Failed to read name len", "v1.0");
-    //             if (nameLen < 0 || nameLen > 1024) {
-    //                 throw std::ios_base::failure("Invalid name length");
-    //             }
-    //
-    //             Mesh mesh;
-    //
-    //             mesh.name.resize(nameLen);
-    //
-    //             //Read name
-    //             safeRead(mesh.name.data(), nameLen, "Failed to read name", "v1.0");
-    //
-    //             //Get vertices length
-    //             safeRead(&verticesLen, sizeof(verticesLen), "Failed to read verticesLen", "v1.0");
-    //             mesh.vertices.resize(verticesLen);
-    //
-    //             //Read every vertex
-    //             safeRead(mesh.vertices.data(), verticesLen * sizeof(GLfloat), "Failed to read vertices", "v1.0");
-    //
-    //             //Get indices length
-    //             safeRead(&indicesLen, sizeof(indicesLen), "Failed to read indicesLen", "v1.0");
-    //             mesh.indices.resize(indicesLen);
-    //
-    //             //Read every index
-    //             safeRead(mesh.indices.data(), indicesLen * sizeof(GLuint), "Failed to read indices", "v1.0");
-    //
-    //             //Read useTexture
-    //             safeRead(&mesh.useTexture, 1, "Failed to read useTexture", "v1.0");
-    //
-    //             //Read useNormalMap
-    //             safeRead(&mesh.useNormalMap, 1, "Failed to read useNormalMap", "v1.0");
-    //
-    //             //Read texturePath
-    //             safeRead(&texturePathLen, sizeof(texturePathLen), "Failed to read texturePathLen", "v1.0");
-    //             mesh.texturePath.resize(texturePathLen);
-    //             safeRead(mesh.texturePath.data(), texturePathLen, "Failed to read texturePathLen", "v1.0");
-    //
-    //             //Read specMapPath
-    //             safeRead(&specMapPathLen, sizeof(specMapPathLen), "Failed to read specMapPathLen", "v1.0");
-    //             mesh.specMapPath.resize(specMapPathLen);
-    //             safeRead(mesh.specMapPath.data(), specMapPathLen, "Failed to read specMapPathLen", "v1.0");
-    //
-    //             //Read normalMapPath
-    //             safeRead(&normalMapPathLen, sizeof(normalMapPathLen), "Failed to read normalMapPathLen", "v1.0");
-    //             mesh.normalMapPath.resize(normalMapPathLen);
-    //             safeRead(mesh.normalMapPath.data(), normalMapPathLen, "Failed to read normalMapPathLen", "v1.0");
-    //
-    //             //Load tex IDs
-    //             mesh.texId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.texturePath.data()).c_str(), GL_NEAREST);
-    //             mesh.specMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.specMapPath.data()).c_str(), GL_NEAREST);
-    //             mesh.normalMapId = Texture::GetTexId((std::string(workingDir + "resources/") + mesh.normalMapPath.data()).c_str(), GL_NEAREST);
-    //
-    //             //Read color
-    //             safeRead(&mesh.color[0], 4 * sizeof(float), "Failed to read colour", "v1.0");
-    //
-    //             //Read roughness
-    //             safeRead(&mesh.roughness, sizeof(float), "Failed to read roughness", "v1.1");
-    //
-    //             //Read F0
-    //             safeRead(&mesh.F0, sizeof(float), "Failed to read F0", "v1.1");
-    //
-    //             //Read meshID
-    //             safeRead(&mesh.meshID, sizeof(mesh.meshID), "Failed to read meshID", "v1.0");
-    //
-    //             //Read parentID
-    //             uint16_t parentID;
-    //             safeRead(&parentID, sizeof(parentID), "Failed to read parentID", "v1.0");
-    //
-    //             //Read Position, Rotation, and Scale
-    //             safeRead(&mesh.position[0], 3 * sizeof(float), "Failed to read position", "v1.0");
-    //             safeRead(&mesh.rotation[0], 3 * sizeof(float), "Failed to read rotation", "v1.0");
-    //             safeRead(&mesh.scale[0], 3 * sizeof(float), "Failed to read scale", "v1.0");
-    //
-    //             //Read model matrix
-    //             safeRead(&mesh.modelMatrix[0][0], 16 * sizeof(float), "Failed to read model matrix", "v1.0");
-    //
-    //             if (versionNumeric == 1.0) mesh.GenerateTangents();
-    //             mesh.setupBuffers();
-    //
-    //             //Recreate mesh hierarchy
-    //             auto* node = new Gui::Node;
-    //             auto meshPtr = std::make_unique<Mesh>(std::move(mesh));
-    //             node->mesh = meshPtr.get();
-    //             Gui::Node* parentNode = Gui::FindNodeByMeshID(Gui::root, parentID);
-    //             if (!parentNode) parentNode = Gui::root;
-    //
-    //             node->parent = parentNode;
-    //             parentNode->children.push_back(node);
-    //
-    //             meshes.push_back(std::move(meshPtr));
-    //             if (versionNumeric == 1.0) objects.push_back(std::move(meshes));
-    //         }
-    //         if (versionNumeric != 1.0) objects.push_back(std::move(meshes));
-    //     }
-    //
-    //     int lightCount;
-    //     safeRead(&lightCount, sizeof(lightCount), "Failed to read light count", "v1.0");
-    //
-    //     for (int i = 0; i < lightCount; ++i) {
-    //         Light light;
-    //
-    //         safeRead(&light.lightType, sizeof(light.lightType), "Failed to read light type", "v1.1");
-    //         safeRead(&light.lightPos[0], 3 * sizeof(float), "Failed to read light position", "v1.0");
-    //         safeRead(&light.lightColor[0], 4 * sizeof(float), "Failed to read light colour", "v1.0");
-    //         safeRead(&light.lightDir[0], 3 * sizeof(float), "failed to read light direction", "v1.1");
-    //         safeRead(&light.spotAngle, sizeof(float), "failed to read spotlight angle", "v1.1");
-    //         safeRead(&light.attenuationScale, sizeof(light.attenuationScale), "Failed to read attenuation scale", "v1.0");
-    //         safeRead(&light.intensity, sizeof(light.intensity), "Failed to read intensity", "v1.1");
-    //
-    //         lights.push_back(light);
-    //     }
-    // } catch (std::ios_base::failure &e) {
-    //     logger("stdError", e.what());
-    //     return Scene{
-    //         std::vector<std::vector<std::unique_ptr<Mesh>>>{},
-    //         std::vector<Light>{}
-    //     };
-    //
-    // }
-    //
-    // logger("stdInfo", "Successfully read file");
-    // std::cout << std::endl;
-    //
-    // return Scene{ std::move(objects), std::move(lights) };
+void IO::loadFromFile(std::ifstream &file, Registry &registry, SharedState& sharedState, const std::string &workingDir) {
+    logger("stdInfo", "beginning to read from file");
+
+    Gui::ClearRoot(registry);
+    sharedState.set_current_meshes(registry, {});
+    for (const auto e : registry.getAllAlive()) {
+        registry.destroyEntity(e);
+    }
+
+    const auto data = std::vector<uint8_t>(
+        std::istreambuf_iterator(file),
+        std::istreambuf_iterator<char>()
+    );
+
+    size_t ptr = 0;
+
+    std::uint32_t entityCount;
+    std::memcpy(&entityCount, data.data(), sizeof(entityCount));
+    ptr += 4;
+
+    std::uint32_t idSize;
+    std::memcpy(&idSize, data.data() + ptr, sizeof(idSize));
+    ptr += 4;
+
+    std::string_view id(
+        reinterpret_cast<const char*>(data.data() + ptr),
+        idSize
+    );
+    ptr += idSize;
+
+    if (id != "engine.entity") { throw std::runtime_error("EXPECTED engine.entity got " + std::string(id) + " instead"); }
+
+    for (std::uint32_t i = 0; i < entityCount; ++i) {
+        EntityHandle e = registry.create();
+
+        auto* node = new Gui::Node{ e, Gui::root, {} };
+        Gui::root->children.push_back(node);
+
+        while (true) {
+            if (ptr == data.size()) {
+                break;
+            }
+
+            std::memcpy(&idSize, data.data() + ptr, sizeof(idSize));
+
+            ptr += 4;
+
+            id = std::string_view(
+                reinterpret_cast<const char*>(data.data() + ptr),
+                idSize
+            );
+            ptr += idSize;
+
+            if (id == "engine.entity") { break; }
+
+            registry.deserializeComponent(e, id, ptr, data);
+        }
+    }
+
+    logger("stdInfo", "Successfully read file");
 }
 
 

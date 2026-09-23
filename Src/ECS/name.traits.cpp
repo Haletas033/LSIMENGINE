@@ -45,7 +45,17 @@ std::any ComponentTraits<Name>::deserialize(const std::vector<uint8_t> &data, si
 
         uint32_t size;
         read(&size, sizeof(size));
-        read(&result.value, size);
+
+        if (size > data.size() - ptr) {
+                throw std::runtime_error("Invalid Name string size");
+        }
+
+        result.value = std::string(
+                reinterpret_cast<const char*>(data.data() + ptr),
+                size
+        );
+
+        ptr += size;
 
         return result;
 }

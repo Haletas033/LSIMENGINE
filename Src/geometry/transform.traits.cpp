@@ -64,10 +64,6 @@ std::vector<uint8_t> ComponentTraits<Transform>::serialize(Registry& registry, c
                 data.insert(data.end(), bytes, bytes + size);
         };
 
-        constexpr uint32_t idSize = id.size();
-        append(&idSize, sizeof(idSize));
-        append(id.data(), id.size());
-
         const auto position = transform->getPosition();
         const auto rotation = transform->getRotation();
         const auto scale = transform->getScale();
