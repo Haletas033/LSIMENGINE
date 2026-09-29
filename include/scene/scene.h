@@ -6,12 +6,11 @@
 #define SCENE_H
 
 #include <memory>
-#include "light.h"
 #include <vector>
 
-struct Scene {
-    std::vector<Light> lights;
+#include "glm/glm.hpp"
 
+struct Scene {
     glm::vec4 ambientLightColour = glm::vec4(1.0);
     float ambientLightIntensity = 0.1;
 
@@ -20,16 +19,6 @@ struct Scene {
     mutable bool deleteLightSignal = false;
 
     Scene() = default;
-
-    // Move constructor
-    explicit Scene(std::vector<Light>&& l)
-    : lights(std::move(l)) {}
-
-    // Move assignment
-    Scene& operator=(Scene&& other) noexcept {
-        lights = std::move(other.lights);
-        return *this;
-    }
 
     // Delete copy operations
     Scene(const Scene&) = delete;

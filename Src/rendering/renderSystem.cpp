@@ -6,6 +6,27 @@
 #include "resources/resourceManager.h"
 
 void RenderSystem::update(Registry &registry, float deltaTime) {
+        std::vector<LightGPUData> lightDatas;
+        lightDatas.reserve(engineDefaults.MAX_LIGHTS);
+
+        for (const EntityHandle& e : registry.getAllAlive()) {
+                if (!registry.hasComponent<Light>(e)) continue;
+                if (!registry.hasComponent<Transform>(e)) continue;
+
+                const auto* transform = registry.getComponent<Transform>(e);
+                const auto* light = registry.getComponent<Light>(e);
+
+                LightGPUData lightData{
+                        .lightColor = light->lightColor,
+                        .position = glm::vec4(transform->getPosition(), 1),
+                        .direction = glm::vec4(transform->getRotation() * glm::vec3(0,0,-1), 0),
+                        .params = glm::vec4(light->attenuationScale, light->intensity, light->spotAngle, static_cast<float>(static_cast<int>(light->type)))
+                };
+
+                if (lightDatas.size() < engineDefaults.MAX_LIGHTS)
+                        lightDatas.push_back(lightData);
+        }
+
         for (const EntityHandle& e : registry.getAllAlive()) {
                 if (!registry.hasComponent<MeshRenderer>(e)) continue;
                 if (!registry.hasComponent<Transform>(e)) continue;
@@ -19,6 +40,14 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
 
                 const Shader* shader = ResourceManager::getShader(material->getShader());
                 shader->Activate();
+
+                glBindBuffer(GL_UNIFORM_BUFFER, lightUBOId);
+
+                glBufferSubData(GL_UNIFORM_BUFFER, 0, lightDatas.size() * sizeof(LightGPUData), lightDatas.data());
+
+                glUniformBlockBinding(shader->GetID(), glGetUniformBlockIndex(shader->GetID(), "lightData"), LIGHT_UBO_BINDING_POINT);
+
+                shader->SetInt("lightCount", lightDatas.size());
 
                 GLuint modelLoc = shader->GetLocation("model");
                 glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));

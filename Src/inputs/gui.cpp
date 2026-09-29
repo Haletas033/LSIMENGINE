@@ -99,41 +99,6 @@ void Gui::Transform(Registry &registry, SharedState &sharedState) {
         }
 }
 
-void Gui::Lighting(std::vector<Light> &lights, int &currentLight) {
-        if (ImGui::CollapsingHeader("Lighting")) {
-                if (currentLight != -1) {
-                        const char *lightTypes[] = {"Point", "Directional", "Spot"};
-                        int selectedIndex = lights[currentLight].lightType;
-
-                        if (ImGui::Combo("Light Type", &selectedIndex, lightTypes, IM_ARRAYSIZE(lightTypes))) {
-                                lights[currentLight].lightType = static_cast<Light::Type>(selectedIndex);
-                        }
-
-                        ImGui::ColorEdit4("Light Color", glm::value_ptr(lights[currentLight].lightColor));
-
-                        if (lights[currentLight].lightType != Light::directional)
-                                ImGui::InputFloat3("Light Position", glm::value_ptr(lights[currentLight].lightPos));
-
-                        if (lights[currentLight].lightType != Light::point)
-                                ImGui::InputFloat3("Light Direction", glm::value_ptr(lights[currentLight].lightDir));
-
-                        if (lights[currentLight].lightType != Light::directional)
-                                ImGui::InputFloat("Light Attenuation", &lights[currentLight].attenuationScale);
-
-                        if (lights[currentLight].lightType == Light::spotlight) {
-                                ImGui::SliderAngle("Spotlight Angle", &lights[currentLight].spotAngle, -80.0f, 80.0f);
-                        }
-
-                        ImGui::InputFloat("Light Intensity", &lights[currentLight].intensity);
-
-                        if (ImGui::InputInt("Current Light", &currentLight))
-                                currentLight = std::clamp(currentLight, 0, static_cast<int>(lights.size() - 1));
-                } else {
-                        ImGui::Text("No lights exist in the current scene.");
-                }
-        }
-}
-
 void Gui::Debug(const double &mouseX, const double &mouseY) {
         if (ImGui::CollapsingHeader("Mouse and FPS")) {
                 ImGui::Text("Mouse X: %.2f", mouseX);

@@ -11,7 +11,6 @@
 #include "../../imgui/backends/imgui_impl_opengl3.h"
 
 #include "../geometry/mesh.h"
-#include "../scene/light.h"
 #include <include/utils/logging/log.h>
 #include <include/utils/fileIO.h>
 
@@ -45,8 +44,6 @@ public:
                                Registry &registry, const std::set<EntityHandle> &currentMeshes);
 
     static void Transform(Registry &registry, SharedState &sharedState);
-
-    static void Lighting(std::vector<Light> &lights, int &currentLight);
 
     static void Debug(const double &mouseX, const double &mouseY);
 

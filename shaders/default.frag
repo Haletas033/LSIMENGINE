@@ -4,22 +4,19 @@ in vec3 Normal;
 in vec2 texCoord;
 in mat3 TBN;
 
-struct Light {
-    int lightType;
-    vec4 lightColor;
-    vec3 lightPos;
-    vec3 lightDir;
-    float linear;
-    float quadratic;
-    float intensity;
-    float spotAngle;
-};
-
 #define POINT_LIGHT 0
 #define DIRECTIONAL_LIGHT 1
 #define SPOT_LIGHT 2
 
-uniform Light lights[MAX_LIGHTS];
+layout(std140, binding = 1) uniform lightData {
+    vec4 lightColor;
+    vec4 position;
+    vec4 direction;
+    vec4 params;
+} lights[MAX_LIGHTS];
+
+uniform int lightCount;
+
 uniform vec4 meshColor;
 
 uniform vec4 ambientLightColour;
@@ -61,17 +58,15 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
     return a2 / max(denom, 1e-6);
 }
 
-float GeometrySchlickGGX(float NdotV, float k)
-{
+float GeometrySchlickGGX(float NdotV, float k) {
     return NdotV / (NdotV * (1.0 - k) + k);
 }
 
-float GeometrySmith(vec3 N, vec3 V, vec3 L, float k)
-{
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float k) {
     return GeometrySchlickGGX(max(dot(N,V),0.0), k) * GeometrySchlickGGX(max(dot(N,L),0.0), k);
 }
 
-void main(){
+void main() {
     vec3 albedo = useTexture ? texture(albedo, texCoord).rgb : meshColor.rgb;
 
     vec3 V = normalize(viewPos - crntPos);
@@ -87,30 +82,34 @@ void main(){
         emissiveMap = pow(texture(emissive, texCoord).rgb, vec3(2.2)) * emissiveIntensity;
     }
 
-    for (int i = 0; i < MAX_LIGHTS; ++i){
-        Light light = lights[i];
-
-        if (light.intensity <= 0.0) continue;
+    for (int i = 0; i < lightCount; ++i) {
+        float attenuationScale = lights[i].params.x;
+        float intensity = lights[i].params.y;
+        float spotAngle = lights[i].params.z;
+        int type = int(lights[i].params.w);
+        if (intensity <= 0.0) continue;
 
         vec3 L;
         float attenuation = 1.0;
 
-        if (light.lightType == DIRECTIONAL_LIGHT){
-            L = normalize(-light.lightDir);
+        if (type == DIRECTIONAL_LIGHT){
+            L = normalize(-lights[i].direction.xyz);
         }
         else {
-            vec3 lightDir = light.lightPos - crntPos;
+            vec3 lightDir = lights[i].position.xyz - crntPos;
             float distance = length(lightDir);
             L = normalize(lightDir);
 
-            attenuation = 1.0 / (1.0 + light.linear * distance + light.quadratic * (distance * distance));
+            float linear = 2.0 / attenuationScale;
+            float quadratic = 1.0 / (attenuationScale*attenuationScale);
+            attenuation = 1.0 / (1.0 + linear * distance + quadratic * distance * distance);
 
-            if (light.lightType == SPOT_LIGHT){
-                float theta = dot(L, normalize(-light.lightDir));
-                float outerCutoff = cos(light.spotAngle);
-                float innerCutoff = cos(light.spotAngle * 0.9);
-                float intensity = clamp((theta - outerCutoff) / (innerCutoff - outerCutoff), 0.0, 1.0);
-                attenuation *= intensity;
+            if (type == SPOT_LIGHT){
+                float theta = dot(L, normalize(-lights[i].direction.xyz));
+                float outerCutoff = cos(spotAngle);
+                float innerCutoff = cos(spotAngle * 0.9);
+                float spotIntensity = clamp((theta - outerCutoff) / (innerCutoff - outerCutoff), 0.0, 1.0);
+                attenuation *= spotIntensity;
             }
         }
 
@@ -142,8 +141,7 @@ void main(){
         vec3 kD = vec3(1.0) - kS;
         vec3 diffuse = kD * albedo / PI;
 
-        vec3 radiance = light.lightColor.rgb * light.intensity * attenuation;
-
+        vec3 radiance = lights[i].lightColor.rgb * intensity * attenuation;
 
         Lo += (diffuse + specular) * radiance * NdotL;
     }

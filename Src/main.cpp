@@ -35,60 +35,6 @@ void framebuffer_size_callback(GLFWwindow* window, const int width, const int he
 	glViewport(0, 0, width, height);
 }
 
-void AddLight(Scene &scene, int &currentLight) {
-	scene.addLightSignal = false;
-
-	constexpr Light light;
-	scene.lights.push_back(light);
-
-	currentLight = scene.lights.size() - 1;
-
-	engineLogger("stdInfo", "Successfully added light");
-}
-
-void DeleteLight(Scene &scene, int &currentLight) {
-	scene.deleteLightSignal = false;
-	scene.lights.erase(scene.lights.begin() + currentLight);
-
-	if (!scene.lights.empty()) {
-		currentLight = scene.lights.size() - 1;
-		return;
-	}
-	currentLight = -1;
-
-	engineLogger("stdInfo", "Successfully deleted light");
-}
-
-void DrawLights(Shader &shader, Defaults defaults, Scene &scene) {
-	for (int i = 0; i < defaults.MAX_LIGHTS; ++i) {
-		std::string prefix = "lights[" + std::to_string(i) + "].";
-		if (i < scene.lights.size()) {
-			shader.SetInt(prefix + "lightType", scene.lights[i].lightType);
-			shader.SetVec4(prefix + "lightColor", 1, &scene.lights[i].lightColor[0]);
-			shader.SetVec3(prefix + "lightPos", 1, &scene.lights[i].lightPos[0]);
-			shader.SetVec3(prefix + "lightDir", 1, &scene.lights[i].lightDir[0]);
-			shader.SetFloat(prefix + "linear", scene.lights[i].linear);
-			shader.SetFloat(prefix + "quadratic", scene.lights[i].quadratic);
-			shader.SetFloat(prefix + "intensity", scene.lights[i].intensity);
-			shader.SetFloat(prefix + "spotAngle", scene.lights[i].spotAngle);
-		} else {
-			// Clear unused lights
-			shader.SetInt(prefix + "lightType", 0);
-			shader.SetVec4(prefix + "lightColor", 1, glm::value_ptr(glm::vec4(0.0f)));
-			shader.SetVec3(prefix + "lightPos", 1, glm::value_ptr(glm::vec3(0.0f)));
-			shader.SetVec3(prefix + "lightPos", 1, glm::value_ptr(glm::vec3(0.0f)));
-			shader.SetVec3(prefix + "lightDir", 1, glm::value_ptr(glm::vec3(0.0f)));
-			shader.SetFloat(prefix + "linear", 0.0f);
-			shader.SetFloat(prefix + "quadratic", 0.0f);
-			shader.SetFloat(prefix + "intensity", 0.0f);
-			shader.SetFloat(prefix + "spotAngle", 0.0f);
-		}
-	}
-
-	shader.SetVec4("ambientLightColour", 1, glm::value_ptr(scene.ambientLightColour));
-	shader.SetFloat("ambientLightIntensity", scene.ambientLightIntensity);
-}
-
 Defaults engineDefaults;
 
 Scene scene {};
@@ -102,9 +48,9 @@ int main(int argc, char** argv) {
 		for (int i = 1; i < argc; ++i) {
 			workingDir += argv[i];
 			if (i != argc - 1)
-				workingDir += " ";
+				workingDir += ' ';
 		}
-		workingDir += "/";
+		workingDir += '/';
 	}
 	//Load config
 	engineDefaults = JSONManager::InitJSON(workingDir + "config/config.json", config);
@@ -134,14 +80,10 @@ int main(int argc, char** argv) {
 	glfwInit();
 
 	//Tell GLFW what version of OpenGL we are using
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	//Tell GLFW we are using the CORE profile
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	std::vector<Light> lights;
-	Light light1;
-	lights.push_back(light1);
 
 	//Create a GLFW window object of 800 by 800 pixels
 	window = glfwCreateWindow(engineDefaults.defaultWindowWidth, engineDefaults.defaultWindowHeight, ("L-SIM ENGINE " + engineDefaults.version + " " + workingDir).c_str(), nullptr, nullptr);
@@ -183,6 +125,8 @@ int main(int argc, char** argv) {
 
 	Gui::Initialize(window);
 
+	EntityHandle firstLight = Light::create(Registry::getDefaultRegistry(), Light::Type::POINT);
+
 	EntityHandle firstCube = Mesh::create(Primitive::CUBE, MeshMode::STATIC, Registry::getDefaultRegistry(), MeshPool::getDefaultMeshPool(), Material::createStandardPBR(), Transform());
 	sharedState.current_meshes() = {firstCube};
 	Registry::getDefaultRegistry().getComponent<Name>(firstCube)->value = "First Cube";
@@ -203,7 +147,6 @@ int main(int argc, char** argv) {
 	float lastTime = 0.0f;
 	int currentLight = 0;
 
-	scene = Scene{ std::move(lights) };
 	engineLogger("stdInfo", "Successfully moved meshes and lights into the main scene");
 
 	if (!workingDir.empty()) {
@@ -264,8 +207,6 @@ int main(int argc, char** argv) {
 		//Tells OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 
-		DrawLights(shaderProgram, engineDefaults, scene);
-
 		//Handle camera inputs
 
 		// Only process camera movement if ImGui is not using the mouse
@@ -292,19 +233,6 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		if (scene.addLightSignal && scene.lights.size() < engineDefaults.MAX_LIGHTS) {
-			AddLight(scene, currentLight);
-			engineLogger("stdInfo", "Adding light");
-		} else if (scene.addLightSignal) {
-			scene.addLightSignal = false;
-			engineLogger("stdWarn", "Tried to create light but it would exceed the maximum number of lights (If you need more lights you can change MAX_LIGHTS in config.json)");
-		}
-
-		if (scene.deleteLightSignal) {
-			DeleteLight(scene, currentLight);
-			engineLogger("stdInfo", "Deleting light");
-		}
-
 		if (ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureKeyboard) {
 			#ifndef GAME
 			inputs.handleInputs((Inputs::InputContext){scene, deltaTime});
@@ -312,6 +240,9 @@ int main(int argc, char** argv) {
 		}
 
 		shaderProgram.Activate();
+		
+		shaderProgram.SetVec4("ambientLightColour", 1, glm::value_ptr(scene.ambientLightColour));
+		shaderProgram.SetFloat("ambientLightIntensity", scene.ambientLightIntensity);
 
 		//Draw all meshes
 		for (auto& sys : systems) sys->update(Registry::getDefaultRegistry(), deltaTime);
@@ -350,8 +281,6 @@ int main(int argc, char** argv) {
 		skyboxShaderProgram.Activate();
 		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, skyboxShaderProgram, "camMatrix", aspect);
 
-		DrawLights(skyboxShaderProgram, engineDefaults, scene);
-
 		auto view = glm::mat4(1.0f);
 		auto projection = glm::mat4(1.0f);
 		view = glm::mat4(glm::mat3(glm::lookAt(camera.Position, camera.Position + camera.Orientation, camera.Up)));
@@ -371,14 +300,6 @@ int main(int argc, char** argv) {
 			script->Update(deltaTime);
 		}
 
-		//Update every light
-		for (auto &light : scene.lights) {
-			// Recalculate dependent values even if the GUI is closed
-			light.invScale  = 1.0f / (light.attenuationScale + 0.001f);
-			light.linear    = 0.09f  * light.invScale;
-			light.quadratic = 0.032f * light.invScale;
-		}
-
 
 		#ifndef GAME
 		Gui::Begin();
@@ -394,8 +315,6 @@ int main(int argc, char** argv) {
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
 		Gui::Transform(Registry::getDefaultRegistry(), sharedState);
-
-		Gui::Lighting(scene.lights, currentLight);
 
 		Gui::SceneGUI(workingDir, skyboxTexId, scene.ambientLightColour, scene.ambientLightIntensity);
 

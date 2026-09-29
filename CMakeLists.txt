@@ -50,7 +50,7 @@ add_executable(LSIM
         Src/utils/fileIO.cpp
         include/inputs/gui.h Src/inputs/gui.cpp
         include/inputs/inputs.h Src/inputs/inputs.cpp
-        Src/main.cpp Src/main.cpp include/scene/light.h
+        Src/main.cpp Src/main.cpp
         include/scene/scene.h include/utils/defaults.h
         include/utils/logging/log.h Src/utils/logging/log.cpp
         include/utils/json.h Src/utils/json.cpp Src/utils/texture.cpp
@@ -65,8 +65,6 @@ add_executable(LSIM
         include/inputs/keyDispatch.h
         include/inputs/keyDispatcherUndef.h
         include/LSIMhelpers.h
-        Src/editor/lightInputs.cpp
-        include/editor/lightInputs.h
         include/editor/IOInputs.h
         Src/editor/IOInputs.cpp
         include/editor/editorInputs.h
@@ -99,6 +97,10 @@ add_executable(LSIM
         Src/rendering/material.traits.cpp
         include/rendering/meshRenderer.traits.h
         Src/rendering/meshRenderer.traits.cpp
+        include/rendering/light.h
+        Src/rendering/light.cpp
+        include/rendering/light.traits.h
+        Src/rendering/light.traits.cpp
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include

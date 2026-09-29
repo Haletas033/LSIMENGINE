@@ -22,7 +22,7 @@ public:
 	};
 private:
 	std::set<EntityHandle> currentMeshes{};
-	std::set<unsigned int> currentLights{};
+	std::set<EntityHandle> currentLights{};
 	Mode currentMode = Mode::MESH_MODE;
 	Transform currentTransform = Transform::POSITION;
 
@@ -44,7 +44,7 @@ public:
 	static void InitSharedState();
 
 	[[nodiscard]] std::set<EntityHandle>& current_meshes() { return currentMeshes; }
-	[[nodiscard]] std::set<unsigned int>& current_lights() { return currentLights; }
+	[[nodiscard]] std::set<EntityHandle>& current_lights() { return currentLights; }
 	[[nodiscard]] Mode current_mode() const { return currentMode; }
 
 	void set_current_meshes(const Registry& registry, const std::set<EntityHandle> &current_meshes) {
@@ -60,16 +60,16 @@ public:
 		safe_remove(currentMeshes, old_meshes);
 	}
 
-	void set_current_lights(const Scene& scene, const std::set<unsigned int> &current_lights) {
+	void set_current_lights(const Registry& registry, const std::set<EntityHandle> &current_lights) {
 		currentLights.clear();
-		safe_insert(currentLights, scene.lights.size(), current_lights, "LIGHT");
+		safe_insert(currentLights, registry, current_lights, "LIGHT");
 	}
 
-	void add_to_current_lights(const Scene& scene, const std::set<unsigned int> &new_lights) {
-		safe_insert(currentLights, scene.lights.size(), new_lights, "LIGHT");
+	void add_to_current_lights(const Registry& registry, const std::set<EntityHandle> &new_lights) {
+		safe_insert(currentLights, registry, new_lights, "LIGHT");
 	}
 
-	void remove_from_current_lights(const std::set<unsigned int> &old_lights) {
+	void remove_from_current_lights(const std::set<EntityHandle> &old_lights) {
 		safe_remove(currentLights, old_lights);
 	}
 

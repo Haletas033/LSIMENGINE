@@ -75,7 +75,7 @@ std::string JSONManager::LoadShaderWithDefines(const std::string &path, json &co
     std::stringstream buffer;
     buffer << file.rdbuf();
 
-    std::string defines = "#version 330 core\n";
+    std::string defines = "#version 420 core\n";
 
     // Inject defines into the shader
     for (const auto&[name, value] : config["shader-constants"].items())
