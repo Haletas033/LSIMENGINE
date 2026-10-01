@@ -73,6 +73,7 @@ Material Material::createStandardPBR() {
     mat.addShader("PBRShader");
     mat.addProperty("roughness", 0.5f);
     mat.addProperty("F0", 0.03f);
+    mat.addProperty("emissiveIntensity", 0.f);
     mat.addProperty("meshColor", glm::vec4(1.f));
     return mat;
 }

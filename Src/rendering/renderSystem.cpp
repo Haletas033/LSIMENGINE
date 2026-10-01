@@ -88,17 +88,6 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                 // Material textures
                 int unit = 0;
 
-                for (const auto &[name, resourceName]: material->getTextures()) {
-                        const uint32_t texId = ResourceManager::getTexture(resourceName);
-
-                        glActiveTexture(GL_TEXTURE0 + unit);
-                        glBindTexture(GL_TEXTURE_2D, texId);
-
-                        shader->SetInt(name, unit);
-
-                        ++unit;
-                }
-
                 // Material properties
                 for (const auto &[name, property]: material->getProperties()) {
                         std::visit([&]<typename T0>(T0 &&value) {
@@ -121,6 +110,10 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                 }
 
                 // Textures
+                shader->SetInt("useTexture", 0);
+                shader->SetInt("useNormalMap", 0);
+                shader->SetInt("useSpecular", 0);
+                shader->SetInt("useEmissive", 0);
                 for (const auto &name: material->getTextures() | std::views::keys) {
                         GLuint texture = ResourceManager::getTexture(name);
                         if (name == "albedo") {
@@ -128,7 +121,27 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                                 glBindTexture(GL_TEXTURE_2D, texture);
                                 shader->SetInt("albedo", unit);
                                 shader->SetInt("useTexture", 1);
+                        } else if (name == "normal") {
+                                glActiveTexture(GL_TEXTURE0 + unit);
+                                glBindTexture(GL_TEXTURE_2D, texture);
+                                shader->SetInt("normal", unit);
+                                shader->SetInt("useNormalMap", 1);
+                        } else if (name == "specular") {
+                                glActiveTexture(GL_TEXTURE0 + unit);
+                                glBindTexture(GL_TEXTURE_2D, texture);
+                                shader->SetInt("specular", unit);
+                                shader->SetInt("useSpecular", 1);
+                        } else if (name == "emissive") {
+                                glActiveTexture(GL_TEXTURE0 + unit);
+                                glBindTexture(GL_TEXTURE_2D, texture);
+                                shader->SetInt("emissive", unit);
+                                shader->SetInt("useEmissive", 1);
+                        } else {
+                                glActiveTexture(GL_TEXTURE0 + unit);
+                                glBindTexture(GL_TEXTURE_2D, texture);
+                                shader->SetInt(name, unit);
                         }
+                        ++unit;
                 }
 
                 // Upload instance data
