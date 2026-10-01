@@ -36,6 +36,9 @@ uniform float emissiveIntensity;
 
 uniform bool useTexture;
 uniform bool useNormalMap;
+uniform bool useSpecular;
+uniform bool useEmissive;
+
 uniform vec3 viewPos;
 
 //PBR
@@ -78,12 +81,18 @@ void main() {
     vec3 Lo = vec3(0.0);
 
     vec3 F0_local = F0;
-    vec3 emissiveMap = vec3(0.0);
-    if (useTexture){
-        float specMap = pow(texture(specular, texCoord).r, 2.2);
-        F0_local = mix(F0, vec3(specMap), 1.0);
 
-        emissiveMap = pow(texture(emissive, texCoord).rgb, vec3(2.2)) * emissiveIntensity;
+    if (useSpecular) {
+        float specMap = texture(specular, texCoord).r;
+        F0_local *= specMap;
+    }
+
+    vec3 emissiveMap = vec3(emissiveIntensity);
+
+    if (useEmissive) {
+        emissiveMap =
+            texture(emissive, texCoord).rgb *
+            emissiveIntensity;
     }
 
     for (int i = 0; i < lightCount; ++i) {
