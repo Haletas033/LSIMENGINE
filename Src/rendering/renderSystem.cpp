@@ -120,6 +120,17 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                         }, property);
                 }
 
+                // Textures
+                for (const auto &name: material->getTextures() | std::views::keys) {
+                        GLuint texture = ResourceManager::getTexture(name);
+                        if (name == "albedo") {
+                                glActiveTexture(GL_TEXTURE0 + unit);
+                                glBindTexture(GL_TEXTURE_2D, texture);
+                                shader->SetInt("albedo", unit);
+                                shader->SetInt("useTexture", 1);
+                        }
+                }
+
                 // Upload instance data
                 glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
 

@@ -1,11 +1,19 @@
 #include <rendering/material.traits.h>
 
 #include "glm/gtc/type_ptr.hpp"
+#include "utils/fileIO.h"
 
 void ComponentTraits<Material>::inspect(Registry& registry, SharedState &sharedState, const EntityHandle self) {
         if (ImGui::CollapsingHeader("Material")) {
                 auto material = registry.getComponent<Material>(self);
+
+                std::string propertyToRemove;
+
+                ImGui::SeparatorText("Properties:");
+
                 for (const auto &property : material->getProperties()) {
+                        ImGui::PushID(property.first.c_str());
+
                         std::visit([property, material]<typename T0>(T0 &&arg) {
                                 using T = std::remove_cvref_t<T0>;
                                 if constexpr (std::is_same_v<int, T>) {
@@ -64,8 +72,134 @@ void ComponentTraits<Material>::inspect(Registry& registry, SharedState &sharedS
                                         }
                                 }
                         }, property.second);
+
+                        ImGui::SameLine();
+
+                        ImGui::SetCursorPosX(
+                                ImGui::GetWindowContentRegionMax().x -
+                                ImGui::CalcTextSize("-").x -
+                                ImGui::GetStyle().FramePadding.x * 2
+                        );
+
+                        if (ImGui::SmallButton("-")) {
+                                propertyToRemove = property.first;
+                        }
+
+                        ImGui::PopID();
                 }
 
+                if (!propertyToRemove.empty()) {
+                        material->removeProperty(propertyToRemove);
+                }
+
+                static char propertyName[128] = "";
+
+                if (ImGui::Button("+ Add Property")) {
+                        ImGui::OpenPopup("Add Property");
+                }
+
+                if (ImGui::BeginPopup("Add Property")) {
+                        ImGui::InputText("Name", propertyName, IM_ARRAYSIZE(propertyName));
+
+                        ImGui::Separator();
+
+                        if (ImGui::MenuItem("Float")) {
+                                material->setProperty(propertyName, 0.0f);
+                        }
+
+                        if (ImGui::MenuItem("Int")) {
+                                material->setProperty(propertyName, 0);
+                        }
+
+                        if (ImGui::MenuItem("Vec3")) {
+                                material->setProperty(propertyName, glm::vec3(0.0f));
+                        }
+
+                        if (ImGui::MenuItem("Vec4")) {
+                                material->setProperty(propertyName, glm::vec4(1.0f));
+                        }
+
+                        if (ImGui::MenuItem("Mat3")) {
+                                material->setProperty(propertyName, glm::mat3(1.0f));
+                        }
+
+                        if (ImGui::MenuItem("Mat4")) {
+                                material->setProperty(propertyName, glm::mat4(1.0f));
+                        }
+
+                        ImGui::SameLine();
+
+                        if (ImGui::Button("Cancel")) {
+                                ImGui::CloseCurrentPopup();
+                        }
+
+                        ImGui::EndPopup();
+                }
+
+                ImGui::SeparatorText("Textures:");
+
+                std::string textureToRemove;
+                for (const auto&[name, path] : material->getTextures()) {
+                        ImGui::PushID(name.c_str());
+
+                        if (ImGui::Button(name.c_str())) {
+                                material->setTexture(name, IO::OpenDialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga;*.hdr\0\0"));
+                        }
+
+                        ImGui::SameLine();
+
+                        ImGui::SetCursorPosX(
+                                ImGui::GetWindowContentRegionMax().x -
+                                ImGui::CalcTextSize("-").x -
+                                ImGui::GetStyle().FramePadding.x * 2
+                        );
+
+                        if (ImGui::SmallButton("-")) {
+                                textureToRemove = name;
+                        }
+
+                        ImGui::Text("Path: %s", path.c_str());
+
+                        ImGui::PopID();
+                }
+
+                if (!textureToRemove.empty()) {
+                        material->removeTexture(textureToRemove);
+                }
+
+                static char textureName[128] = "";
+
+                if (ImGui::Button("+ Add Texture")) {
+                        textureName[0] = '\0';
+                        ImGui::OpenPopup("Add Texture");
+                }
+
+                if (ImGui::BeginPopup("Add Texture")) {
+                        ImGui::InputText("Name", textureName, IM_ARRAYSIZE(textureName));
+
+                        if (ImGui::Button("Choose Image")) {
+                                if (textureName[0] != '\0') {
+                                        const std::string path = IO::OpenDialog(
+                                            "Image Files\0"
+                                            "*.png;*.jpg;*.jpeg;*.bmp;*.tga;*.hdr\0"
+                                            "\0"
+                                        );
+
+                                        if (!path.empty()) {
+                                                material->addTexture(textureName, path);
+                                                ImGui::CloseCurrentPopup();
+                                        }
+                                }
+                        }
+
+                        ImGui::SameLine();
+
+                        if (ImGui::Button("Cancel")) {
+                                ImGui::CloseCurrentPopup();
+                        }
+
+                        ImGui::EndPopup();
+                }
         }
 }
 

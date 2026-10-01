@@ -13,13 +13,8 @@ void Material::addTexture(const std::string &name, const std::string &path) {
 }
 
 void Material::setTexture(const std::string &name, const std::string &path) {
-    const auto &tex = ResourceManager::getTextures();
-    if (const auto it = tex.find(name); it != tex.end()) {
-        textures[name] = it->first;
-    } else {
-        ResourceManager::addTexture(name, path);
-        textures[name] = path;
-    }
+    ResourceManager::addTexture(name, path);
+    textures[name] = path;
 }
 
 void Material::addTexture(const std::string &name) {
@@ -76,7 +71,6 @@ void Material::addShader(const std::string &name) {
 Material Material::createStandardPBR() {
     Material mat;
     mat.addShader("PBRShader");
-    mat.addProperty("useTexture", 0);
     mat.addProperty("roughness", 0.5f);
     mat.addProperty("F0", 0.03f);
     mat.addProperty("meshColor", glm::vec4(1.f));

@@ -49,9 +49,8 @@ EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, 
                         const EntityHandle mesh = create(vertices, indices, mode, registry, meshPool, material, transform);
                         registry.getComponent<Name>(mesh)->value = "Terrain";
                         Material *mat = registry.getComponent<Material>(mesh);
-                        mat->setProperty("useTexture", 1);
-                        // newMesh->texturePath = std::to_string(uID) + "terrain.png";
-                        mat->addProperty<int>("texId", static_cast<int>(noiseMapTexture));
+                        mat->addTexture("albedo", outputPath);
+                        ResourceManager::getShader(mat->getShader())->SetInt("useTexture", 1);
                         return mesh;
                 }
                 case Primitive::MODEL: {
