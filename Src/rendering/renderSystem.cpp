@@ -6,21 +6,52 @@
 #include "resources/resourceManager.h"
 
 void RenderSystem::update(Registry &registry, float deltaTime) {
+        std::unordered_map<BatchKey, RenderBatch, BatchKeyHash> batches;
+
+        for (const EntityHandle &e: registry.getAllAlive()) {
+                if (!registry.hasComponent<MeshRenderer>(e)) continue;
+                if (!registry.hasComponent<Transform>(e)) continue;
+                if (!registry.hasComponent<Material>(e)) continue;
+
+                const auto *transform = registry.getComponent<Transform>(e);
+                const auto *meshRenderer = registry.getComponent<MeshRenderer>(e);
+                auto *material = registry.getComponent<Material>(e);
+
+                BatchKey key{
+                        meshRenderer->meshHandle,
+                        material
+                };
+
+                auto &[instances] = batches[key];
+
+                InstanceGPUData instance{};
+                instance.model = transform->getModelMatrix();
+                instance.normalMatrix =
+                                glm::transpose(
+                                        glm::inverse(
+                                                glm::mat3(instance.model)
+                                        )
+                                );
+
+                instances.push_back(instance);
+        }
+
         std::vector<LightGPUData> lightDatas;
         lightDatas.reserve(engineDefaults.MAX_LIGHTS);
 
-        for (const EntityHandle& e : registry.getAllAlive()) {
+        for (const EntityHandle &e: registry.getAllAlive()) {
                 if (!registry.hasComponent<Light>(e)) continue;
                 if (!registry.hasComponent<Transform>(e)) continue;
 
-                const auto* transform = registry.getComponent<Transform>(e);
-                const auto* light = registry.getComponent<Light>(e);
+                const auto *transform = registry.getComponent<Transform>(e);
+                const auto *light = registry.getComponent<Light>(e);
 
                 LightGPUData lightData{
                         .lightColor = light->lightColor,
                         .position = glm::vec4(transform->getPosition(), 1),
-                        .direction = glm::vec4(transform->getRotation() * glm::vec3(0,0,-1), 0),
-                        .params = glm::vec4(light->attenuationScale, light->intensity, glm::radians(light->spotAngle), static_cast<float>(static_cast<int>(light->type)))
+                        .direction = glm::vec4(transform->getRotation() * glm::vec3(0, 0, -1), 0),
+                        .params = glm::vec4(light->attenuationScale, light->intensity, glm::radians(light->spotAngle),
+                                            static_cast<float>(static_cast<int>(light->type)))
                 };
 
                 if (lightDatas.size() < engineDefaults.MAX_LIGHTS)
@@ -31,47 +62,48 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
 
         glBufferSubData(GL_UNIFORM_BUFFER, 0, lightDatas.size() * sizeof(LightGPUData), lightDatas.data());
 
+        for (auto &[key, batch]: batches) {
+                Material *material = key.material;
+                GPUMeshBuffer *mesh = meshPool.get(key.mesh);
 
+                const Shader *shader = ResourceManager::getShader(material->getShader());
 
-        for (const EntityHandle& e : registry.getAllAlive()) {
-                if (!registry.hasComponent<MeshRenderer>(e)) continue;
-                if (!registry.hasComponent<Transform>(e)) continue;
-                if (!registry.hasComponent<Material>(e)) continue;
-
-                const auto* transform = registry.getComponent<Transform>(e);
-                const auto* meshRenderer = registry.getComponent<MeshRenderer>(e);
-                const auto* material = registry.getComponent<Material>(e);
-
-                glm::mat4 model = transform->getModelMatrix();
-
-                const Shader* shader = ResourceManager::getShader(material->getShader());
                 shader->Activate();
 
-                glUniformBlockBinding(shader->GetID(), glGetUniformBlockIndex(shader->GetID(), "lightData"), LIGHT_UBO_BINDING_POINT);
+                const GLuint shaderId = shader->GetID();
 
-                shader->SetInt("lightCount", lightDatas.size());
+                glUniformBlockBinding(
+                        shaderId,
+                        glGetUniformBlockIndex(shaderId, "lightData"),
+                        LIGHT_UBO_BINDING_POINT
+                );
 
-                GLuint modelLoc = shader->GetLocation("model");
-                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-                GLuint normalLoc = shader->GetLocation("normalMatrix");
-                glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
-                glUniformMatrix3fv(normalLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
-                GLuint viewPosLoc = shader->GetLocation("viewPos");
-                glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera.Position));
+                shader->SetInt("lightCount", static_cast<int>(lightDatas.size()));
+                shader->SetVec3(
+                        "viewPos",
+                        1,
+                        glm::value_ptr(camera.Position)
+                );
 
+                // Material textures
                 int unit = 0;
-                for (const auto& [name, resourceName] : material->getTextures()) {
+
+                for (const auto &[name, resourceName]: material->getTextures()) {
                         const uint32_t texId = ResourceManager::getTexture(resourceName);
 
                         glActiveTexture(GL_TEXTURE0 + unit);
                         glBindTexture(GL_TEXTURE_2D, texId);
+
                         shader->SetInt(name, unit);
+
                         ++unit;
                 }
 
-                for (const auto& [name, property] : material->getProperties()) {
-                        std::visit([&]<typename T0>(T0&& value) {
+                // Material properties
+                for (const auto &[name, property]: material->getProperties()) {
+                        std::visit([&]<typename T0>(T0 &&value) {
                                 using T = std::decay_t<T0>;
+
                                 if constexpr (std::is_same_v<T, float>) {
                                         shader->SetFloat(name, value);
                                 } else if constexpr (std::is_same_v<T, int>) {
@@ -88,8 +120,26 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                         }, property);
                 }
 
-                meshPool.get(meshRenderer->meshHandle)->vao.Bind();
+                // Upload instance data
+                glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
 
-                glDrawElements(GL_TRIANGLES, meshPool.get(meshRenderer->meshHandle)->indexCount, GL_UNSIGNED_INT, nullptr);
+                glBufferSubData(
+                        GL_ARRAY_BUFFER,
+                        0,
+                        batch.instances.size() * sizeof(InstanceGPUData),
+                        batch.instances.data()
+                );
+
+                mesh->configureInstanceAttributes(instanceVBO);
+                mesh->vao.Bind();
+
+
+                glDrawElementsInstanced(
+                        GL_TRIANGLES,
+                        mesh->indexCount,
+                        GL_UNSIGNED_INT,
+                        nullptr,
+                        static_cast<GLsizei>(batch.instances.size())
+                );
         }
 }

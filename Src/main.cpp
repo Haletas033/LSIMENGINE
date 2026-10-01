@@ -63,8 +63,6 @@ int main(int argc, char** argv) {
 	std::string vertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.vert", config);
 	std::string fragmentShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/default.frag", config);
 
-	std::string instanceVertexShader = JSONManager::LoadShaderWithDefines(workingDir + "shaders/instance.vert", config);
-
 	std::string skyboxVert = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.vert", config);
 	std::string skyboxFrag = JSONManager::LoadShaderWithDefines(workingDir + "shaders/skybox.frag", config);
 
@@ -117,7 +115,6 @@ int main(int argc, char** argv) {
 	Shader shaderProgram({vertexShader, fragmentShader});
 	ResourceManager::addShader("PBRShader", std::move(shaderProgram));
 
-	Shader instanceShaderProgram({instanceVertexShader, fragmentShader});
 	Shader skyboxShaderProgram({skyboxVert, skyboxFrag});
 
 	systems.push_back(std::make_unique<TransformSystem>());
@@ -247,34 +244,6 @@ int main(int argc, char** argv) {
 
 		//Draw all meshes
 		for (auto& sys : systems) sys->update(Registry::getDefaultRegistry(), deltaTime);
-
-		// //Switch to instanceShaderProgram to draw instances
-		// instanceShaderProgram.Activate();
-		//
-		// camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, instanceShaderProgram, "camMatrix", aspect);
-		//
-		// DrawLights(instanceShaderProgram, engineDefaults, scene);
-		//
-		// //Draw all instanced meshes
-		// for (auto& instance : scene.instancedMeshes) {
-		// 	Mesh& mesh = *instance->mesh;
-		//
-		// 	instanceShaderProgram.SetInt("tex0", 0);
-		// 	instanceShaderProgram.SetInt("normal0", 1);
-		//
-		// 	GLint useTexLoc = shaderProgram.GetLocation("useTexture");
-		// 	GLint useNormalMapLoc = shaderProgram.GetLocation("useNormalMap");
-		// 	glUniform1i(useTexLoc, mesh.useTexture);
-		// 	glUniform1i(useNormalMapLoc, mesh.useNormalMap);
-		//
-		// 	glActiveTexture(GL_TEXTURE0);
-		// 	glBindTexture(GL_TEXTURE_2D, mesh.texId);
-		//
-		// 	glActiveTexture(GL_TEXTURE1);
-		// 	glBindTexture(GL_TEXTURE_2D, mesh.normalMapId);
-		//
-		// 	instance->DrawInstances(instanceShaderProgram, camera);
-		// }
 
 		//Draw skybox
 		glDepthFunc(GL_LEQUAL);

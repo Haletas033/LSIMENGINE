@@ -1,6 +1,7 @@
 #ifndef LSIM_MESHPOOL_H
 #define LSIM_MESHPOOL_H
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 #include "meshData.h"
@@ -39,6 +40,43 @@ struct GPUMeshBuffer {
         VBO::Unbind();
         VAO::Unbind();
     }
+
+    void configureInstanceAttributes(GLuint instanceVBO) const;
+};
+
+struct InstanceGPUData {
+    glm::mat4 model;
+    glm::mat3 normalMatrix;
+};
+
+struct MeshKey {
+    uint64_t hash;
+    uint32_t vertexCount;
+    uint32_t indexCount;
+
+    bool operator==(const MeshKey& other) const {
+        return hash == other.hash &&
+               vertexCount == other.vertexCount &&
+               indexCount == other.indexCount;
+    }
+};
+
+struct MeshKeyHash {
+    std::size_t operator()(const MeshKey& key) const {
+        std::size_t h = std::hash<uint64_t>{}(key.hash);
+
+        h ^= std::hash<uint32_t>{}(key.vertexCount)
+             + 0x9e3779b9
+             + (h << 6)
+             + (h >> 2);
+
+        h ^= std::hash<uint32_t>{}(key.indexCount)
+             + 0x9e3779b9
+             + (h << 6)
+             + (h >> 2);
+
+        return h;
+    }
 };
 
 class MeshPool {
@@ -48,9 +86,25 @@ private:
     std::vector<uint8_t> alive{};
     std::vector<uint32_t> nextFree{};
     std::vector<GPUMeshBuffer> buffers;
+    std::unordered_map<MeshKey, MeshHandle, MeshKeyHash> meshCache;
+    std::vector<std::optional<MeshKey>> meshKeys;
 
     uint32_t nextFreeHead = SENTINEL;
     uint32_t nextFreeTail = SENTINEL;
+
+    static uint64_t hashBytes(
+        const void* data,
+        size_t size,
+        uint64_t hash = 14695981039346656037ULL
+    );
+
+    static MeshKey makeMeshKey(const MeshData& data);
+
+    MeshHandle allocate(
+        const std::vector<float>& vertices,
+        const std::vector<uint32_t>& indices,
+        MeshMode mode
+    );
 
 public:
     [[nodiscard]] GPUMeshBuffer* get(const MeshHandle h) {
