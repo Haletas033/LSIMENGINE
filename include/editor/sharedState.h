@@ -21,8 +21,7 @@ public:
 		SCALE
 	};
 private:
-	std::set<EntityHandle> currentMeshes{};
-	std::set<EntityHandle> currentLights{};
+	std::set<EntityHandle> currentEntities{};
 	Mode currentMode = Mode::MESH_MODE;
 	Transform currentTransform = Transform::POSITION;
 
@@ -43,34 +42,20 @@ private:
 public:
 	static void InitSharedState();
 
-	[[nodiscard]] std::set<EntityHandle>& current_meshes() { return currentMeshes; }
-	[[nodiscard]] std::set<EntityHandle>& current_lights() { return currentLights; }
+	[[nodiscard]] std::set<EntityHandle>& current_entities() { return currentEntities; }
 	[[nodiscard]] Mode current_mode() const { return currentMode; }
 
-	void set_current_meshes(const Registry& registry, const std::set<EntityHandle> &current_meshes) {
-		currentMeshes.clear();
-		safe_insert(currentMeshes, registry, current_meshes, "MESH");
+	void set_current_entities(const Registry& registry, const std::set<EntityHandle> &current_entities) {
+		currentEntities.clear();
+		safe_insert(currentEntities, registry, current_entities, "MESH");
 	}
 
-	void add_to_current_meshes(const Registry& registry, const std::set<EntityHandle> &new_meshes) {
-		safe_insert(currentMeshes, registry, new_meshes, "MESH");
+	void add_to_current_entities(const Registry& registry, const std::set<EntityHandle> &new_entities) {
+		safe_insert(currentEntities, registry, new_entities, "MESH");
 	}
 
-	void remove_from_current_meshes(const std::set<EntityHandle> &old_meshes) {
-		safe_remove(currentMeshes, old_meshes);
-	}
-
-	void set_current_lights(const Registry& registry, const std::set<EntityHandle> &current_lights) {
-		currentLights.clear();
-		safe_insert(currentLights, registry, current_lights, "LIGHT");
-	}
-
-	void add_to_current_lights(const Registry& registry, const std::set<EntityHandle> &new_lights) {
-		safe_insert(currentLights, registry, new_lights, "LIGHT");
-	}
-
-	void remove_from_current_lights(const std::set<EntityHandle> &old_lights) {
-		safe_remove(currentLights, old_lights);
+	void remove_from_current_entities(const std::set<EntityHandle> &old_entities) {
+		safe_remove(currentEntities, old_entities);
 	}
 
 	void set_current_mode(const Mode current_mode) { currentMode = current_mode; }

@@ -88,7 +88,7 @@ void Gui::RemoveTexture(const std::string &slotName, Registry &registry, const s
 }
 
 void Gui::Transform(Registry &registry, SharedState &sharedState) {
-        const auto currentMeshes = sharedState.current_meshes();
+        const auto currentMeshes = sharedState.current_entities();
 
         if (!currentMeshes.empty()) {
                 const std::optional refMesh = *currentMeshes.begin();

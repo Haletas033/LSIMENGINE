@@ -16,17 +16,17 @@ void ComponentTraits<Transform>::inspect(Registry& registry, SharedState &shared
                 glm::vec3 rotation = transform->getRotationEuler();
                 glm::vec3 scale = transform->getScale();
 
-                const auto currentMeshes = sharedState.current_meshes();
+                const auto currentEntities = sharedState.current_entities();
 
                 if (ImGui::InputFloat3("Position", glm::value_ptr(position))) {
-                        for (const EntityHandle e : currentMeshes) {
+                        for (const EntityHandle e : currentEntities) {
                                 if (auto* t = registry.getComponent<::Transform>(e)) {
                                         t->setPosition(position);
                                 }
                         }
                 }
                 if (ImGui::InputFloat3("Rotation", glm::value_ptr(rotation))) {
-                        for (const EntityHandle e : currentMeshes) {
+                        for (const EntityHandle e : currentEntities) {
                                 if (auto* t = registry.getComponent<::Transform>(e)) {
                                         t->setRotation(rotation);
                                 }
@@ -35,7 +35,7 @@ void ComponentTraits<Transform>::inspect(Registry& registry, SharedState &shared
 
                 if (uniformScaleLock) {
                         if (ImGui::InputFloat("Scale", &uniformScale, 0.1f)) {
-                                for (const EntityHandle e : currentMeshes) {
+                                for (const EntityHandle e : currentEntities) {
                                         if (auto* t = registry.getComponent<::Transform>(e)) {
                                                 t->setScale(glm::vec3(uniformScale));
                                         }
@@ -43,7 +43,7 @@ void ComponentTraits<Transform>::inspect(Registry& registry, SharedState &shared
                         }
                 } else {
                         if (ImGui::InputFloat3("Scale", glm::value_ptr(scale))) {
-                                for (const EntityHandle e : currentMeshes) {
+                                for (const EntityHandle e : currentEntities) {
                                         if (auto* t = registry.getComponent<::Transform>(e)) {
                                                 t->setScale(scale);
                                         }

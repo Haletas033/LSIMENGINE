@@ -3,6 +3,7 @@
 #include "LSIMhelpers.h"
 #include "geometry/mesh.h"
 #include "inputs/gui.h"
+#include "rendering/light.h"
 
 void MeshInputs::add(glm::vec3& lhs, const glm::vec3 rhs) {
 	lhs += rhs;
@@ -47,7 +48,7 @@ void MeshInputs::Move(Registry& registry, SharedState &sharedState, const Defaul
 	const float speed = sharedState.current_transform() == SharedState::Transform::ROTATION ? defaults.rotationSpeed : defaults.transformSpeed;
 	const glm::vec3 delta = direction * context.deltaTime * speed;
 
-	for (const EntityHandle& e : sharedState.current_meshes()) {
+	for (const EntityHandle& e : sharedState.current_entities()) {
 		auto* transform = registry.getComponent<Transform>(e);
 		if (!transform) continue;
 		auto [get, set] = TransformToProperty(*transform, sharedState);
@@ -75,6 +76,7 @@ void MeshInputs::Init(Registry& registry, MeshPool& meshPool, SharedState &share
 	meshInputs.addAction("select_scale_mode", Inputs::KeyCode::N, Inputs::KeyState::JUST_PRESSED);
 
 	meshInputs.addAction("add_mesh", Inputs::KeyCode::F, Inputs::KeyState::JUST_PRESSED);
+	meshInputs.addAction("add_light", Inputs::KeyCode::L, Inputs::KeyState::JUST_PRESSED);
 	meshInputs.addAction("delete_mesh", Inputs::KeyCode::DELETE, Inputs::KeyState::JUST_PRESSED);
 
 	meshInputs.addFunctionForAction("move_meshes_forward", [&](const Inputs::InputContext& context) {
@@ -108,21 +110,28 @@ void MeshInputs::Init(Registry& registry, MeshPool& meshPool, SharedState &share
 
 	meshInputs.addFunctionForAction("add_mesh", [&](const Inputs::InputContext& context) {
 		const EntityHandle mesh = Mesh::create(sharedState.selected_mesh_type(), MeshMode::STATIC, registry, meshPool);
-		sharedState.current_meshes() = {mesh};
+		sharedState.current_entities() = {mesh};
 		if (sharedState.selected_mesh_type() != Primitive::MODEL) {
 			auto* node = new Gui::Node{ mesh, Gui::root, {} };
 			Gui::root->children.push_back(node);
 		}
 	});
 
+	meshInputs.addFunctionForAction("add_light", [&](const Inputs::InputContext& context) {
+		EntityHandle light = Light::create(Registry::getDefaultRegistry(), Light::Type::POINT);
+		sharedState.current_entities() = {light};
+		auto* lightNode = new Gui::Node{ light, Gui::root, {} };
+		Gui::root->children.push_back(lightNode);
+	});
+
 	meshInputs.addFunctionForAction("delete_mesh", [&](const Inputs::InputContext& context) {
-		for (const EntityHandle& e : sharedState.current_meshes()) {
+		for (const EntityHandle& e : sharedState.current_entities()) {
 	    		if (Gui::Node *node = Gui::FindNodeByMesh(Gui::root, e); node != nullptr) {
 	    			std::erase(node->parent->children, node);
 	    			Gui::DeleteNodeRecursively(registry, node);
 	    		}
 		}
-		sharedState.current_meshes() = {};
+		sharedState.current_entities() = {};
 	});
 
 	// Generate 0-9 bindings

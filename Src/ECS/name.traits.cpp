@@ -8,7 +8,7 @@ void ComponentTraits<Name>::inspect(Registry& registry, SharedState &sharedState
         nameBuffer[sizeof(nameBuffer)-1] = '\0';
 
         if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer))) {
-                for (const auto e : sharedState.current_meshes()) {
+                for (const auto e : sharedState.current_entities()) {
                         if (!registry.hasComponent<Name>(e)) { continue; }
                         registry.getComponent<Name>(e)->value = nameBuffer;
                 }
@@ -36,7 +36,7 @@ std::any ComponentTraits<Name>::deserialize(const std::vector<uint8_t> &data, si
 
         const auto read = [&data, &ptr](void* dst, const size_t size) {
                 if (ptr + size > data.size()) {
-                        throw std::runtime_error("Invalid Transform data");
+                        throw std::runtime_error("Invalid Name data");
                 }
 
                 std::memcpy(dst, data.data() + ptr, size);

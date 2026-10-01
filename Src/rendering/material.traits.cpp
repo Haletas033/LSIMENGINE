@@ -128,7 +128,7 @@ std::any ComponentTraits<Material>::deserialize(const std::vector<uint8_t> &data
 
         const auto read = [&data, &ptr](void* dst, const size_t size) {
                 if (ptr + size > data.size()) {
-                        throw std::runtime_error("Invalid Transform data");
+                        throw std::runtime_error("Invalid Material data");
                 }
 
                 std::memcpy(dst, data.data() + ptr, size);

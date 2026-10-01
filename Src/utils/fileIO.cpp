@@ -174,7 +174,7 @@ void IO::loadFromFile(std::ifstream &file, Registry &registry, SharedState& shar
     logger("stdInfo", "beginning to read from file");
 
     Gui::ClearRoot(registry);
-    sharedState.set_current_meshes(registry, {});
+    sharedState.set_current_entities(registry, {});
     for (const auto e : registry.getAllAlive()) {
         registry.destroyEntity(e);
     }

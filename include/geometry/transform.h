@@ -15,6 +15,11 @@ private:
     void applyTransformations();
 
 public:
+    Transform() = default;
+
+    Transform(const glm::vec3 position, const glm::vec3 rotation, const glm::vec3 scale)
+    : position(position), rotation(glm::quat(glm::radians(rotation))), scale(scale) {}
+
     void setPosition(const glm::vec3& p) { position = p; dirty = true; }
     void setRotation(const glm::quat& r) { rotation = r; dirty = true; }
     void setRotation(const glm::vec3& r) { setRotation(glm::quat(glm::radians(r))); }
@@ -22,7 +27,7 @@ public:
 
     [[nodiscard]] const glm::vec3& getPosition() const { return position; }
     [[nodiscard]] const glm::quat& getRotation() const { return rotation; }
-    [[nodiscard]] glm::vec3 getRotationEuler() const { return glm::eulerAngles(rotation); }
+    [[nodiscard]] glm::vec3 getRotationEuler() const { return glm::degrees(glm::eulerAngles(rotation)); }
     [[nodiscard]] const glm::vec3& getScale() const { return scale; }
     [[nodiscard]] const glm::mat4& getModelMatrix() const { return modelMatrix; }
 

@@ -126,12 +126,15 @@ int main(int argc, char** argv) {
 	Gui::Initialize(window);
 
 	EntityHandle firstLight = Light::create(Registry::getDefaultRegistry(), Light::Type::POINT);
+	Registry::getDefaultRegistry().getComponent<Name>(firstLight)->value = "First Light";
+	auto* lightNode = new Gui::Node{ firstLight, Gui::root, {} };
+	Gui::root->children.push_back(lightNode);
 
 	EntityHandle firstCube = Mesh::create(Primitive::CUBE, MeshMode::STATIC, Registry::getDefaultRegistry(), MeshPool::getDefaultMeshPool(), Material::createStandardPBR(), Transform());
-	sharedState.current_meshes() = {firstCube};
+	sharedState.current_entities() = {firstCube};
 	Registry::getDefaultRegistry().getComponent<Name>(firstCube)->value = "First Cube";
-	auto* node = new Gui::Node{ firstCube, Gui::root, {} };
-	Gui::root->children.push_back(node);
+	auto* meshNode = new Gui::Node{ firstCube, Gui::root, {} };
+	Gui::root->children.push_back(meshNode);
 
 	engineLogger("stdInfo", "Successfully created the default \"First Cube\"");
 
@@ -176,9 +179,7 @@ int main(int argc, char** argv) {
 	unsigned int skyboxTexId = Texture::GetCubemapId(faces, GL_LINEAR);
 
 	//Run Start() for all scripts
-	for (auto script : Script::GetAllScripts()) {
-		script->Start();
-	}
+	for (auto script : Script::GetAllScripts()) script->Start();
 
 
 	//Main render loop
@@ -229,7 +230,7 @@ int main(int argc, char** argv) {
 			auto viewport = glm::vec4(0.0f, 0.0f, windowWidth, windowHeight);
 			auto rayDir = meshPicking::GetMouseRay(mouseX, mouseY, camera.projection, camera.view, viewport);
 			if (const auto e = meshPicking::pickMesh(Registry::getDefaultRegistry(), camera.Position, rayDir); e.has_value()) {
-				sharedState.current_meshes() = {e.value()};
+				sharedState.current_entities() = {e.value()};
 			}
 		}
 
@@ -296,10 +297,7 @@ int main(int argc, char** argv) {
 		glDepthFunc(GL_LESS);
 
 		//Run Update() function for all scripts
-		for (auto script : Script::GetAllScripts()) {
-			script->Update(deltaTime);
-		}
-
+		for (auto script : Script::GetAllScripts()) script->Update(deltaTime);
 
 		#ifndef GAME
 		Gui::Begin();
@@ -330,7 +328,7 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Hierarchy", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		if (std::optional<EntityHandle> clickedMesh = Gui::Hierarchy(Registry::getDefaultRegistry()); clickedMesh) sharedState.current_meshes() = {clickedMesh.value()};
+		if (std::optional<EntityHandle> clickedMesh = Gui::Hierarchy(Registry::getDefaultRegistry()); clickedMesh) sharedState.current_entities() = {clickedMesh.value()};
 
 		ImGui::End();
 

@@ -8,12 +8,16 @@ in mat3 TBN;
 #define DIRECTIONAL_LIGHT 1
 #define SPOT_LIGHT 2
 
-layout(std140, binding = 1) uniform lightData {
+struct Light {
     vec4 lightColor;
     vec4 position;
     vec4 direction;
     vec4 params;
-} lights[MAX_LIGHTS];
+};
+
+layout(std140, binding = 1) uniform lightData {
+    Light lights[MAX_LIGHTS];
+};
 
 uniform int lightCount;
 
@@ -83,7 +87,7 @@ void main() {
     }
 
     for (int i = 0; i < lightCount; ++i) {
-        float attenuationScale = lights[i].params.x;
+        float attenuationScale = 1 / lights[i].params.x;
         float intensity = lights[i].params.y;
         float spotAngle = lights[i].params.z;
         int type = int(lights[i].params.w);
@@ -100,9 +104,7 @@ void main() {
             float distance = length(lightDir);
             L = normalize(lightDir);
 
-            float linear = 2.0 / attenuationScale;
-            float quadratic = 1.0 / (attenuationScale*attenuationScale);
-            attenuation = 1.0 / (1.0 + linear * distance + quadratic * distance * distance);
+            attenuation = 1.0 / (1.0 + attenuationScale * distance * distance);
 
             if (type == SPOT_LIGHT){
                 float theta = dot(L, normalize(-lights[i].direction.xyz));

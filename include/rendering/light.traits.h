@@ -11,7 +11,7 @@
 template <>
 struct ComponentTraits<Light> {
         static constexpr std::string_view id = "engine.light";
-        static void inspect(Registry &registry, SharedState &sharedState, const std::any &self) {}
+        static void inspect(Registry &registry, SharedState &sharedState, const EntityHandle &self);
         static std::vector<uint8_t> serialize(Registry &registry, EntityHandle self);
         static std::any deserialize(const std::vector<uint8_t> &data, uint64_t &ptr);
 };
