@@ -179,11 +179,11 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	SystemManager::getDefaultSystemManager().addAtStage<NameSystem>(PRE_UPDATE);
-	SystemManager::getDefaultSystemManager().addAtStage<TransformSystem>(PRE_PHYSICS);
+	SystemManager::getDefaultSystemManager().addAtStage<NameSystem>(SystemStage::PRE_UPDATE);
+	SystemManager::getDefaultSystemManager().addAtStage<TransformSystem>(SystemStage::PRE_PHYSICS);
 	SystemManager::getDefaultSystemManager().addAtStage<RenderSystem>(
 		std::make_unique<RenderSystem>(MeshPool::getDefaultMeshPool(), camera),
-		RENDER
+		SystemStage::RENDER
 	);
 
 	//Run Start() for all scripts

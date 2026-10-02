@@ -11,7 +11,7 @@
 
 #include "system.h"
 
-enum SystemStage {
+enum class SystemStage {
         PRE_UPDATE,
 
         PRE_PHYSICS,
