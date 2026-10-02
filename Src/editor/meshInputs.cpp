@@ -111,25 +111,16 @@ void MeshInputs::Init(Registry& registry, MeshPool& meshPool, SharedState &share
 	meshInputs.addFunctionForAction("add_mesh", [&](const Inputs::InputContext& context) {
 		const EntityHandle mesh = Mesh::create(sharedState.selected_mesh_type(), MeshMode::STATIC, registry, meshPool);
 		sharedState.current_entities() = {mesh};
-		if (sharedState.selected_mesh_type() != Primitive::MODEL) {
-			auto* node = new Gui::Node{ mesh, Gui::root, {} };
-			Gui::root->children.push_back(node);
-		}
 	});
 
 	meshInputs.addFunctionForAction("add_light", [&](const Inputs::InputContext& context) {
 		EntityHandle light = Light::create(Registry::getDefaultRegistry(), Light::Type::POINT);
 		sharedState.current_entities() = {light};
-		auto* lightNode = new Gui::Node{ light, Gui::root, {} };
-		Gui::root->children.push_back(lightNode);
 	});
 
 	meshInputs.addFunctionForAction("delete_mesh", [&](const Inputs::InputContext& context) {
 		for (const EntityHandle& e : sharedState.current_entities()) {
-	    		if (Gui::Node *node = Gui::FindNodeByMesh(Gui::root, e); node != nullptr) {
-	    			std::erase(node->parent->children, node);
-	    			Gui::DeleteNodeRecursively(registry, node);
-	    		}
+	    		registry.destroyEntity(e);
 		}
 		sharedState.current_entities() = {};
 	});

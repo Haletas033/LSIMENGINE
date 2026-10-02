@@ -247,21 +247,27 @@ void Gui::DeleteNode(Node *node) {
         delete node;
 }
 
-void Gui::DeleteNodeRecursively(Registry &registry, Node *node) {
-        for (const auto child: node->children) {
-                DeleteNodeRecursively(registry, child);
+void Gui::DeleteNodeRecursively(Node* node) {
+        if (!node || node == root)
+                return;
+
+        for (Node* child : node->children) {
+                DeleteNodeRecursively(child);
         }
-        node->children = {};
-        if (node != root) {
-                if (!node->mesh.has_value()) { return; }
-                registry.destroyEntity(node->mesh.value());
-                delete node;
+
+        node->children.clear();
+
+        if (node->parent) {
+                auto& siblings = node->parent->children;
+                std::erase(siblings, node);
         }
+
+        delete node;
 }
 
 void Gui::ClearRoot(Registry &registry) {
         for (auto *child: root->children) {
-                DeleteNodeRecursively(registry, child);
+                DeleteNodeRecursively(child);
         }
         root->children.clear();
 }

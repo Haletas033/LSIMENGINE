@@ -16,6 +16,7 @@
 #include <nlohmann/json.hpp>
 
 #include "ECS/name.h"
+#include "ECS/nameSystem.h"
 #include "ECS/system.h"
 #include "editor/editorInputs.h"
 #include "geometry/transformSystem.h"
@@ -118,6 +119,7 @@ int main(int argc, char** argv) {
 	Shader skyboxShaderProgram({skyboxVert, skyboxFrag});
 	ResourceManager::addShader("skyboxShader", std::move(skyboxShaderProgram));
 
+	systems.push_back(std::make_unique<NameSystem>());
 	systems.push_back(std::make_unique<TransformSystem>());
 	systems.push_back(std::make_unique<RenderSystem>(MeshPool::getDefaultMeshPool(), camera));
 
@@ -125,14 +127,11 @@ int main(int argc, char** argv) {
 
 	EntityHandle firstLight = Light::create(Registry::getDefaultRegistry(), Light::Type::POINT);
 	Registry::getDefaultRegistry().getComponent<Name>(firstLight)->value = "First Light";
-	auto* lightNode = new Gui::Node{ firstLight, Gui::root, {} };
-	Gui::root->children.push_back(lightNode);
 
 	EntityHandle firstCube = Mesh::create(Primitive::CUBE, MeshMode::STATIC, Registry::getDefaultRegistry(), MeshPool::getDefaultMeshPool(), Material::createStandardPBR(), Transform());
 	sharedState.current_entities() = {firstCube};
 	Registry::getDefaultRegistry().getComponent<Name>(firstCube)->value = "First Cube";
-	auto* meshNode = new Gui::Node{ firstCube, Gui::root, {} };
-	Gui::root->children.push_back(meshNode);
+
 
 	//Skybox faces
 	std::array<std::string, 6> faces = {
@@ -308,7 +307,7 @@ int main(int argc, char** argv) {
 	}
 	engineLogger("stdInfo", "Exiting L-SIMENGINE");
 
-	Gui::DeleteNodeRecursively(Registry::getDefaultRegistry(), Gui::root);
+	Gui::DeleteNodeRecursively(Gui::root);
 	Gui::CleanUp();
 
 	systems.clear();
