@@ -1,8 +1,6 @@
 name: generateStructureTree
 on:
   push:
-    branches:
-      - master
 jobs:
   build-structure-tree:
     runs-on: ubuntu-latest
