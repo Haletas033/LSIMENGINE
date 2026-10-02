@@ -133,11 +133,41 @@ public:
         }
 
         template <typename TSystem, typename TRelativeTo>
+        void addBefore(std::unique_ptr<TSystem> system) {
+                assert(systems.contains(typeid(TRelativeTo)) && "TRelativeTo not registered");
+
+                if (!systems.contains(typeid(TSystem))) {
+                        addAtStage<TSystem>(std::move(system), systems.at(typeid(TRelativeTo)).stage);
+                }
+
+                assert(std::ranges::find(systems.at(typeid(TSystem)).runsBefore, typeid(TRelativeTo))
+                        == systems.at(typeid(TSystem)).runsBefore.end() && "Constraint already exists");
+
+                systems.at(typeid(TSystem)).runsBefore.emplace_back(typeid(TRelativeTo));
+                isDirty = true;
+        }
+
+        template <typename TSystem, typename TRelativeTo>
         void addAfter() {
                 assert(systems.contains(typeid(TRelativeTo)) && "TRelativeTo not registered");
 
                 if (!systems.contains(typeid(TSystem))) {
                         addAtStage<TSystem>(systems.at(typeid(TRelativeTo)).stage);
+                }
+
+                assert(std::ranges::find(systems.at(typeid(TSystem)).runsAfter, typeid(TRelativeTo))
+                        == systems.at(typeid(TSystem)).runsAfter.end() && "Constraint already exists");
+
+                systems.at(typeid(TSystem)).runsAfter.emplace_back(typeid(TRelativeTo));
+                isDirty = true;
+        }
+
+        template <typename TSystem, typename TRelativeTo>
+        void addAfter(std::unique_ptr<TSystem> system) {
+                assert(systems.contains(typeid(TRelativeTo)) && "TRelativeTo not registered");
+
+                if (!systems.contains(typeid(TSystem))) {
+                        addAtStage<TSystem>(std::move(system), systems.at(typeid(TRelativeTo)).stage);
                 }
 
                 assert(std::ranges::find(systems.at(typeid(TSystem)).runsAfter, typeid(TRelativeTo))
