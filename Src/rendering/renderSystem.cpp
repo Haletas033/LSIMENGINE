@@ -72,6 +72,14 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
 
                 const GLuint shaderId = shader->GetID();
 
+
+                bool isSkybox = material->getShader() == "skyboxShader";
+
+                if (isSkybox) {
+                        shader->SetMat4("projection", 1, glm::value_ptr(camera.projection));
+                        shader->SetMat4("view", 1, glm::value_ptr(camera.view));
+                }
+
                 glUniformBlockBinding(
                         shaderId,
                         glGetUniformBlockIndex(shaderId, "lightData"),
@@ -96,7 +104,13 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                                 if constexpr (std::is_same_v<T, float>) {
                                         shader->SetFloat(name, value);
                                 } else if constexpr (std::is_same_v<T, int>) {
-                                        shader->SetInt(name, value);
+                                        if (name == "skybox") {
+                                                glActiveTexture(GL_TEXTURE0);
+                                                glBindTexture(GL_TEXTURE_CUBE_MAP, static_cast<GLuint>(value));
+                                                shader->SetInt("skybox", 0);
+                                            } else {
+                                                shader->SetInt(name, value);
+                                            }
                                 } else if constexpr (std::is_same_v<T, glm::vec3>) {
                                         shader->SetVec3(name, 1, glm::value_ptr(value));
                                 } else if constexpr (std::is_same_v<T, glm::vec4>) {
@@ -157,13 +171,22 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                 mesh->configureInstanceAttributes(instanceVBO);
                 mesh->vao.Bind();
 
+                if (isSkybox) {
+                        glDepthFunc(GL_LEQUAL);
+                        glDepthMask(GL_FALSE);
+                }
 
                 glDrawElementsInstanced(
-                        GL_TRIANGLES,
-                        mesh->indexCount,
-                        GL_UNSIGNED_INT,
-                        nullptr,
-                        static_cast<GLsizei>(batch.instances.size())
+                    GL_TRIANGLES,
+                    mesh->indexCount,
+                    GL_UNSIGNED_INT,
+                    nullptr,
+                    static_cast<GLsizei>(batch.instances.size())
                 );
+
+                if (isSkybox) {
+                        glDepthMask(GL_TRUE);
+                        glDepthFunc(GL_LESS);
+                }
         }
 }

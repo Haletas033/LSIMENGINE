@@ -12,6 +12,8 @@
 
 Gui::Node *Gui::root = nullptr;
 
+extern std::string workingDir;
+
 //Map ANSI codes to there RGB values
 #define COL(NAME, CODE, RGB) { Ansi::NAME, ImColor RGB },
 
@@ -87,7 +89,7 @@ void Gui::RemoveTexture(const std::string &slotName, Registry &registry, const s
         }
 }
 
-void Gui::Transform(Registry &registry, SharedState &sharedState) {
+void Gui::Main(Registry &registry, SharedState &sharedState) {
         const auto currentMeshes = sharedState.current_entities();
 
         if (!currentMeshes.empty()) {
@@ -148,7 +150,7 @@ void Gui::Console(int &selectedLogLevel) {
         }
 }
 
-void Gui::SceneGUI(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour,
+void Gui::SceneGUI(EntityHandle skybox, glm::vec4 &ambientLightColour,
                    float &ambientLightIntensity) {
         if (ImGui::CollapsingHeader("Scene")) {
                 if (ImGui::Button("Set Skybox")) {
@@ -159,17 +161,30 @@ void Gui::SceneGUI(const std::string &workingDir, unsigned int &skyboxTexId, glm
                                               std::filesystem::copy_options::recursive);
                         const std::string skyBoxDir = workingDir + "skybox";
 
-                        std::cout << skyBoxDir;
+                        auto findFace = [&](const std::string& name) {
+                                const auto png = std::filesystem::path(skyBoxDir) / (name + ".png");
+                                const auto jpg = std::filesystem::path(skyBoxDir) / (name + ".jpg");
 
-                        //Load faces
-                        faces[0] = skyBoxDir + "/right.jpg";
-                        faces[1] = skyBoxDir + "/left.jpg";
-                        faces[2] = skyBoxDir + "/top.jpg";
-                        faces[3] = skyBoxDir + "/bottom.jpg";
-                        faces[4] = skyBoxDir + "/front.jpg";
-                        faces[5] = skyBoxDir + "/back.jpg";
+                                if (std::filesystem::exists(png))
+                                        return png.string();
 
-                        skyboxTexId = Texture::GetCubemapId(faces, GL_NEAREST);
+                                if (std::filesystem::exists(jpg))
+                                        return jpg.string();
+
+                                engineLogger("stdError", "Missing skybox face: " + name);
+                                return std::string{};
+                        };
+
+                        // Load faces
+                        faces[0] = findFace("right");
+                        faces[1] = findFace("left");
+                        faces[2] = findFace("top");
+                        faces[3] = findFace("bottom");
+                        faces[4] = findFace("front");
+                        faces[5] = findFace("back");
+
+                        Registry::getDefaultRegistry().getComponent<Material>(skybox)
+                                ->setProperty("skybox", static_cast<int>(Texture::GetCubemapId(faces, GL_NEAREST)));
                 }
 
                 ImGui::ColorEdit4("Ambient Light Colour", glm::value_ptr(ambientLightColour));

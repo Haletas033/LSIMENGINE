@@ -43,13 +43,13 @@ public:
     static void RemoveTexture(const std::string &slotName,
                                Registry &registry, const std::set<EntityHandle> &currentMeshes);
 
-    static void Transform(Registry &registry, SharedState &sharedState);
+    static void Main(Registry &registry, SharedState &sharedState);
 
     static void Debug(const double &mouseX, const double &mouseY);
 
     static void Console(int &selectedLogLevel);
 
-    static void SceneGUI(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
+    static void SceneGUI(EntityHandle skybox, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
 
     static void DrawNode(Node *node, std::optional<EntityHandle> &clickedMesh, Registry &registry);
 

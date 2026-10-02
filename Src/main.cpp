@@ -116,6 +116,7 @@ int main(int argc, char** argv) {
 	ResourceManager::addShader("PBRShader", std::move(shaderProgram));
 
 	Shader skyboxShaderProgram({skyboxVert, skyboxFrag});
+	ResourceManager::addShader("skyboxShader", std::move(skyboxShaderProgram));
 
 	systems.push_back(std::make_unique<TransformSystem>());
 	systems.push_back(std::make_unique<RenderSystem>(MeshPool::getDefaultMeshPool(), camera));
@@ -133,6 +134,31 @@ int main(int argc, char** argv) {
 	auto* meshNode = new Gui::Node{ firstCube, Gui::root, {} };
 	Gui::root->children.push_back(meshNode);
 
+	//Skybox faces
+	std::array<std::string, 6> faces = {
+		"skybox/right.jpg",
+		"skybox/left.jpg",
+		"skybox/top.jpg",
+		"skybox/bottom.jpg",
+		"skybox/front.jpg",
+		"skybox/back.jpg",
+	};
+
+	//Get skybox texture id
+	GLuint skyboxTexId = Texture::GetCubemapId(faces, GL_LINEAR);
+
+	Material skyboxMat;
+	skyboxMat.addShader("skyboxShader");
+	skyboxMat.addProperty("skybox", static_cast<int>(skyboxTexId));
+	EntityHandle skybox = Mesh::create(
+	    Primitive::CUBE,
+	    MeshMode::STATIC,
+	    Registry::getDefaultRegistry(),
+	    MeshPool::getDefaultMeshPool(),
+	    skyboxMat
+	);
+	Registry::getDefaultRegistry().getComponent<Name>(skybox)->value = "Skybox";
+
 	engineLogger("stdInfo", "Successfully created the default \"First Cube\"");
 
 	//Enable the Depth Buffer
@@ -145,7 +171,6 @@ int main(int argc, char** argv) {
 
 	float deltaTime = 0.0f;
 	float lastTime = 0.0f;
-	int currentLight = 0;
 
 	engineLogger("stdInfo", "Successfully moved meshes and lights into the main scene");
 
@@ -159,25 +184,8 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	//Create skybox
-	// std::unique_ptr<Mesh> skybox = std::make_unique<Mesh>(Primitive::GenerateCube(1));
-
-	//Skybox faces
-	std::array<std::string, 6> faces = {
-		"skybox/right.jpg",
-		"skybox/left.jpg",
-		"skybox/top.jpg",
-		"skybox/bottom.jpg",
-		"skybox/front.jpg",
-		"skybox/back.jpg",
-	};
-
-	//Get skybox texture id
-	unsigned int skyboxTexId = Texture::GetCubemapId(faces, GL_LINEAR);
-
 	//Run Start() for all scripts
 	for (auto script : Script::GetAllScripts()) script->Start();
-
 
 	//Main render loop
 	engineLogger("stdInfo", "Starting main gameplay loop");
@@ -214,13 +222,11 @@ int main(int argc, char** argv) {
 			#endif
 		}
 
-
 		glfwGetCursorPos(window, &mouseX, &mouseY);
 
 		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, shaderProgram, "camMatrix", aspect);
 
 		static std::vector currentMeshes = {0};
-		static int selectedMeshType = 0;
 		static int selectedLogLevel = 0;
 
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
@@ -245,26 +251,6 @@ int main(int argc, char** argv) {
 		//Draw all meshes
 		for (auto& sys : systems) sys->update(Registry::getDefaultRegistry(), deltaTime);
 
-		//Draw skybox
-		glDepthFunc(GL_LEQUAL);
-
-		skyboxShaderProgram.Activate();
-		camera.Matrix(engineDefaults.FOVdeg, engineDefaults.nearPlane, engineDefaults.farPlane, skyboxShaderProgram, "camMatrix", aspect);
-
-		auto view = glm::mat4(1.0f);
-		auto projection = glm::mat4(1.0f);
-		view = glm::mat4(glm::mat3(glm::lookAt(camera.Position, camera.Position + camera.Orientation, camera.Up)));
-		projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
-		skyboxShaderProgram.SetMat4("view", 1, glm::value_ptr(view));
-		skyboxShaderProgram.SetMat4("projection", 1, glm::value_ptr(projection));
-
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexId);
-		skyboxShaderProgram.SetInt("skybox", 0);
-
-		// skybox->Draw(skyboxShaderProgram, camera, skybox->modelMatrix);
-
-		glDepthFunc(GL_LESS);
-
 		//Run Update() function for all scripts
 		for (auto script : Script::GetAllScripts()) script->Update(deltaTime);
 
@@ -281,9 +267,8 @@ int main(int argc, char** argv) {
 
 		ImGui::Begin("Main UI", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-		Gui::Transform(Registry::getDefaultRegistry(), sharedState);
-
-		Gui::SceneGUI(workingDir, skyboxTexId, scene.ambientLightColour, scene.ambientLightIntensity);
+		Gui::Main(Registry::getDefaultRegistry(), sharedState);
+		Gui::SceneGUI(skybox, scene.ambientLightColour, scene.ambientLightIntensity);
 
 		Gui::Debug(mouseX, mouseY);
 
