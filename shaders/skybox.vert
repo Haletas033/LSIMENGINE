@@ -5,9 +5,9 @@ out vec3 TexCoords;
 uniform mat4 projection;
 uniform mat4 view;
 
-void main()
-{
-    vec4 pos = projection * view * vec4(aPos, 1.0f);
-    gl_Position = pos.xyww;
+void main() {
     TexCoords = aPos;
+    mat4 skyboxView = mat4(mat3(view));
+    vec4 pos = projection * skyboxView * vec4(aPos, 1.0);
+    gl_Position = pos.xyww;
 }
