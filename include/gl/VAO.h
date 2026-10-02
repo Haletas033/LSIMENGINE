@@ -9,6 +9,7 @@ private:
     GLuint ID = 0;
     void Delete();
 public:
+    [[nodiscard]] GLuint GetID() const { return ID; }
     VAO();
     VAO(const VAO&) = delete;
     VAO& operator=(const VAO&) = delete;

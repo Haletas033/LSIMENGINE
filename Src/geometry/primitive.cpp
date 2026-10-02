@@ -3,7 +3,7 @@
 
 constexpr float PI = 3.14159265359f;
 
-Mesh Primitive::GeneratePlane(const float tileScale) {
+MeshData Primitive::GeneratePlane(const float tileScale) {
     std::vector<GLfloat> vertices = {
         -0.5f, 0.0f, -0.5f,  0, 1, 0,  0, 0,
          0.5f, 0.0f, -0.5f,  0, 1, 0,  tileScale, 0,
@@ -15,10 +15,10 @@ Mesh Primitive::GeneratePlane(const float tileScale) {
         0, 1, 2,
         2, 3, 0
     };
-    return {vertices, indices};
+    return MeshData{.vertices=vertices, .indices=indices};
 }
 
-Mesh Primitive::GenerateCube(const float tileScale) {
+MeshData Primitive::GenerateCube(const float tileScale) {
     std::vector<GLfloat> vertices = {
 
         -0.5f, -0.5f,  0.5f,  0, 0, 1,  0, 0,
@@ -66,10 +66,11 @@ Mesh Primitive::GenerateCube(const float tileScale) {
 
        20,21,22, 22,23,20
     };
-    return {vertices, indices};
+
+    return MeshData{.vertices=vertices, .indices=indices};
 }
 
-Mesh Primitive::GeneratePyramid(const float tileScale) {
+MeshData Primitive::GeneratePyramid(const float tileScale) {
     // Vertices coordinates
     std::vector<GLfloat>vertices =
     { //     COORDINATES     /        COLORS      /   TexCoord  //
@@ -91,10 +92,10 @@ Mesh Primitive::GeneratePyramid(const float tileScale) {
         3, 0, 4
     };
 
-    return {vertices, indices};
+    return MeshData{.vertices=vertices, .indices=indices};
 }
 
-Mesh Primitive::GenerateSphere(const int stacks = 20, const int slices = 30, const float tileScale = 1) {
+MeshData Primitive::GenerateSphere(const int stacks = 20, const int slices = 30, const float tileScale = 1) {
     std::vector<GLfloat> vertices;
     std::vector<GLuint> indices;
 
@@ -142,10 +143,10 @@ Mesh Primitive::GenerateSphere(const int stacks = 20, const int slices = 30, con
         }
     }
 
-    return {vertices, indices};
+    return MeshData{.vertices=vertices, .indices=indices};
 }
 
-Mesh Primitive::GenerateTorus(const int ringSegments = 30, const int tubeSegments = 20, const float ringRadius = 0.3f, const float tubeRadius = 0.1f, const float tileScale = 1) {
+MeshData Primitive::GenerateTorus(const int ringSegments = 30, const int tubeSegments = 20, const float ringRadius = 0.3f, const float tubeRadius = 0.1f, const float tileScale = 1) {
     std::vector<GLfloat> vertices;
     std::vector<GLuint> indices;
 
@@ -197,5 +198,5 @@ Mesh Primitive::GenerateTorus(const int ringSegments = 30, const int tubeSegment
         }
     }
 
-    return {vertices, indices};
+    return MeshData{.vertices=vertices, .indices=indices};
 }

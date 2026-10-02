@@ -1,145 +1,80 @@
-#include "../../include/geometry/mesh.h"
+#include <geometry/mesh.h>
 
-#include "gl/VAO.h"
-#include "gl/VAO.h"
+#include "ECS/name.h"
+#include "geometry/model.h"
+#include "geometry/terrain.h"
+#include "inputs/gui.h"
+#include "rendering/meshRenderer.h"
 
+#include "ECS/name.traits.h"
+#include "rendering/material.traits.h"
+#include "rendering/meshRenderer.traits.h"
+#include "geometry/transform.traits.h"
 
-// Constructor
-Mesh::Mesh(const std::vector<GLfloat> &vertices, const std::vector<GLuint> &indices) {
-    Mesh::vertices = vertices;
-    Mesh::indices = indices;
+extern Defaults engineDefaults;
+extern std::string workingDir;
 
-    GenerateTangents();
-    setupBuffers();
+EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, Registry &registry, MeshPool &meshPool, const Material &material, const Transform &transform) {
+        MeshData meshData{};
+
+        switch (primitive) {
+                case Primitive::CUBE:
+                        meshData = Primitive::GenerateCube(1.f);
+                        break;
+                case Primitive::PYRAMID:
+                        meshData = Primitive::GeneratePyramid(1.f);
+                        break;
+                case Primitive::PLANE:
+                        meshData = Primitive::GeneratePlane(1.f);
+                        break;
+                case Primitive::SPHERE:
+                        meshData = Primitive::GenerateSphere(24, 24, 1.f);
+                        break;
+                case Primitive::TORUS:
+                        meshData = Primitive::GenerateTorus(24, 12, 1.f, 0.2f,1.f);
+                        break;
+                case Primitive::TERRAIN: {
+                        std::vector<std::vector<float>> noiseMap = Terrain::GenerateNoiseMap(engineDefaults.size, engineDefaults.size, static_cast<int>(time(nullptr)),
+                                engineDefaults.scale, engineDefaults.octaves, engineDefaults.persistence, engineDefaults.lacunarity);
+
+                        const auto uID = static_cast<long long>(glfwGetTime() * 1'000'000'000LL);
+                        const std::string outputPath = std::string(workingDir) + "resources/" + std::to_string(uID) + "terrain.png";
+                        const uint32_t noiseMapTexture = Terrain::noiseMapToTexture(noiseMap, outputPath.c_str());
+
+                        std::vector<float> vertices;
+                        std::vector<uint32_t> indices;
+
+                        Terrain::noiseMapToMesh(noiseMap, vertices, indices, engineDefaults.heightScale, engineDefaults.gridScale);
+
+                        const EntityHandle mesh = create(vertices, indices, mode, registry, meshPool, material, transform);
+                        registry.getComponent<Name>(mesh)->value = "Terrain";
+                        Material *mat = registry.getComponent<Material>(mesh);
+                        mat->addTexture("albedo", outputPath);
+                        ResourceManager::getShader(mat->getShader())->SetInt("useTexture", 1);
+                        return mesh;
+                }
+                case Primitive::MODEL: {
+                        const auto filePath = IO::OpenDialog("Model Files\0*.gltf\0All Files\0*.*\0");
+                        engineLogger("stdInfo", filePath);
+
+                        const Model model{registry, meshPool, filePath.c_str()};
+                        return model.meshes[0];
+                }
+        }
+        EntityHandle mesh = create(meshData.vertices, meshData.indices, mode, registry, meshPool, material, transform);
+        return mesh;
 }
 
-void Mesh::ApplyTransformations() {
-    modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, position);
+EntityHandle Mesh::create(const std::vector<float>& vertices, const std::vector<uint32_t>& indices, const MeshMode mode,
+        Registry &registry, MeshPool &meshPool, const Material &material, const Transform &transform)
+{
+        const EntityHandle e = registry.create();
+        MeshData data{ vertices, {}, indices };
+        const MeshHandle handle = meshPool.upload(data, mode);
+        registry.addComponent<Name>(e, {"Mesh"});
+        registry.addComponent<Transform>(e, transform);
+        registry.addComponent<Material>(e, material);
+        registry.addComponent<MeshRenderer>(e, MeshRenderer{handle, vertices, indices, mode});
 
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.x), glm::vec3(1, 0, 0));
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.y), glm::vec3(0, 1, 0));
-    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation.z), glm::vec3(0, 0, 1));
-
-    modelMatrix = glm::scale(modelMatrix, scale);
+        return e;
 }
-
-void Mesh::Draw(Shader& shader, Camera& camera, const glm::mat4 &finalMatrix) {
-    GLuint modelLoc = shader.GetLocation("model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(finalMatrix));
-    GLuint normalLoc = shader.GetLocation("normalMatrix");
-    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(finalMatrix)));
-    glUniformMatrix3fv(normalLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
-    GLuint viewPosLoc = shader.GetLocation("viewPos");
-    glUniform3fv(viewPosLoc, 1, glm::value_ptr(camera.Position));
-
-
-    shader.Activate();
-
-    if (useTexture) {
-        //Albedo
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texId);
-        //Set the sampler uniform to use texture unit 0
-        GLint texLoc = shader.GetLocation("albedo");
-        glUniform1i(texLoc, 0);
-
-        //Specular
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specMapId);
-        //Set the sampler uniform to use texture unit 1
-        GLint specMapLoc = shader.GetLocation("specular");
-        glUniform1i(specMapLoc, 1);
-
-        //Normal
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, normalMapId);
-        //Set the sampler uniform to use texture unit 2
-        GLint normalMapLoc = shader.GetLocation("normal");
-        glUniform1i(normalMapLoc, 2);
-
-        //Emissive
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, emissiveMapId);
-        //Set the sampler uniform to use texture unit 3
-        GLint emissiveMapLoc = shader.GetLocation("emissive");
-        glUniform1i(emissiveMapLoc, 3);
-
-        //Emissive Intensity
-        shader.SetFloat("emissiveIntensity", emissiveIntensity);
-    }
-
-    vao.Bind();
-
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-}
-
-void Mesh::GenerateTangents() {
-    constexpr int STRIDE = 8;
-    std::vector tangents(vertices.size() / STRIDE, glm::vec3(0.0f));
-
-
-
-    for (size_t i = 0; i < indices.size(); i+=3) {
-        GLuint i0 = indices[i];
-        GLuint i1 = indices[i+1];
-        GLuint i2 = indices[i+2];
-
-        auto p0 = VecFromVertices<3>(STRIDE, i0);
-        auto p1 = VecFromVertices<3>(STRIDE, i1);
-        auto p2 = VecFromVertices<3>(STRIDE, i2);
-
-        auto uv0 = VecFromVertices<2>(STRIDE, i0, 6);
-        auto uv1 = VecFromVertices<2>(STRIDE, i1, 6);
-        auto uv2 = VecFromVertices<2>(STRIDE, i2, 6);
-
-        const glm::vec3 edge1 = p1 - p0;
-        const glm::vec3 edge2 = p2 - p0;
-        const glm::vec2 deltaUV1 = uv1 - uv0;
-        const glm::vec2 deltaUV2 = uv2 - uv0;
-
-        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
-
-        glm::vec3 tangent;
-        tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
-        tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-        tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
-
-        tangents[i0] += tangent;
-        tangents[i1] += tangent;
-        tangents[i2] += tangent;
-    }
-
-    std::vector<GLfloat> newVertices;
-    newVertices.reserve((vertices.size() / STRIDE) * 11);
-
-    for (size_t i = 0; i < vertices.size() / STRIDE; ++i)
-    {
-        for (int j = 0; j < STRIDE; ++j)
-            newVertices.push_back(vertices[i * STRIDE + j]);
-
-        glm::vec3 t = glm::normalize(tangents[i]);
-        newVertices.push_back(t.x);
-        newVertices.push_back(t.y);
-        newVertices.push_back(t.z);
-    }
-
-    vertices = std::move(newVertices);
-}
-
-void Mesh::setupBuffers() {
-    vao.Bind();
-    vbo = VBO(vertices);
-    ebo = EBO(indices);
-    vbo->Bind();
-
-    vao.LinkAttrib(0, 3, GL_FLOAT, 11 * sizeof(float), nullptr);
-    vao.LinkAttrib(1, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
-    vao.LinkAttrib(2, 2, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(6 * sizeof(float)));
-    vao.LinkAttrib(3, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(8 * sizeof(float)));
-
-    VAO::Unbind();
-    VBO::Unbind();
-    EBO::Unbind();
-}
-

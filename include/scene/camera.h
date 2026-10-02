@@ -2,16 +2,16 @@
 #define CAMERA_CLASS_H
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include<glad/glad.h>
+#define GLFW_INCLUDE_NONE
 #include<GLFW/glfw3.h>
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
 #include<glm/gtx/rotate_vector.hpp>
 #include<glm/gtx/vector_angle.hpp>
-
-#include "../gl/shaderClass.h"
 #include "include/utils/defaults.h"
+
+class Shader;
 
 class Camera
 {

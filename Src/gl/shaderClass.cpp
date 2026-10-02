@@ -51,7 +51,7 @@ void Shader::Activate() const {
     glUseProgram(ID);
 }
 
-GLint Shader::GetLocation(const std::string &name) const {
+GLuint Shader::GetLocation(const std::string &name) const {
     return glGetUniformLocation(ID, name.c_str());
 }
 

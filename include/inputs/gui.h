@@ -11,7 +11,6 @@
 #include "../../imgui/backends/imgui_impl_opengl3.h"
 
 #include "../geometry/mesh.h"
-#include "../scene/light.h"
 #include <include/utils/logging/log.h>
 #include <include/utils/fileIO.h>
 
@@ -23,7 +22,7 @@ private:
     static std::unordered_map<std::string, ImColor> colourMap;
 public:
     struct Node {
-        Mesh* mesh;
+        std::optional<EntityHandle> mesh;
         Node* parent;
         std::vector<Node*> children;
     };
@@ -38,40 +37,33 @@ public:
 
     static void CleanUp();
 
-    static void AddTexture(const char *name, std::string fileName,
-                           const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, const std::set<unsigned int> &currentMeshes, const std::
-                           string
-                           &workingDir,
-                           GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use);
+    static void AddTexture(const std::string &slotName, std::string &fileName,
+                           Registry &registry, const std::set<EntityHandle> &currentMeshes,
+                           const std::string &workingDir);
+    static void RemoveTexture(const std::string &slotName,
+                               Registry &registry, const std::set<EntityHandle> &currentMeshes);
 
-    static void RemoveTexture(const char *name,
-                              const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes,
-                              const std::set<unsigned int> &currentMeshes, GLuint Mesh::*id, std::string Mesh::*path, bool Mesh::*use);
-
-    static void Transform(SharedState &sharedState, const std::string &workingDir, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes, int
-                          &selectedMeshType, int clickedMesh);
-
-    static void Lighting(std::vector<Light> &lights, int &currentLight);
+    static void Main(Registry &registry, SharedState &sharedState);
 
     static void Debug(const double &mouseX, const double &mouseY);
 
     static void Console(int &selectedLogLevel);
 
-    static void SceneGUI(const std::string &workingDir, unsigned int &skyboxTexId, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
+    static void SceneGUI(EntityHandle skybox, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
 
-    static void DrawNode(Node *node, int &clickedMesh, const std::vector<std::vector<std::unique_ptr<Mesh>>> &meshes);
+    static void DrawNode(Node *node, std::optional<EntityHandle> &clickedMesh, Registry &registry);
 
     static void DeleteNode(Node *node);
 
     static void DeleteNodeRecursively(Node *node);
 
-    static void ClearRoot();
+    static void ClearRoot(Registry &registry);
 
-    static Node *FindNodeByMesh(Node *node, const Mesh *mesh);
+    static Node *FindNodeByMesh(Node *node, const EntityHandle &mesh);
 
     static Node *FindNodeByMeshID(Node *node, uint16_t meshID);
 
-    static int Hierarchy(const std::vector<std::vector<std::unique_ptr<Mesh>>>& meshes);
+    static std::optional<EntityHandle> Hierarchy(Registry &registry);
 
 
 };

@@ -22,6 +22,7 @@ set(IMGUI_SOURCES
         external/imgui/imgui_demo.cpp
         external/imgui/backends/imgui_impl_glfw.cpp
         external/imgui/backends/imgui_impl_opengl3.cpp
+        include/ECS/entityManager.h
 )
 add_executable(LSIM
         ${IMGUI_SOURCES}
@@ -49,7 +50,7 @@ add_executable(LSIM
         Src/utils/fileIO.cpp
         include/inputs/gui.h Src/inputs/gui.cpp
         include/inputs/inputs.h Src/inputs/inputs.cpp
-        Src/main.cpp Src/main.cpp include/scene/light.h
+        Src/main.cpp Src/main.cpp
         include/scene/scene.h include/utils/defaults.h
         include/utils/logging/log.h Src/utils/logging/log.cpp
         include/utils/json.h Src/utils/json.cpp Src/utils/texture.cpp
@@ -64,12 +65,44 @@ add_executable(LSIM
         include/inputs/keyDispatch.h
         include/inputs/keyDispatcherUndef.h
         include/LSIMhelpers.h
-        Src/editor/lightInputs.cpp
-        include/editor/lightInputs.h
         include/editor/IOInputs.h
         Src/editor/IOInputs.cpp
         include/editor/editorInputs.h
         Src/editor/editorInputs.cpp
+        Src/ECS/entityManager.cpp
+        include/ECS/registry.h
+        include/geometry/transform.h
+        Src/geometry/transform.cpp
+        include/rendering/material.h
+        include/resources/resourceManager.h
+        Src/rendering/material.cpp
+        Src/resources/resourceManager.cpp
+        include/rendering/meshRenderer.h
+        include/ECS/handle.h
+        include/geometry/meshPool.h
+        include/geometry/meshData.h
+        Src/geometry/meshPool.cpp
+        include/ECS/system.h
+        include/rendering/renderSystem.h
+        Src/rendering/renderSystem.cpp
+        Src/geometry/meshData.cpp
+        include/geometry/transformSystem.h
+        include/ECS/name.h
+        include/ECS/componentTraits.h
+        include/geometry/transform.traits.h
+        Src/geometry/transform.traits.cpp
+        include/ECS/name.traits.h
+        Src/ECS/name.traits.cpp
+        include/rendering/material.traits.h
+        Src/rendering/material.traits.cpp
+        include/rendering/meshRenderer.traits.h
+        Src/rendering/meshRenderer.traits.cpp
+        include/rendering/light.h
+        Src/rendering/light.cpp
+        include/rendering/light.traits.h
+        Src/rendering/light.traits.cpp
+        include/ECS/nameSystem.h
+        include/ECS/systemManager.h
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include

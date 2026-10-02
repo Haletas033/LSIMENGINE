@@ -24,7 +24,8 @@ public:
 
     explicit Shader(const ShaderFiles& shaders);
     void Activate() const;
-    GLint GetLocation(const std::string &name) const;
+    [[nodiscard]] GLuint GetID() const { return ID; }
+    [[nodiscard]] GLuint GetLocation(const std::string &name) const;
     void SetInt(const std::string &name, int value) const;
     void SetFloat(const std::string &name, float value) const;
     void SetVec4(const std::string &name, int count, const float *value) const;

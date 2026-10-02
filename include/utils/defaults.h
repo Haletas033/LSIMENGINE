@@ -1,9 +1,7 @@
-//
-// Created by halet on 9/5/2025.
-//
-
 #ifndef DEFAULTS_H
 #define DEFAULTS_H
+
+#include <string>
 
 struct Defaults {
     unsigned int MAX_LIGHTS = 8;

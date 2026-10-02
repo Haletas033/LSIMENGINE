@@ -39,8 +39,8 @@ public:
 
     static std::string GetFileContents(const std::string& filePath);
 
-    static void saveToFile(std::ofstream &file, const Scene &scene);
-    static Scene loadFromFile(std::ifstream &file, const std::string &workingDir);
+    static void saveToFile(std::ofstream &file, Registry &registry);
+    static void loadFromFile(std::ifstream &file, Registry &registry, SharedState &sharedState, const std::string &workingDir);
 };
 
 #endif //FILEIO_CLASS_H

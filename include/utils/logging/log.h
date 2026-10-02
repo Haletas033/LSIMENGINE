@@ -12,31 +12,21 @@
 #include "imgui.h"
 #include "LSIMtypes.h"
 
+
+#define STR_IMPL(x) #x
+#define STR(x) STR_IMPL(x)
+
+#define COL(NAME, CODE, RGB) constexpr auto NAME = STR(CODE##m);
+
 namespace Ansi {
     constexpr auto START = "\033[";
     constexpr auto END = "\033[0m";
-    constexpr auto BLACK = "30m";
-    constexpr auto RED = "31m";
-    constexpr auto GREEN = "32m";
-    constexpr auto YELLOW = "33m";
-    constexpr auto BLUE = "34m";
-    constexpr auto MAGENTA = "35m";
-    constexpr auto CYAN = "36m";
-    constexpr auto WHITE = "37m";
-
-    constexpr auto BRIGHT_BLACK = "90m";
-    constexpr auto BRIGHT_RED = "91m";
-    constexpr auto BRIGHT_GREEN = "92m";
-    constexpr auto BRIGHT_YELLOW = "93m";
-    constexpr auto BRIGHT_BLUE = "94m";
-    constexpr auto BRIGHT_MAGENTA = "95m";
-    constexpr auto BRIGHT_CYAN = "96m";
-    constexpr auto BRIGHT_WHITE = "97m";
-
-    constexpr auto ERROR_COLOUR = "31m";
-    constexpr auto WARNING_COLOUR = "33m";
-    constexpr auto INFO_COLOUR = "34m";
+    #include "colorCodes.def"
 }
+
+#undef COL
+#undef STR
+#undef STR_IMPL
 
 class Logger {
 public:
