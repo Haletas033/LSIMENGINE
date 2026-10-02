@@ -195,6 +195,10 @@ public:
                 }
         }
 
+        static SystemManager& getDefaultSystemManager() {
+                static SystemManager instance;
+                return instance;
+        }
 };
 
 #endif //LSIM_SYSTEMMANAGER_H

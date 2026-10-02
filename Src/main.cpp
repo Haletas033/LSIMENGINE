@@ -179,11 +179,12 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	SystemManager systemManager;
-
-	systemManager.addAtStage<NameSystem>(PRE_UPDATE);
-	systemManager.addAtStage<TransformSystem>(PRE_PHYSICS);
-	systemManager.addAtStage<RenderSystem>(std::make_unique<RenderSystem>(MeshPool::getDefaultMeshPool(), camera), RENDER);
+	SystemManager::getDefaultSystemManager().addAtStage<NameSystem>(PRE_UPDATE);
+	SystemManager::getDefaultSystemManager().addAtStage<TransformSystem>(PRE_PHYSICS);
+	SystemManager::getDefaultSystemManager().addAtStage<RenderSystem>(
+		std::make_unique<RenderSystem>(MeshPool::getDefaultMeshPool(), camera),
+		RENDER
+	);
 
 	//Run Start() for all scripts
 	for (auto script : Script::GetAllScripts()) script->Start();
@@ -249,7 +250,7 @@ int main(int argc, char** argv) {
 		shaderProgram.SetVec4("ambientLightColour", 1, glm::value_ptr(scene.ambientLightColour));
 		shaderProgram.SetFloat("ambientLightIntensity", scene.ambientLightIntensity);
 
-		systemManager.update(Registry::getDefaultRegistry(), deltaTime);
+		SystemManager::getDefaultSystemManager().update(Registry::getDefaultRegistry(), deltaTime);
 
 		//Run Update() function for all scripts
 		for (auto script : Script::GetAllScripts()) script->Update(deltaTime);
