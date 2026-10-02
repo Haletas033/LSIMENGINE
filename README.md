@@ -66,6 +66,7 @@ ninja
 │   │   ├── editorInputs.cpp
 │   │   ├── meshInputs.cpp
 │   │   └── sharedState.cpp
+│   ├── engine.cpp
 │   ├── geometry
 │   │   ├── mesh.cpp
 │   │   ├── meshData.cpp
@@ -160,6 +161,7 @@ ninja
 │   │   ├── editorInputs.h
 │   │   ├── meshInputs.h
 │   │   └── sharedState.h
+│   ├── engine.h
 │   ├── geometry
 │   │   ├── mesh.h
 │   │   ├── meshData.h
@@ -219,7 +221,7 @@ ninja
 ├── tree.txt
 └── website.dsp
 
-32 directories, 134 files
+32 directories, 136 files
 ```
 <!-- TREE_END -->
 ## Contributing
