@@ -58,10 +58,23 @@ ninja
 ├── LICENSE
 ├── README.md
 ├── Src
+│   ├── ECS
+│   │   ├── entityManager.cpp
+│   │   └── name.traits.cpp
+│   ├── editor
+│   │   ├── IOInputs.cpp
+│   │   ├── editorInputs.cpp
+│   │   ├── meshInputs.cpp
+│   │   └── sharedState.cpp
 │   ├── geometry
 │   │   ├── mesh.cpp
-│   │   ├── primitives.cpp
-│   │   └── terrain.cpp
+│   │   ├── meshData.cpp
+│   │   ├── meshPool.cpp
+│   │   ├── model.cpp
+│   │   ├── primitive.cpp
+│   │   ├── terrain.cpp
+│   │   ├── transform.cpp
+│   │   └── transform.traits.cpp
 │   ├── gl
 │   │   ├── EBO.cpp
 │   │   ├── VAO.cpp
@@ -71,6 +84,15 @@ ninja
 │   │   ├── gui.cpp
 │   │   └── inputs.cpp
 │   ├── main.cpp
+│   ├── rendering
+│   │   ├── light.cpp
+│   │   ├── light.traits.cpp
+│   │   ├── material.cpp
+│   │   ├── material.traits.cpp
+│   │   ├── meshRenderer.traits.cpp
+│   │   └── renderSystem.cpp
+│   ├── resources
+│   │   └── resourceManager.cpp
 │   ├── scene
 │   │   └── camera.cpp
 │   └── utils
@@ -79,13 +101,75 @@ ninja
 │       ├── logging
 │       │   └── log.cpp
 │       └── texture.cpp
+├── Website
+│   ├── LSIMdocs
+│   │   ├── 001welcome.md
+│   │   ├── 002gettingStarted.md
+│   │   ├── 003fixingLauncherIssues.md
+│   │   ├── 004theBasics.md
+│   │   ├── 005movement.md
+│   │   ├── 006transformations.md
+│   │   ├── 007creations.md
+│   │   ├── 008textures.md
+│   │   ├── 009fileIO.md
+│   │   ├── 010goingFurther.md
+│   │   ├── 011workingWithConfigs.md
+│   │   ├── 012logger.md
+│   │   ├── 013fileIO.md
+│   │   ├── 014otherSystems.md
+│   │   ├── 015primitives.md
+│   │   ├── 016mesh.md
+│   │   ├── 017light.md
+│   │   ├── 018gui.md
+│   │   ├── 019inputs.md
+│   │   ├── 020texture.md
+│   │   ├── 021programmingYourGame.md
+│   │   ├── 022exampleGame.md
+│   │   ├── 023theEnd.md
+│   │   └── imgs
+│   │       ├── after.png
+│   │       ├── before.png
+│   │       ├── components.png
+│   │       ├── configMisconfig.png
+│   │       ├── normalExample.jpg
+│   │       ├── shaderMisconfig.png
+│   │       ├── specularExample.png
+│   │       └── success.png
+│   └── Src
+│       ├── docs
+│       │   └── LSIMdocs.h
+│       └── styles
+│           └── LSIMENGINE_Styles.css.h
 ├── config
 │   └── config.json
 ├── include
+│   ├── ECS
+│   │   ├── componentTraits.h
+│   │   ├── entityManager.h
+│   │   ├── handle.h
+│   │   ├── name.h
+│   │   ├── name.traits.h
+│   │   ├── nameSystem.h
+│   │   ├── registry.h
+│   │   ├── system.h
+│   │   └── systemManager.h
+│   ├── LSIMhelpers.h
+│   ├── LSIMtypes.h
+│   ├── editor
+│   │   ├── IOInputs.h
+│   │   ├── editorInputs.h
+│   │   ├── meshInputs.h
+│   │   └── sharedState.h
 │   ├── geometry
 │   │   ├── mesh.h
-│   │   ├── primitives.h
-│   │   └── terrain.h
+│   │   ├── meshData.h
+│   │   ├── meshPool.h
+│   │   ├── model.h
+│   │   ├── primitive.h
+│   │   ├── terrain.h
+│   │   ├── transform.h
+│   │   ├── transform.traits.h
+│   │   └── transformSystem.h
 │   ├── gl
 │   │   ├── EBO.h
 │   │   ├── VAO.h
@@ -93,10 +177,22 @@ ninja
 │   │   └── shaderClass.h
 │   ├── inputs
 │   │   ├── gui.h
-│   │   └── inputs.h
+│   │   ├── inputs.h
+│   │   ├── keyDispatch.h
+│   │   ├── keyDispatcherUndef.h
+│   │   └── keys.def
+│   ├── rendering
+│   │   ├── light.h
+│   │   ├── light.traits.h
+│   │   ├── material.h
+│   │   ├── material.traits.h
+│   │   ├── meshRenderer.h
+│   │   ├── meshRenderer.traits.h
+│   │   └── renderSystem.h
+│   ├── resources
+│   │   └── resourceManager.h
 │   ├── scene
 │   │   ├── camera.h
-│   │   ├── light.h
 │   │   ├── scene.h
 │   │   └── script.h
 │   └── utils
@@ -104,16 +200,26 @@ ninja
 │       ├── fileIO.h
 │       ├── json.h
 │       ├── logging
+│       │   ├── colorCodes.def
 │       │   └── log.h
+│       ├── meshPicking.h
 │       └── texture.h
 ├── shaders
 │   ├── default.frag
-│   ├── default.geom
 │   ├── default.vert
-│   └── instance.vert
-└── tree.txt
+│   ├── skybox.frag
+│   └── skybox.vert
+├── skybox
+│   ├── back.jpg
+│   ├── bottom.jpg
+│   ├── front.jpg
+│   ├── left.jpg
+│   ├── right.jpg
+│   └── top.jpg
+├── tree.txt
+└── website.dsp
 
-17 directories, 43 files
+32 directories, 134 files
 ```
 <!-- TREE_END -->
 ## Contributing
