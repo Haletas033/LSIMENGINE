@@ -173,7 +173,6 @@ void IO::saveToFile(std::ofstream &file, Registry& registry) {
 void IO::loadFromFile(std::ifstream &file, Registry &registry, SharedState& sharedState, const std::string &workingDir) {
     logger("stdInfo", "beginning to read from file");
 
-    Gui::ClearRoot(registry);
     sharedState.set_current_entities(registry, {});
     for (const auto e : registry.getAllAlive()) {
         registry.destroyEntity(e);
