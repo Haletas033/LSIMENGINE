@@ -43,10 +43,10 @@ private:
         void rebuildExecutionOrder() {
                 executionOrder.clear();
 
-                for (int stage = 0; stage < STAGE_COUNT; ++stage) {
+                for (int stage = 0; stage < static_cast<int>(SystemStage::STAGE_COUNT); ++stage) {
                         std::vector<std::pair<std::type_index, const SystemData*>> systemsAtStage{};
                         for (const auto &[type, data]: systems) {
-                                if (data.stage == stage) systemsAtStage.emplace_back(type, &data);
+                                if (data.stage == static_cast<SystemStage>(stage)) systemsAtStage.emplace_back(type, &data);
                         }
 
                         std::unordered_map<std::type_index, std::vector<std::type_index>> edges;
