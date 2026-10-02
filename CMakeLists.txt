@@ -103,6 +103,8 @@ add_executable(LSIM
         Src/rendering/light.traits.cpp
         include/ECS/nameSystem.h
         include/ECS/systemManager.h
+        include/engine.h
+        Src/engine.cpp
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include
