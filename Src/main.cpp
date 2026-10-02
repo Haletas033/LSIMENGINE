@@ -18,6 +18,7 @@
 #include "ECS/name.h"
 #include "ECS/nameSystem.h"
 #include "ECS/system.h"
+#include "ECS/systemManager.h"
 #include "editor/editorInputs.h"
 #include "geometry/transformSystem.h"
 #include "include/scene/script.h"
@@ -42,7 +43,6 @@ Scene scene {};
 Camera camera {};
 GLFWwindow* window;
 std::string workingDir;
-std::vector<std::unique_ptr<System>> systems;
 
 int main(int argc, char** argv) {
 	if (argc >= 2) {
@@ -119,10 +119,6 @@ int main(int argc, char** argv) {
 	Shader skyboxShaderProgram({skyboxVert, skyboxFrag});
 	ResourceManager::addShader("skyboxShader", std::move(skyboxShaderProgram));
 
-	systems.push_back(std::make_unique<NameSystem>());
-	systems.push_back(std::make_unique<TransformSystem>());
-	systems.push_back(std::make_unique<RenderSystem>(MeshPool::getDefaultMeshPool(), camera));
-
 	Gui::Initialize(window);
 
 	EntityHandle firstLight = Light::create(Registry::getDefaultRegistry(), Light::Type::POINT);
@@ -182,6 +178,12 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
+
+	SystemManager systemManager;
+
+	systemManager.addAtStage<NameSystem>(PRE_UPDATE);
+	systemManager.addAtStage<TransformSystem>(PRE_PHYSICS);
+	systemManager.addAtStage<RenderSystem>(std::make_unique<RenderSystem>(MeshPool::getDefaultMeshPool(), camera), RENDER);
 
 	//Run Start() for all scripts
 	for (auto script : Script::GetAllScripts()) script->Start();
@@ -247,8 +249,7 @@ int main(int argc, char** argv) {
 		shaderProgram.SetVec4("ambientLightColour", 1, glm::value_ptr(scene.ambientLightColour));
 		shaderProgram.SetFloat("ambientLightIntensity", scene.ambientLightIntensity);
 
-		//Draw all meshes
-		for (auto& sys : systems) sys->update(Registry::getDefaultRegistry(), deltaTime);
+		systemManager.update(Registry::getDefaultRegistry(), deltaTime);
 
 		//Run Update() function for all scripts
 		for (auto script : Script::GetAllScripts()) script->Update(deltaTime);
@@ -310,7 +311,6 @@ int main(int argc, char** argv) {
 	Gui::DeleteNodeRecursively(Gui::root);
 	Gui::CleanUp();
 
-	systems.clear();
 	Registry::getDefaultRegistry() = Registry{};
 	MeshPool::getDefaultMeshPool() = MeshPool{};
 	ResourceManager::clear();
