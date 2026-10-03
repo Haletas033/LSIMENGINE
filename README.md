@@ -146,6 +146,19 @@ ninja
 │       │   └── LSIMdocs.h
 │       └── styles
 │           └── LSIMENGINE_Styles.css.h
+├── cmake
+│   ├── ECS.cmake
+│   ├── editor.cmake
+│   ├── engine.cmake
+│   ├── geometry.cmake
+│   ├── gl.cmake
+│   ├── inputs.cmake
+│   ├── platform.cmake
+│   ├── rendering.cmake
+│   ├── resources.cmake
+│   ├── scene.cmake
+│   ├── shaderCompilation.cmake
+│   └── utils.cmake
 ├── config
 │   └── config.json
 ├── include
@@ -217,10 +230,8 @@ ninja
 │       ├── meshPicking.h
 │       └── texture.h
 ├── shaders
-│   ├── default.frag
-│   ├── default.vert
-│   ├── skybox.frag
-│   └── skybox.vert
+│   ├── test.frag
+│   └── test.vert
 ├── skybox
 │   ├── back.jpg
 │   ├── bottom.jpg
@@ -231,7 +242,7 @@ ninja
 ├── tree.txt
 └── website.dsp
 
-34 directories, 144 files
+35 directories, 154 files
 ```
 <!-- TREE_END -->
 ## Contributing
