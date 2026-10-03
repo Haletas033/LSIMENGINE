@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <unordered_set>
 #include <utility>
+
+#include "engineContext.h"
+#include "editor/editorInputs.h"
 #include "include/utils/json.h"
 
 static Logger logger;
@@ -151,4 +154,31 @@ void Inputs::handleInputs(const InputContext& context) {
     }
 
     lastKeyStates = currentKeyStates;
+}
+
+std::optional<LSIM::Error> Inputs::initializeInput(Inputs& inputs, GLFWwindow* window, EditorInputs& editorInputs, Scene& scene, SharedState& sharedState, const Camera& camera) {
+    inputs.InitInputs(window);
+    editorInputs.Init(
+        Registry::getDefaultRegistry(),
+        MeshPool::getDefaultMeshPool(),
+        scene,
+        EngineContext::getWorkingDir(),
+        sharedState,
+        EngineContext::getDefaults(),
+        camera,
+        inputs
+    );
+
+    return std::nullopt;
+}
+
+std::optional<LSIM::Error> Inputs::handleInputs(Inputs& inputs, GLFWwindow* window, Scene& scene, Camera& camera, const float deltaTime) {
+    if (const ImGuiIO& io = ImGui::GetIO(); !io.WantCaptureMouse && !io.WantCaptureKeyboard) {
+        #ifndef GAME
+        camera.Inputs(window, deltaTime);
+        #endif
+        inputs.handleInputs((InputContext){scene, deltaTime});
+    }
+
+    return std::nullopt;
 }

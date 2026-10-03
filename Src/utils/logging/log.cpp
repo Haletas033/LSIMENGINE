@@ -3,7 +3,7 @@
 #include "engineContext.h"
 #include "utils/json.h"
 
-CapacityBuffer<Logger> Logger::logs(UINT16_MAX);
+LSIM::CapacityBuffer<Logger> Logger::logs(UINT16_MAX);
 
 Logger engineLogger;
 

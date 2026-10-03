@@ -10,6 +10,7 @@
 class Engine {
 private:
         double mouseX{}, mouseY{};
+        int windowWidth{}, windowHeight{};
         float aspect{};
         float deltaTime{};
         float lastTime{};
@@ -22,19 +23,26 @@ private:
         SharedState sharedState{};
         Inputs inputs{};
         EditorInputs editorInputs{};
+        EntityHandle skybox = EntityHandle::invalid();
 
-        static void frameBufferSizeCallback(GLFWwindow* window, const int width, const int height){
-                glViewport(0, 0, width, height);
-        }
+        [[nodiscard]] std::optional<LSIM::Error> initializeConfig();
+        [[nodiscard]] std::optional<LSIM::Error> loadShaders();
+        [[nodiscard]] std::optional<LSIM::Error> loadResources();
+        [[nodiscard]] std::optional<LSIM::Error> initializeSystems();
+        [[nodiscard]] static std::optional<LSIM::Error> initializeScripts();
+        [[nodiscard]] std::optional<LSIM::Error> updateSystems();
+
+        void updateAspect();
+
+        void updateTime();
 
 public:
         Engine(int argc, char **argv);
 
-        void start();
+        [[nodiscard]] std::optional<LSIM::Error> start();
+        [[nodiscard]] std::optional<LSIM::Error> update();
 
-        void update();
-
-        void exit();
+        ~Engine();
 };
 
 #endif //LSIM_ENGINE_H

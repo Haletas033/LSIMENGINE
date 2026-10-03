@@ -2,8 +2,11 @@
 
 #include <iostream>
 
-GLuint Shader::CreateShader(const std::optional<std::string>& shaderSource, const int type) {
-    if (shaderSource == std::nullopt) return 0;
+#include "LSIMtypes.h"
+#include "utils/logging/log.h"
+
+std::pair<GLuint, std::optional<LSIM::Error>> Shader::CreateShader(const std::optional<std::string> &shaderSource, const int type) {
+    if (shaderSource == std::nullopt) return {0, LSIM::Error{LSIM::ErrorCode::SHADER_SOURCE_EMPTY, LSIM::FatalityLevel::FATAL}};
     const GLuint shader = glCreateShader(type);
     const GLchar* src = shaderSource.value().c_str();
     glShaderSource(shader, 1, &src, nullptr);
@@ -14,37 +17,67 @@ GLuint Shader::CreateShader(const std::optional<std::string>& shaderSource, cons
     if (!success) {
         GLchar error[1024];
         glGetShaderInfoLog(shader, 1024, nullptr, error);
-        std::cerr << "SHADER COMPILATION FAILED: " << error << std::endl;
-        std::terminate();
+        engineLogger("stdError", "SHADER COMPILATION FAILED: " + std::string(error));
+        glDeleteShader(shader);
+        return{0, LSIM::Error{LSIM::ErrorCode::SHADER_COMPILATION_FAILURE, LSIM::FatalityLevel::FATAL}};
     }
 
-    return shader;
+    return {shader, std::nullopt};
 }
 
-Shader::Shader(const ShaderFiles& shaders) {
-    const GLuint vertexShader = CreateShader(shaders.vertexSource, GL_VERTEX_SHADER);
-    const GLuint fragmentShader = CreateShader(shaders.fragmentSource, GL_FRAGMENT_SHADER);
-    const GLuint geometryShader = CreateShader(shaders.geometrySource, GL_GEOMETRY_SHADER);
+std::pair<Shader, std::optional<LSIM::Error>> Shader::Create(const ShaderFiles& shaders) {
+    Shader shader{};
 
-    ID = glCreateProgram();
+    auto [vsdr, verr] = CreateShader(
+        shaders.vertexSource, GL_VERTEX_SHADER);
+    if (verr) { return {std::move(shader), verr}; }
 
-    SHADER_SAFE_ATTACH(vertexShader);
-    SHADER_SAFE_ATTACH(fragmentShader);
-    SHADER_SAFE_ATTACH(geometryShader);
-
-    glLinkProgram(ID);
-    GLint success;
-    glGetProgramiv(ID, GL_LINK_STATUS, &success);
-    if (!success) {
-        GLchar error[1024];
-        glGetProgramInfoLog(ID, 1024, nullptr, error);
-        std::cerr << "SHADER LINKING FAILED: " << error << std::endl;
-        std::terminate();
+    auto [fsdr, ferr] = CreateShader(
+        shaders.fragmentSource, GL_FRAGMENT_SHADER);
+    if (ferr) {
+        SHADER_SAFE_DELETE(vsdr);
+        return {std::move(shader), ferr};
     }
 
-    SHADER_SAFE_DELETE(vertexShader);
-    SHADER_SAFE_DELETE(fragmentShader);
-    SHADER_SAFE_DELETE(geometryShader);
+    GLuint gsdr = 0;
+
+    if (shaders.geometrySource) {
+        auto [geometryShader, gerr] = CreateShader(
+            shaders.geometrySource, GL_GEOMETRY_SHADER);
+
+        if (gerr) {
+            SHADER_SAFE_DELETE(vsdr);
+            SHADER_SAFE_DELETE(fsdr);
+            return {std::move(shader), gerr};
+        }
+
+        gsdr = geometryShader;
+    }
+
+    shader.ID = glCreateProgram();
+
+    SHADER_SAFE_ATTACH(vsdr, shader);
+    SHADER_SAFE_ATTACH(fsdr, shader);
+    SHADER_SAFE_ATTACH(gsdr, shader);
+
+    glLinkProgram(shader.ID);
+    GLint success;
+    glGetProgramiv(shader.ID, GL_LINK_STATUS, &success);
+    if (!success) {
+        GLchar error[1024];
+        glGetProgramInfoLog(shader.ID, 1024, nullptr, error);
+        engineLogger("stdError", "SHADER LINKING FAILED: " + std::string(error));
+        SHADER_SAFE_DELETE(vsdr);
+        SHADER_SAFE_DELETE(fsdr);
+        SHADER_SAFE_DELETE(gsdr);
+        shader.Delete();
+        return {std::move(shader), LSIM::Error{LSIM::ErrorCode::SHADER_LINK_FAILURE, LSIM::FatalityLevel::FATAL}};
+    }
+
+    SHADER_SAFE_DELETE(vsdr);
+    SHADER_SAFE_DELETE(fsdr);
+    SHADER_SAFE_DELETE(gsdr);
+    return {std::move(shader), std::nullopt};
 }
 
 Shader::Shader(Shader&& other) noexcept {

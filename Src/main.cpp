@@ -1,10 +1,8 @@
 #include "engine.h"
 
-int main(int argc, char** argv) {
+int main(const int argc, char** argv) {
 	Engine engine(argc, argv);
-	engine.start();
-	engine.update();
-	engine.exit();
+	if (const auto err = engine.start(); err) return 1;
+	if (const auto err = engine.update(); err) return 1;
 	return 0;
 }
-

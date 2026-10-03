@@ -36,7 +36,7 @@ public:
         ERR
     };
 private:
-    static CapacityBuffer<Logger> logs;
+    static LSIM::CapacityBuffer<Logger> logs;
 
     LogLevel level = INFO;
 
@@ -66,7 +66,7 @@ private:
 public:
     std::unordered_map<std::string, std::shared_ptr<Logger>> loggers;
 
-    static const CapacityBuffer<Logger>& GetLogs() { return logs; }
+    static const LSIM::CapacityBuffer<Logger>& GetLogs() { return logs; }
 
     static void InitEngineLogger();
     explicit Logger(const std::string& subModule);

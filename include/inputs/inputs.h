@@ -16,6 +16,9 @@
 
 #include "include/utils/defaults.h"
 
+class EditorInputs;
+class Engine;
+
 class Inputs {
 public:
     #include "keyDispatch.h"
@@ -97,6 +100,12 @@ public:
 
     void InitInputs(GLFWwindow *_window);
     void handleInputs(const InputContext& context);
+
+private:
+    [[nodiscard]] static std::optional<LSIM::Error> initializeInput(Inputs &inputs, GLFWwindow *window, EditorInputs &editorInputs, Scene &scene, SharedState &sharedState, const Camera &
+                                                                    camera);
+    [[nodiscard]] static std::optional<LSIM::Error> handleInputs(Inputs &inputs, GLFWwindow *window, Scene &scene, Camera &camera, float deltaTime);
+    friend Engine;
 };
 
 #endif //INPUTS_CLASS_H

@@ -20,6 +20,7 @@ enum class SystemStage {
 
         PRE_RENDER,
         RENDER,
+        POST_RENDER,
 
         POST_UPDATE,
 
@@ -37,16 +38,22 @@ struct SystemData {
 class SystemManager {
 private:
         std::unordered_map<std::type_index, SystemData> systems{};
-        std::vector<std::type_index> executionOrder{};
+        std::array<std::vector<std::type_index>, static_cast<size_t>(SystemStage::STAGE_COUNT)> executionOrders{};
         bool isDirty = true;
 
-        void rebuildExecutionOrder() {
-                executionOrder.clear();
+        void rebuildExecutionOrders() {
+                for (auto& order : executionOrders) {
+                        order.clear();
+                }
 
-                for (int stage = 0; stage < static_cast<int>(SystemStage::STAGE_COUNT); ++stage) {
+                for (int stageIdx = 0; stageIdx < static_cast<int>(SystemStage::STAGE_COUNT); ++stageIdx) {
+                        const auto stage = static_cast<SystemStage>(stageIdx);
+                        auto& executionOrder = executionOrders[stageIdx];
+
                         std::vector<std::pair<std::type_index, const SystemData*>> systemsAtStage{};
                         for (const auto &[type, data]: systems) {
-                                if (data.stage == static_cast<SystemStage>(stage)) systemsAtStage.emplace_back(type, &data);
+                                if (data.stage == static_cast<SystemStage>(stage))
+                                        systemsAtStage.emplace_back(type, &data);
                         }
 
                         std::unordered_map<std::type_index, std::vector<std::type_index>> edges;
@@ -77,8 +84,6 @@ private:
                                 if (degree == 0) degreeZero.push(type);
                         }
 
-                        const size_t previousSize = executionOrder.size();
-
                         while (!degreeZero.empty()) {
                                 std::type_index type = degreeZero.front();
                                 degreeZero.pop();
@@ -89,7 +94,7 @@ private:
                                 }
                         }
 
-                        assert(executionOrder.size() == previousSize + systemsAtStage.size() && "Cycle detected in system ordering");
+                        assert(executionOrder.size() == systemsAtStage.size() && "Cycle detected in system ordering");
                 }
 
                 isDirty = false;
@@ -216,10 +221,22 @@ public:
                 return systems.at(typeid(T)).isEnabled;
         }
 
-        void update(Registry& registry, const float deltaTime) {
-                if (isDirty) rebuildExecutionOrder();
-                for (const auto t : executionOrder) {
-                        if (const auto& data = systems.at(t); data.isEnabled) {
+        void update(
+    const SystemStage stage,
+    Registry& registry,
+    const float deltaTime
+) {
+                if (isDirty) {
+                        rebuildExecutionOrders();
+                }
+
+                const auto& executionOrder =
+                    executionOrders[static_cast<size_t>(stage)];
+
+                for (const auto type : executionOrder) {
+                        auto& data = systems.at(type);
+
+                        if (data.isEnabled) {
                                 data.system->update(registry, deltaTime);
                         }
                 }

@@ -13,12 +13,37 @@
 #include "glm/ext/matrix_projection.hpp"
 #include "rendering/meshRenderer.h"
 
-class meshPicking {
+class Engine;
+class MeshPicking {
+private:
+    static std::optional<LSIM::Error> handleMeshPicking(GLFWwindow* window, double mouseX, double mouseY,
+        const int windowWidth, const int windowHeight, const Camera& camera, SharedState& sharedState) {
+        glfwGetCursorPos(window, &mouseX, &mouseY);
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+            const auto viewport = glm::vec4(0.0f, 0.0f, windowWidth, windowHeight);
+            const auto rayDir = GetMouseRay(
+                static_cast<float>(mouseX),
+                static_cast<float>(mouseY),
+                camera.projection,
+                camera.view,
+                viewport
+            );
+            if (const auto e = pickMesh(Registry::getDefaultRegistry(), camera.Position, rayDir); e.has_value()) {
+                sharedState.current_entities() = {e.value()};
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    friend Engine;
 public:
     static glm::vec3 GetMouseRay(const float mouseX, const float mouseY,
-                                 const glm::mat4& projection,
-                                 const glm::mat4& view,
-                                 const glm::vec4& viewport) {
+         const glm::mat4& projection,
+         const glm::mat4& view,
+         const glm::vec4& viewport
+    ) {
         //Flip the Y
         const float flippedY = viewport.w - mouseY;
 

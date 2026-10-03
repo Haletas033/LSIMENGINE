@@ -2,19 +2,24 @@
 #ifndef SHADER_CLASS_H
 #define SHADER_CLASS_H
 
+#include <optional>
 #include<glad/glad.h>
 #include <glm/glm.hpp>
 #include<string>
 #include <optional>
 
-#define SHADER_SAFE_ATTACH(shader) do {if (shader) glAttachShader(ID, shader);} while (0)
+#include "LSIMtypes.h"
+
+#define SHADER_SAFE_ATTACH(shader, program) do {if (shader) glAttachShader(program.ID, shader);} while (0)
 #define SHADER_SAFE_DELETE(shader) do {if (shader) glDeleteShader(shader);} while (0)
 
 class Shader {
 private:
     GLuint ID = 0;
     void Delete();
-    static GLuint CreateShader(const std::optional<std::string> &shaderSource, int type);
+    [[nodiscard]] static std::pair<GLuint, std::optional<LSIM::Error>> CreateShader(const std::optional<std::string> &shaderSource, int type);
+    explicit Shader() = default;
+
 public:
     struct ShaderFiles {
         std::optional<std::string> vertexSource;
@@ -22,8 +27,10 @@ public:
         std::optional<std::string> geometrySource;
     };
 
-    explicit Shader(const ShaderFiles& shaders);
+    [[nodiscard]] static std::pair<Shader, std::optional<LSIM::Error>> Create(const ShaderFiles &shaders);
 
+    Shader(const Shader&) = delete;
+    Shader& operator=(const Shader&) = delete;
     Shader(Shader &&other) noexcept;
 
     Shader& operator=(Shader&& other) noexcept {

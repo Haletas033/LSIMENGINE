@@ -3,10 +3,6 @@ project(LSIM)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-
 add_subdirectory(external/glad)
 add_subdirectory(external/glm)
 add_subdirectory(external/glfw)
@@ -26,7 +22,6 @@ set(IMGUI_SOURCES
         external/imgui/imgui_demo.cpp
         external/imgui/backends/imgui_impl_glfw.cpp
         external/imgui/backends/imgui_impl_opengl3.cpp
-        include/ECS/entityManager.h
 )
 add_executable(LSIM
         ${IMGUI_SOURCES}
@@ -107,8 +102,16 @@ add_executable(LSIM
         Src/rendering/light.traits.cpp
         include/ECS/nameSystem.h
         include/ECS/systemManager.h
+        include/ECS/entityManager.h
         include/engine.h
         Src/engine.cpp
+        include/editor/editorGUI.h
+        Src/editor/editorGUI.cpp
+        Src/scene/scene.cpp
+        include/gl/gl.h
+        Src/gl/gl.cpp
+        include/platform/window.h
+        Src/platform/window.cpp
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include
