@@ -5,17 +5,12 @@ set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
+find_package(Vulkan REQUIRED)
 
 FetchContent_Declare(
         glfw
         GIT_REPOSITORY https://github.com/glfw/glfw.git
         GIT_TAG 3.4
-)
-
-FetchContent_Declare(
-        glad
-        GIT_REPOSITORY https://github.com/Dav1dde/glad.git
-        GIT_TAG v2.0.8
 )
 
 FetchContent_Declare(
@@ -57,27 +52,6 @@ FetchContent_MakeAvailable(
         fastnoiselite
 )
 
-FetchContent_GetProperties(glad)
-
-if(NOT glad_POPULATED)
-    FetchContent_Populate(glad)
-endif()
-
-set(GLAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/glad)
-
-execute_process(
-        COMMAND
-        ${Python3_EXECUTABLE} -m glad
-        --api gl:core=4.2
-        --out-path ${GLAD_DIR}
-        WORKING_DIRECTORY ${glad_SOURCE_DIR}
-        RESULT_VARIABLE GLAD_RESULT
-)
-
-if(NOT GLAD_RESULT EQUAL 0)
-    message(FATAL_ERROR "Failed to generate GLAD 2")
-endif()
-
 if(DEFINED SCRIPTS)
     message(STATUS "Including extra scripts from: ${SCRIPTS}")
     file(GLOB_RECURSE SCRIPTS_SOURCES "${SCRIPTS}/*.cpp")
@@ -92,7 +66,7 @@ set(IMGUI_SOURCES
         ${imgui_SOURCE_DIR}/imgui_widgets.cpp
         ${imgui_SOURCE_DIR}/imgui_demo.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
 )
 
 include(cmake/ECS.cmake)
@@ -106,37 +80,37 @@ include(cmake/rendering.cmake)
 include(cmake/resources.cmake)
 include(cmake/scene.cmake)
 include(cmake/utils.cmake)
+include(cmake/shaderCompilation.cmake)
 
 add_executable(LSIM
         ${IMGUI_SOURCES}
         ${SCRIPTS_SOURCES}
-        ${GLAD_DIR}/src/gl.c
-
-        ${ECS_SOURCES}
-        ${EDITOR_SOURCES}
-        ${ENGINE_SOURCES}
-        ${GEOMETRY_SOURCES}
-        ${GL_SOURCES}
-        ${INPUT_SOURCES}
-        ${PLATFORM_SOURCES}
-        ${RENDERING_SOURCES}
-        ${RESOURCE_SOURCES}
-        ${SCENE_SOURCES}
-        ${UTIL_SOURCES}
+        Src/main.cpp
+#        ${ECS_SOURCES}
+#        ${EDITOR_SOURCES}
+#        ${ENGINE_SOURCES}
+#        ${GEOMETRY_SOURCES}
+#        ${GL_SOURCES}
+#        ${INPUT_SOURCES}
+#        ${PLATFORM_SOURCES}
+#        ${RENDERING_SOURCES}
+#        ${RESOURCE_SOURCES}
+#        ${SCENE_SOURCES}
+#        ${UTIL_SOURCES}
 )
 target_include_directories(LSIM PRIVATE
         include
-        ${GLAD_DIR}/include
         ${imgui_SOURCE_DIR}
         ${imgui_SOURCE_DIR}/backends
         ${stb_SOURCE_DIR}
         ${fastnoiselite_SOURCE_DIR}/Cpp
 )
 
-file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/skybox DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
-target_link_libraries(LSIM PRIVATE glfw glm::glm nlohmann_json::nlohmann_json)
+target_link_libraries(LSIM PRIVATE Vulkan::Vulkan glfw glm::glm nlohmann_json::nlohmann_json)
+
+add_dependencies(LSIM compile_shaders)
 
 option(GAME "Build LSIM in GAME mode" OFF)
 if(GAME)
