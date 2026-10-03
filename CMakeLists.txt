@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(LSIM)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 include(FetchContent)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -73,7 +73,7 @@ include(cmake/ECS.cmake)
 include(cmake/editor.cmake)
 include(cmake/engine.cmake)
 include(cmake/geometry.cmake)
-include(cmake/gl.cmake)
+include(cmake/vk.cmake)
 include(cmake/inputs.cmake)
 include(cmake/platform.cmake)
 include(cmake/rendering.cmake)
@@ -86,11 +86,12 @@ add_executable(LSIM
         ${IMGUI_SOURCES}
         ${SCRIPTS_SOURCES}
         Src/main.cpp
+        include/LSIMtypes.h
 #        ${ECS_SOURCES}
 #        ${EDITOR_SOURCES}
 #        ${ENGINE_SOURCES}
 #        ${GEOMETRY_SOURCES}
-#        ${GL_SOURCES}
+        ${VK_SOURCES}
 #        ${INPUT_SOURCES}
 #        ${PLATFORM_SOURCES}
 #        ${RENDERING_SOURCES}
