@@ -63,6 +63,7 @@ ninja
 │   │   └── name.traits.cpp
 │   ├── editor
 │   │   ├── IOInputs.cpp
+│   │   ├── editorGUI.cpp
 │   │   ├── editorInputs.cpp
 │   │   ├── meshInputs.cpp
 │   │   └── sharedState.cpp
@@ -80,11 +81,14 @@ ninja
 │   │   ├── EBO.cpp
 │   │   ├── VAO.cpp
 │   │   ├── VBO.cpp
+│   │   ├── gl.cpp
 │   │   └── shaderClass.cpp
 │   ├── inputs
 │   │   ├── gui.cpp
 │   │   └── inputs.cpp
 │   ├── main.cpp
+│   ├── platform
+│   │   └── window.cpp
 │   ├── rendering
 │   │   ├── light.cpp
 │   │   ├── light.traits.cpp
@@ -95,7 +99,8 @@ ninja
 │   ├── resources
 │   │   └── resourceManager.cpp
 │   ├── scene
-│   │   └── camera.cpp
+│   │   ├── camera.cpp
+│   │   └── scene.cpp
 │   └── utils
 │       ├── fileIO.cpp
 │       ├── json.cpp
@@ -158,6 +163,7 @@ ninja
 │   ├── LSIMtypes.h
 │   ├── editor
 │   │   ├── IOInputs.h
+│   │   ├── editorGUI.h
 │   │   ├── editorInputs.h
 │   │   ├── meshInputs.h
 │   │   └── sharedState.h
@@ -177,6 +183,7 @@ ninja
 │   │   ├── EBO.h
 │   │   ├── VAO.h
 │   │   ├── VBO.h
+│   │   ├── gl.h
 │   │   └── shaderClass.h
 │   ├── inputs
 │   │   ├── gui.h
@@ -184,6 +191,8 @@ ninja
 │   │   ├── keyDispatch.h
 │   │   ├── keyDispatcherUndef.h
 │   │   └── keys.def
+│   ├── platform
+│   │   └── window.h
 │   ├── rendering
 │   │   ├── light.h
 │   │   ├── light.traits.h
@@ -222,7 +231,7 @@ ninja
 ├── tree.txt
 └── website.dsp
 
-32 directories, 137 files
+34 directories, 144 files
 ```
 <!-- TREE_END -->
 ## Contributing
