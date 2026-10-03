@@ -1,7 +1,7 @@
 #include "gl/gl.h"
 
 std::optional<LSIM::Error> GL::initializeOpenGL(GLFWwindow* window) {
-        if (!gladLoadGL()) {
+        if (!gladLoadGL(glfwGetProcAddress)) {
                 return LSIM::Error{LSIM::ErrorCode::GLAD_LOAD_FAILURE, LSIM::FatalityLevel::FATAL};
         }
 

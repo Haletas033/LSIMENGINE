@@ -15,12 +15,12 @@
 #include <commdlg.h>
 #endif
 
-#include <include/utils/logging/log.h>
-#include "../scene/scene.h"
-#include "../inputs/gui.h"
+#include "utils/logging/log.h"
+#include "scene/scene.h"
+#include "inputs/gui.h"
 
-#include "glad/glad.h"
-#include "glm/glm.hpp"
+#include <glad/gl.h>
+#include <glm/glm.hpp>
 
 class IO {
 public:

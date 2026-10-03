@@ -3,7 +3,7 @@
 #define SHADER_CLASS_H
 
 #include <optional>
-#include<glad/glad.h>
+#include<glad/gl.h>
 #include <glm/glm.hpp>
 #include<string>
 #include <optional>

@@ -181,6 +181,8 @@ Engine::~Engine() {
 	MeshPool::getDefaultMeshPool() = MeshPool{};
 	ResourceManager::clear();
 
+	SystemManager::getDefaultSystemManager().clear();
+
 	glfwDestroyWindow(window);
 	glfwTerminate();
 

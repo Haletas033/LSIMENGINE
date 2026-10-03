@@ -5,8 +5,8 @@
 #include<ctime>
 #include <string>
 
-#include "../../external/FastNoiseLite/FastNoiseLite.h"
-#include "glad/glad.h"
+#include <FastNoiseLite.h>
+#include <glad/gl.h>
 
 #include "../utils/texture.h"
 

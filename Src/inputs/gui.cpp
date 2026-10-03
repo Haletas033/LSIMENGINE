@@ -1,4 +1,4 @@
-#include "../../include/inputs/gui.h"
+#include "inputs/gui.h"
 
 #include <iterator>
 #include <memory>
@@ -9,7 +9,7 @@
 #include "editor/sharedState.h"
 #include "geometry/transform.traits.h"
 
-#include "include/utils/texture.h"
+#include "utils/texture.h"
 
 Gui::Node *Gui::root = nullptr;
 
@@ -17,7 +17,7 @@ Gui::Node *Gui::root = nullptr;
 #define COL(NAME, CODE, RGB) { Ansi::NAME, ImColor RGB },
 
 std::unordered_map<std::string, ImColor> Gui::colourMap = {
-        #include "include/utils/logging/colorCodes.def"
+        #include "utils/logging/colorCodes.def"
 };
 
 #undef COL

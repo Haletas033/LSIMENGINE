@@ -99,6 +99,18 @@ private:
 
                 isDirty = false;
         }
+
+        void clear() {
+                systems.clear();
+
+                for (auto& order : executionOrders) {
+                        order.clear();
+                }
+
+                isDirty = true;
+        }
+
+        friend class Engine;
 public:
         template <typename T>
         void addAtStage(const SystemStage stage) {

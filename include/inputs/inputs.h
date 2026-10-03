@@ -10,11 +10,11 @@
 #include <unordered_map>
 #include <map>
 #include <variant>
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <vector>
 
-#include "include/utils/defaults.h"
+#include "utils/defaults.h"
 
 class EditorInputs;
 class Engine;
@@ -105,7 +105,7 @@ private:
     [[nodiscard]] static std::optional<LSIM::Error> initializeInput(Inputs &inputs, GLFWwindow *window, EditorInputs &editorInputs, Scene &scene, SharedState &sharedState, const Camera &
                                                                     camera);
     [[nodiscard]] static std::optional<LSIM::Error> handleInputs(Inputs &inputs, GLFWwindow *window, Scene &scene, Camera &camera, float deltaTime);
-    friend Engine;
+    friend class Engine;
 };
 
 #endif //INPUTS_CLASS_H

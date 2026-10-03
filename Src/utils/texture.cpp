@@ -1,8 +1,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
-#include <stb/stb_image.h>
-#include "include/utils/texture.h"
+#include <stb_image.h>
+#include "utils/texture.h"
 
 static Logger logger;
 

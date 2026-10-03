@@ -1,5 +1,5 @@
-#include <include/inputs/inputs.h>
-#include <include/utils/logging/log.h>
+#include "inputs/inputs.h"
+#include "utils/logging/log.h"
 
 #include <algorithm>
 #include <unordered_set>
@@ -7,7 +7,7 @@
 
 #include "engineContext.h"
 #include "editor/editorInputs.h"
-#include "include/utils/json.h"
+#include "utils/json.h"
 
 static Logger logger;
 

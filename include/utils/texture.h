@@ -5,10 +5,10 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include <glad/glad.h>
-#include <stb/stb_image_write.h>
-#include "include/utils/json.h"
-#include "include/utils/logging/log.h"
+#include <glad/gl.h>
+#include <stb_image_write.h>
+#include "utils/json.h"
+#include "utils/logging/log.h"
 
 class Texture {
 private:

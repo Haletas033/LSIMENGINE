@@ -1,16 +1,12 @@
-//
-// Created by halet on 10/5/2025.
-//
-
 #ifndef MESHPICKING_H
 #define MESHPICKING_H
 
 
 #include <memory>
-#include <external/glm/glm.hpp>
+#include <glm/glm.hpp>
 
 #include "geometry/mesh.h"
-#include "glm/ext/matrix_projection.hpp"
+#include <glm/ext/matrix_projection.hpp>
 #include "rendering/meshRenderer.h"
 
 class Engine;
@@ -37,7 +33,7 @@ private:
         return std::nullopt;
     }
 
-    friend Engine;
+    friend class Engine;
 public:
     static glm::vec3 GetMouseRay(const float mouseX, const float mouseY,
          const glm::mat4& projection,

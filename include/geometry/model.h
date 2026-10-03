@@ -5,8 +5,8 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include <external/nlohmann/json.hpp>
-#include <include/geometry/mesh.h>
+#include "nlohmann/json.hpp"
+#include "geometry/mesh.h"
 
 using json = nlohmann::ordered_json;
 

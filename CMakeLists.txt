@@ -3,9 +3,80 @@ project(LSIM)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_subdirectory(external/glad)
-add_subdirectory(external/glm)
-add_subdirectory(external/glfw)
+include(FetchContent)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+FetchContent_Declare(
+        glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG 3.4
+)
+
+FetchContent_Declare(
+        glad
+        GIT_REPOSITORY https://github.com/Dav1dde/glad.git
+        GIT_TAG v2.0.8
+)
+
+FetchContent_Declare(
+        glm
+        GIT_REPOSITORY https://github.com/g-truc/glm.git
+        GIT_TAG 1.0.1
+)
+
+FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG v1.92.2
+)
+
+FetchContent_Declare(
+        stb
+        GIT_REPOSITORY https://github.com/nothings/stb.git
+        GIT_TAG master
+)
+
+FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.12.0
+)
+
+FetchContent_Declare(
+        fastnoiselite
+        GIT_REPOSITORY https://github.com/Auburn/FastNoiseLite.git
+        GIT_TAG v1.1.1
+)
+
+FetchContent_MakeAvailable(
+        glfw
+        glm
+        imgui
+        stb
+        nlohmann_json
+        fastnoiselite
+)
+
+FetchContent_GetProperties(glad)
+
+if(NOT glad_POPULATED)
+    FetchContent_Populate(glad)
+endif()
+
+set(GLAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/glad)
+
+execute_process(
+        COMMAND
+        ${Python3_EXECUTABLE} -m glad
+        --api gl:core=4.2
+        --out-path ${GLAD_DIR}
+        WORKING_DIRECTORY ${glad_SOURCE_DIR}
+        RESULT_VARIABLE GLAD_RESULT
+)
+
+if(NOT GLAD_RESULT EQUAL 0)
+    message(FATAL_ERROR "Failed to generate GLAD 2")
+endif()
 
 if(DEFINED SCRIPTS)
     message(STATUS "Including extra scripts from: ${SCRIPTS}")
@@ -15,115 +86,58 @@ else()
 endif()
 
 set(IMGUI_SOURCES
-        external/imgui/imgui.cpp
-        external/imgui/imgui_draw.cpp
-        external/imgui/imgui_tables.cpp
-        external/imgui/imgui_widgets.cpp
-        external/imgui/imgui_demo.cpp
-        external/imgui/backends/imgui_impl_glfw.cpp
-        external/imgui/backends/imgui_impl_opengl3.cpp
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/imgui_demo.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )
+
+include(cmake/ECS.cmake)
+include(cmake/editor.cmake)
+include(cmake/engine.cmake)
+include(cmake/geometry.cmake)
+include(cmake/gl.cmake)
+include(cmake/inputs.cmake)
+include(cmake/platform.cmake)
+include(cmake/rendering.cmake)
+include(cmake/resources.cmake)
+include(cmake/scene.cmake)
+include(cmake/utils.cmake)
+
 add_executable(LSIM
         ${IMGUI_SOURCES}
         ${SCRIPTS_SOURCES}
-        Src/main.cpp
-        include/gl/shaderClass.h
-        Src/gl/shaderClass.cpp
-        include/gl/VBO.h
-        Src/gl/VBO.cpp
-        include/gl/VAO.h
-        Src/gl/VAO.cpp
-        include/gl/EBO.h
-        Src/gl/EBO.cpp
-        include/scene/camera.h
-        Src/scene/camera.cpp
-        include/geometry/terrain.h
-        Src/geometry/terrain.cpp
-        include/geometry/mesh.h
-        Src/geometry/mesh.cpp
-        include/geometry/primitive.h
-        Src/geometry/primitive.cpp
-        include/geometry/model.h
-        Src/geometry/model.cpp
-        include/utils/fileIO.h
-        Src/utils/fileIO.cpp
-        include/inputs/gui.h Src/inputs/gui.cpp
-        include/inputs/inputs.h Src/inputs/inputs.cpp
-        Src/main.cpp Src/main.cpp
-        include/scene/scene.h include/utils/defaults.h
-        include/utils/logging/log.h Src/utils/logging/log.cpp
-        include/utils/json.h Src/utils/json.cpp Src/utils/texture.cpp
-        include/utils/texture.h
-        include/scene/script.h
-        include/utils/meshPicking.h
-        include/LSIMtypes.h
-        include/editor/sharedState.h
-        Src/editor/sharedState.cpp
-        include/editor/meshInputs.h
-        Src/editor/meshInputs.cpp
-        include/inputs/keyDispatch.h
-        include/inputs/keyDispatcherUndef.h
-        include/LSIMhelpers.h
-        include/editor/IOInputs.h
-        Src/editor/IOInputs.cpp
-        include/editor/editorInputs.h
-        Src/editor/editorInputs.cpp
-        Src/ECS/entityManager.cpp
-        include/ECS/registry.h
-        include/geometry/transform.h
-        Src/geometry/transform.cpp
-        include/rendering/material.h
-        include/resources/resourceManager.h
-        Src/rendering/material.cpp
-        Src/resources/resourceManager.cpp
-        include/rendering/meshRenderer.h
-        include/ECS/handle.h
-        include/geometry/meshPool.h
-        include/geometry/meshData.h
-        Src/geometry/meshPool.cpp
-        include/ECS/system.h
-        include/rendering/renderSystem.h
-        Src/rendering/renderSystem.cpp
-        Src/geometry/meshData.cpp
-        include/geometry/transformSystem.h
-        include/ECS/name.h
-        include/ECS/componentTraits.h
-        include/geometry/transform.traits.h
-        Src/geometry/transform.traits.cpp
-        include/ECS/name.traits.h
-        Src/ECS/name.traits.cpp
-        include/rendering/material.traits.h
-        Src/rendering/material.traits.cpp
-        include/rendering/meshRenderer.traits.h
-        Src/rendering/meshRenderer.traits.cpp
-        include/rendering/light.h
-        Src/rendering/light.cpp
-        include/rendering/light.traits.h
-        Src/rendering/light.traits.cpp
-        include/ECS/nameSystem.h
-        include/ECS/systemManager.h
-        include/ECS/entityManager.h
-        include/engine.h
-        Src/engine.cpp
-        include/editor/editorGUI.h
-        Src/editor/editorGUI.cpp
-        Src/scene/scene.cpp
-        include/gl/gl.h
-        Src/gl/gl.cpp
-        include/platform/window.h
-        Src/platform/window.cpp
+        ${GLAD_DIR}/src/gl.c
+
+        ${ECS_SOURCES}
+        ${EDITOR_SOURCES}
+        ${ENGINE_SOURCES}
+        ${GEOMETRY_SOURCES}
+        ${GL_SOURCES}
+        ${INPUT_SOURCES}
+        ${PLATFORM_SOURCES}
+        ${RENDERING_SOURCES}
+        ${RESOURCE_SOURCES}
+        ${SCENE_SOURCES}
+        ${UTIL_SOURCES}
 )
-target_include_directories(LSIM
-        PRIVATE external/glad/include
-        external/glfw/include external/
-        external/imgui
-        external/imgui/backends
+target_include_directories(LSIM PRIVATE
         include
+        ${GLAD_DIR}/include
+        ${imgui_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}/backends
+        ${stb_SOURCE_DIR}
+        ${fastnoiselite_SOURCE_DIR}/Cpp
 )
+
 file(COPY ${CMAKE_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/skybox DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
-target_link_libraries(LSIM PRIVATE glfw glm::glm-header-only glad)
+target_link_libraries(LSIM PRIVATE glfw glm::glm nlohmann_json::nlohmann_json)
+
 option(GAME "Build LSIM in GAME mode" OFF)
 if(GAME)
     target_compile_definitions(LSIM PRIVATE GAME=1)

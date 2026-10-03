@@ -2,7 +2,10 @@
 // Created by halet on 10/2/2025.
 //
 
-#include "include/geometry/model.h"
+#include "geometry/model.h"
+
+#include <filesystem>
+
 #include "scene/scene.h"
 #include "utils/fileIO.h"
 #include "utils/texture.h"

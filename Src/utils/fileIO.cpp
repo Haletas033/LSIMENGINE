@@ -1,8 +1,6 @@
-#include <include/utils/fileIO.h>
+#include "utils/fileIO.h"
 
-#include "include/utils/json.h"
-#include "include/utils/texture.h"
-#include "include/utils/defaults.h"
+#include "utils/json.h"
 
 #ifdef _WIN32
 OPENFILENAME ofn;                           //common dialog box structure

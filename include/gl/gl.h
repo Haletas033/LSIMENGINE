@@ -4,7 +4,7 @@
 
 #include "engineContext.h"
 #include "LSIMtypes.h"
-#include "glad/glad.h"
+#include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "utils/defaults.h"
 

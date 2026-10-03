@@ -6,13 +6,13 @@
 #include<glm/glm.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
-#include "../../imgui/imgui.h"
-#include "../../imgui/backends/imgui_impl_glfw.h"
-#include "../../imgui/backends/imgui_impl_opengl3.h"
+#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
 
 #include "../geometry/mesh.h"
-#include <include/utils/logging/log.h>
-#include <include/utils/fileIO.h>
+#include "utils/logging/log.h"
+#include "utils/fileIO.h"
 
 #include "editor/sharedState.h"
 

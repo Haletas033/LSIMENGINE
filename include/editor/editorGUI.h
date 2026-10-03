@@ -10,7 +10,7 @@ class Engine;
 class EditorGUI {
 private:
 
-        friend Engine;
+        friend class Engine;
 
         static std::optional<LSIM::Error> updateGUI(SharedState &sharedState, Scene &scene, EntityHandle skybox, double mouseX, double mouseY);
 };
