@@ -23,6 +23,14 @@ public:
 
     [[nodiscard]] uint32_t getIndex() const { return index; }
     [[nodiscard]] uint32_t getGeneration() const { return generation; }
+
+    static Handle invalid() {
+        return Handle{UINT32_MAX, UINT32_MAX};
+    }
+
+    [[nodiscard]] bool isValid() const {
+        return getGeneration() != UINT32_MAX && getIndex() != UINT32_MAX;
+    }
 };
 
 template<typename Tag>

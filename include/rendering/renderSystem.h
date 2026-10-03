@@ -3,13 +3,13 @@
 #include "ECS/system.h"
 #include <geometry/meshPool.h>
 
+#include "engineContext.h"
 #include "light.h"
 #include "scene/camera.h"
+#include "scene/scene.h"
 
 class Material;
 constexpr GLuint LIGHT_UBO_BINDING_POINT = 1;
-
-extern Defaults engineDefaults;
 
 struct RenderBatch {
         std::vector<InstanceGPUData> instances;
@@ -41,14 +41,16 @@ class RenderSystem final : public System {
 private:
         MeshPool& meshPool;
         Camera& camera;
+        Scene& scene;
+        float& aspect;
         GLuint lightUBOId;
         GLuint instanceVBO;
 public:
-        RenderSystem(MeshPool& meshPool, Camera& camera) : meshPool(meshPool), camera(camera) {
+        RenderSystem(MeshPool& meshPool, Camera& camera, Scene& scene, float& aspect) : meshPool(meshPool), camera(camera), scene(scene), aspect(aspect) {
                 // Lights
                 glGenBuffers(1, &lightUBOId);
                 glBindBuffer(GL_UNIFORM_BUFFER, lightUBOId);
-                glBufferData(GL_UNIFORM_BUFFER, sizeof(LightGPUData) * engineDefaults.MAX_LIGHTS, nullptr,
+                glBufferData(GL_UNIFORM_BUFFER, sizeof(LightGPUData) * EngineContext::getDefaults().MAX_LIGHTS, nullptr,
                              GL_DYNAMIC_DRAW);
 
                 glBindBufferBase(GL_UNIFORM_BUFFER, LIGHT_UBO_BINDING_POINT, lightUBOId);

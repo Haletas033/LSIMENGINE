@@ -10,10 +10,6 @@ char szFile[260] = {"untitled.lsim"};       //File size buffer
 HWND hwnd;                                  //owner window
 #endif
 
-extern nlohmann::ordered_json config;
-
-extern Defaults engineDefaults;
-
 static Logger logger;
 
 void IO::InitIO() {

@@ -23,7 +23,7 @@ public:
 
     static Defaults LoadConfigDefaults(nlohmann::ordered_json &config);
 
-    static void LoadLoggers(nlohmann::ordered_json &config, std::unordered_map<std::string, std::shared_ptr<Logger>> &loggers);
+    static void LoadLoggers(const nlohmann::ordered_json &config, std::unordered_map<std::string, std::shared_ptr<Logger>> &loggers);
 
     static Defaults InitJSON(const std::string &path, nlohmann::ordered_json &config);
 

@@ -23,6 +23,16 @@ public:
     };
 
     explicit Shader(const ShaderFiles& shaders);
+
+    Shader(Shader &&other) noexcept;
+
+    Shader& operator=(Shader&& other) noexcept {
+        this->Delete();
+        this->ID = other.GetID();
+        other.ID = 0;
+        return *this;
+    }
+
     void Activate() const;
     [[nodiscard]] GLuint GetID() const { return ID; }
     [[nodiscard]] GLuint GetLocation(const std::string &name) const;

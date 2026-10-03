@@ -4,7 +4,7 @@
 #include "utils/texture.h"
 
 std::unordered_map<std::string, uint32_t> ResourceManager::textures;
-std::unordered_map<std::string, Shader> ResourceManager::shaders;
+std::unordered_map<std::string, std::unique_ptr<Shader>> ResourceManager::shaders;
 std::unordered_map<uint32_t, Shader*> ResourceManager::shadersById;
 
 uint32_t ResourceManager::getTexture(const std::string& name) {
@@ -23,10 +23,10 @@ uint32_t ResourceManager::addTexture(const std::string &name, const std::string 
 }
 
 Shader& ResourceManager::addShader(const std::string &name, Shader &&shaderObj) {
-    auto [it, inserted] = shaders.emplace(name, std::move(shaderObj));
+    auto [it, inserted] = shaders.emplace(name, std::make_unique<Shader>(std::move(shaderObj)));
     if (inserted)
-        shadersById[it->second.GetID()] = &it->second;
-    return it->second;
+        shadersById[it->second->GetID()] = it->second.get();
+    return *it->second;
 }
 
 Shader *ResourceManager::getShaderById(const uint32_t id) {
@@ -40,5 +40,5 @@ Shader* ResourceManager::getShader(const std::string& name) {
     if (it == shaders.end())
         return nullptr;
 
-    return &it->second;
+    return it->second.get();
 }

@@ -47,7 +47,7 @@ public:
 
     static void Debug(const double &mouseX, const double &mouseY);
 
-    static void Console(int &selectedLogLevel);
+    static void Console();
 
     static void SceneGUI(EntityHandle skybox, glm::vec4 &ambientLightColour, float &ambientLightIntensity);
 

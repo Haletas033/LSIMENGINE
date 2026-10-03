@@ -48,7 +48,7 @@ public:
     static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 
     //Updates and exports the camera matrix to the Vertex Shader
-    void Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform, float aspect);
+    void Matrix(float FOVdeg, float nearPlane, float farPlane, const Shader &shader, const char *uniform, float aspect);
 
     //Handles camera inputs (keyboard and mouse)
     void Inputs(GLFWwindow* window, float deltaTime);

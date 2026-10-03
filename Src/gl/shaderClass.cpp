@@ -47,6 +47,11 @@ Shader::Shader(const ShaderFiles& shaders) {
     SHADER_SAFE_DELETE(geometryShader);
 }
 
+Shader::Shader(Shader&& other) noexcept {
+    this->ID = other.GetID();
+    other.ID = 0;
+}
+
 void Shader::Activate() const {
     glUseProgram(ID);
 }

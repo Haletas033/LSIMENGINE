@@ -1,8 +1,7 @@
 #include <include/utils/logging/log.h>
 
+#include "engineContext.h"
 #include "utils/json.h"
-
-extern nlohmann::ordered_json config;
 
 CapacityBuffer<Logger> Logger::logs(UINT16_MAX);
 
@@ -13,7 +12,7 @@ void Logger::InitEngineLogger() {
 }
 
 Logger::Logger(const std::string& subModule) {
-    JSONManager::LoadLoggers(config, loggers);
+    JSONManager::LoadLoggers(EngineContext::getConfig(), loggers);
     loggers["stdInfo"]->SetModule(subModule);
     loggers["stdWarn"]->SetModule(subModule);
     loggers["stdError"]->SetModule(subModule);

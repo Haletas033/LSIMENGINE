@@ -4,6 +4,7 @@
 #include <memory>
 #include <algorithm>
 
+#include "engineContext.h"
 #include "ECS/name.h"
 #include "editor/sharedState.h"
 #include "geometry/transform.traits.h"
@@ -11,8 +12,6 @@
 #include "include/utils/texture.h"
 
 Gui::Node *Gui::root = nullptr;
-
-extern std::string workingDir;
 
 //Map ANSI codes to there RGB values
 #define COL(NAME, CODE, RGB) { Ansi::NAME, ImColor RGB },
@@ -109,7 +108,8 @@ void Gui::Debug(const double &mouseX, const double &mouseY) {
         }
 }
 
-void Gui::Console(int &selectedLogLevel) {
+void Gui::Console() {
+        static int selectedLogLevel = 0;
         const char *logLevels[] = {"INFO", "WARNING", "ERROR"};
 
         std::vector<std::string> modules;
@@ -156,10 +156,10 @@ void Gui::SceneGUI(EntityHandle skybox, glm::vec4 &ambientLightColour,
                 if (ImGui::Button("Set Skybox")) {
                         std::array<std::string, 6> faces;
                         //Copy the skybox into resources
-                        std::filesystem::copy(IO::DirectoryDialog(), workingDir + "skybox/",
+                        std::filesystem::copy(IO::DirectoryDialog(), EngineContext::getWorkingDir() + "skybox/",
                                               std::filesystem::copy_options::overwrite_existing |
                                               std::filesystem::copy_options::recursive);
-                        const std::string skyBoxDir = workingDir + "skybox";
+                        const std::string skyBoxDir = EngineContext::getWorkingDir() + "skybox";
 
                         auto findFace = [&](const std::string& name) {
                                 const auto png = std::filesystem::path(skyBoxDir) / (name + ".png");

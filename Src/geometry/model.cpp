@@ -7,8 +7,6 @@
 #include "utils/fileIO.h"
 #include "utils/texture.h"
 
-extern Scene scene;
-
 Model::Model(Registry& registry, MeshPool& meshPool, const char *file) {
     std::string text = IO::GetFileContents(file);
     JSON = json::parse(text);

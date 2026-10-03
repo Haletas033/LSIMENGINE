@@ -6,8 +6,6 @@
 #include <utility>
 #include "include/utils/json.h"
 
-extern nlohmann::ordered_json config;
-
 static Logger logger;
 
 void Inputs::InitInputs(GLFWwindow *_window) {

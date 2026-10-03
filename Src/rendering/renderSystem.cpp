@@ -6,6 +6,8 @@
 #include "resources/resourceManager.h"
 
 void RenderSystem::update(Registry &registry, float deltaTime) {
+        Defaults defaults = EngineContext::getDefaults();
+
         std::unordered_map<BatchKey, RenderBatch, BatchKeyHash> batches;
 
         for (const EntityHandle &e: registry.getAllAlive()) {
@@ -37,7 +39,7 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
         }
 
         std::vector<LightGPUData> lightDatas;
-        lightDatas.reserve(engineDefaults.MAX_LIGHTS);
+        lightDatas.reserve(EngineContext::getDefaults().MAX_LIGHTS);
 
         for (const EntityHandle &e: registry.getAllAlive()) {
                 if (!registry.hasComponent<Light>(e)) continue;
@@ -54,7 +56,7 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                                             static_cast<float>(static_cast<int>(light->type)))
                 };
 
-                if (lightDatas.size() < engineDefaults.MAX_LIGHTS)
+                if (lightDatas.size() < EngineContext::getDefaults().MAX_LIGHTS)
                         lightDatas.push_back(lightData);
         }
 
@@ -69,6 +71,8 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                 const Shader *shader = ResourceManager::getShader(material->getShader());
 
                 shader->Activate();
+
+                camera.Matrix(defaults.FOVdeg, defaults.nearPlane, defaults.farPlane, *shader, "camMatrix", aspect);
 
                 const GLuint shaderId = shader->GetID();
 
@@ -87,6 +91,10 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                 );
 
                 shader->SetInt("lightCount", static_cast<int>(lightDatas.size()));
+
+                shader->SetVec4("ambientLightColour", 1, glm::value_ptr(scene.ambientLightColour));
+                shader->SetFloat("ambientLightIntensity", scene.ambientLightIntensity);
+
                 shader->SetVec3(
                         "viewPos",
                         1,

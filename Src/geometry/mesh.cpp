@@ -1,5 +1,6 @@
 #include <geometry/mesh.h>
 
+#include "engineContext.h"
 #include "ECS/name.h"
 #include "geometry/model.h"
 #include "geometry/terrain.h"
@@ -10,9 +11,6 @@
 #include "rendering/material.traits.h"
 #include "rendering/meshRenderer.traits.h"
 #include "geometry/transform.traits.h"
-
-extern Defaults engineDefaults;
-extern std::string workingDir;
 
 EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, Registry &registry, MeshPool &meshPool, const Material &material, const Transform &transform) {
         MeshData meshData{};
@@ -34,17 +32,18 @@ EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, 
                         meshData = Primitive::GenerateTorus(24, 12, 1.f, 0.2f,1.f);
                         break;
                 case Primitive::TERRAIN: {
-                        std::vector<std::vector<float>> noiseMap = Terrain::GenerateNoiseMap(engineDefaults.size, engineDefaults.size, static_cast<int>(time(nullptr)),
-                                engineDefaults.scale, engineDefaults.octaves, engineDefaults.persistence, engineDefaults.lacunarity);
+                        Defaults defaults = EngineContext::getDefaults();
+                        std::vector<std::vector<float>> noiseMap = Terrain::GenerateNoiseMap(defaults.size, defaults.size, static_cast<int>(time(nullptr)),
+                                defaults.scale, defaults.octaves, defaults.persistence, defaults.lacunarity);
 
                         const auto uID = static_cast<long long>(glfwGetTime() * 1'000'000'000LL);
-                        const std::string outputPath = std::string(workingDir) + "resources/" + std::to_string(uID) + "terrain.png";
+                        const std::string outputPath = std::string(EngineContext::getWorkingDir()) + "resources/" + std::to_string(uID) + "terrain.png";
                         const uint32_t noiseMapTexture = Terrain::noiseMapToTexture(noiseMap, outputPath.c_str());
 
                         std::vector<float> vertices;
                         std::vector<uint32_t> indices;
 
-                        Terrain::noiseMapToMesh(noiseMap, vertices, indices, engineDefaults.heightScale, engineDefaults.gridScale);
+                        Terrain::noiseMapToMesh(noiseMap, vertices, indices, defaults.heightScale, defaults.gridScale);
 
                         const EntityHandle mesh = create(vertices, indices, mode, registry, meshPool, material, transform);
                         registry.getComponent<Name>(mesh)->value = "Terrain";

@@ -3,6 +3,10 @@ project(LSIM)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+
 add_subdirectory(external/glad)
 add_subdirectory(external/glm)
 add_subdirectory(external/glfw)
@@ -103,6 +107,8 @@ add_executable(LSIM
         Src/rendering/light.traits.cpp
         include/ECS/nameSystem.h
         include/ECS/systemManager.h
+        include/engine.h
+        Src/engine.cpp
 )
 target_include_directories(LSIM
         PRIVATE external/glad/include
