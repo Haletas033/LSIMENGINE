@@ -93,7 +93,7 @@ add_executable(LSIM
 #        ${GEOMETRY_SOURCES}
         ${VK_SOURCES}
 #        ${INPUT_SOURCES}
-#        ${PLATFORM_SOURCES}
+        ${PLATFORM_SOURCES}
 #        ${RENDERING_SOURCES}
 #        ${RESOURCE_SOURCES}
 #        ${SCENE_SOURCES}

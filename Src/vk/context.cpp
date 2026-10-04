@@ -4,14 +4,15 @@
 #include <iostream>
 #include <vector>
 
-#include "GLFW/glfw3.h"
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 Context::Context(Context&& other) noexcept
-        : m_instance(other.m_instance),
-        m_debugMessenger(other.m_debugMessenger)
+        : instance(other.instance),
+        debugMessenger(other.debugMessenger)
 {
-        other.m_instance = VK_NULL_HANDLE;
-        other.m_debugMessenger = VK_NULL_HANDLE;
+        other.instance = VK_NULL_HANDLE;
+        other.debugMessenger = VK_NULL_HANDLE;
 }
 
 Context &Context::operator=(Context &&other) noexcept {
@@ -19,11 +20,11 @@ Context &Context::operator=(Context &&other) noexcept {
 
        destroy();
 
-        m_instance = other.m_instance;
-        m_debugMessenger = other.m_debugMessenger;
+        instance = other.instance;
+        debugMessenger = other.debugMessenger;
 
-        other.m_instance = VK_NULL_HANDLE;
-        other.m_debugMessenger = VK_NULL_HANDLE;
+        other.instance = VK_NULL_HANDLE;
+        other.debugMessenger = VK_NULL_HANDLE;
 
         return *this;
 }
@@ -165,7 +166,7 @@ std::expected<VkDebugUtilsMessengerEXT, LSIM::Error> Context::createDebugMesseng
         if (result != VK_SUCCESS) {
                 return std::unexpected(
                         LSIM::Error{
-                                LSIM::ErrorCode::VK_DEBUG_MESSENGER_CREATION_FAILED,
+                                LSIM::ErrorCode::VK_DEBUG_MESSENGER_CREATION_FAILURE,
                                 LSIM::FatalityLevel::FATAL
                         }
                 );
@@ -175,31 +176,40 @@ std::expected<VkDebugUtilsMessengerEXT, LSIM::Error> Context::createDebugMesseng
 }
 
 void Context::destroyDebugMessenger() {
-        if (m_debugMessenger == VK_NULL_HANDLE)
+        if (debugMessenger == VK_NULL_HANDLE)
                 return;
 
         const auto destroyDebugMessengerFP =
                 reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-                vkGetInstanceProcAddr(m_instance, "vkDestroyDebugUtilsMessengerEXT")
+                vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT")
         );
 
         if (destroyDebugMessengerFP != nullptr) {
-                destroyDebugMessengerFP(m_instance, m_debugMessenger, nullptr);
+                destroyDebugMessengerFP(instance, debugMessenger, nullptr);
         }
 
-        m_debugMessenger = VK_NULL_HANDLE;
+        debugMessenger = VK_NULL_HANDLE;
 }
 
-std::expected<Context, LSIM::Error> Context::create() {
+std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
         Context context{};
 
         auto instance = createInstance();
         if (!instance) return {std::unexpected(instance.error())};
-        context.m_instance = instance.value();
+        context.instance = instance.value();
 
-        auto debugMessenger = createDebugMessenger(context.m_instance);
+        auto debugMessenger = createDebugMessenger(context.instance);
         if (!debugMessenger) return {std::unexpected(debugMessenger.error())};
-        context.m_debugMessenger = debugMessenger.value();
+        context.debugMessenger = debugMessenger.value();
+
+        if (const VkResult result = glfwCreateWindowSurface(context.instance, window, nullptr, &context.surface); result != VK_SUCCESS) {
+                return std::unexpected(
+                        LSIM::Error{
+                                LSIM::ErrorCode::VK_SURFACE_CREATION_FAILURE,
+                                LSIM::FatalityLevel::FATAL
+                        }
+                );
+        }
 
         return context;
 }
@@ -207,9 +217,9 @@ std::expected<Context, LSIM::Error> Context::create() {
 void Context::destroy() {
         destroyDebugMessenger();
 
-        if (m_instance != VK_NULL_HANDLE) {
-                vkDestroyInstance(m_instance, nullptr);
-                m_instance = VK_NULL_HANDLE;
+        if (instance != VK_NULL_HANDLE) {
+                vkDestroyInstance(instance, nullptr);
+                instance = VK_NULL_HANDLE;
         }
 }
 

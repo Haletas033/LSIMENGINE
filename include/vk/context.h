@@ -11,10 +11,12 @@
 
 #include "LSIMtypes.h"
 
+struct GLFWwindow;
 class Context {
 private:
-        VkInstance m_instance = VK_NULL_HANDLE;
-        VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE;
+        VkInstance instance = VK_NULL_HANDLE;
+        VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
+        VkSurfaceKHR surface = VK_NULL_HANDLE;
         static constexpr const char* VK_VALIDATION_LAYERS[] = {"VK_LAYER_KHRONOS_validation"};
 
 public:
@@ -44,7 +46,7 @@ public:
 
         void destroyDebugMessenger();
 
-        static std::expected<Context, LSIM::Error> create();
+        static std::expected<Context, LSIM::Error> create(GLFWwindow *window);
 
         void destroy();
 
