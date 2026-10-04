@@ -7,18 +7,23 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "vk/device.h"
+
 Context::Context(Context&& other) noexcept
         : instance(other.instance),
-        debugMessenger(other.debugMessenger)
+          debugMessenger(other.debugMessenger),
+          surface(other.surface),
+          device(std::move(other.device))
 {
         other.instance = VK_NULL_HANDLE;
         other.debugMessenger = VK_NULL_HANDLE;
+        other.surface = VK_NULL_HANDLE;
 }
 
 Context &Context::operator=(Context &&other) noexcept {
         if (this == &other) return *this;
 
-       destroy();
+        destroy();
 
         instance = other.instance;
         debugMessenger = other.debugMessenger;
@@ -211,10 +216,22 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 );
         }
 
+        if (auto device = Device::create(context.instance, context.surface); !device)
+                return std::unexpected(device.error());
+        else
+                context.device = std::move(*device);
+
         return context;
 }
 
 void Context::destroy() {
+        device = {};
+
+        if (surface != VK_NULL_HANDLE) {
+                vkDestroySurfaceKHR(instance, surface, nullptr);
+                surface = VK_NULL_HANDLE;
+        }
+
         destroyDebugMessenger();
 
         if (instance != VK_NULL_HANDLE) {

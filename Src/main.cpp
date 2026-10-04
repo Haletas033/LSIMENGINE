@@ -17,6 +17,7 @@ int main(const int argc, char** argv) {
 	if (!ctx) return 1;
 	const auto context = std::move(*ctx);
 
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 	}

@@ -9,6 +9,7 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "device.h"
 #include "LSIMtypes.h"
 
 struct GLFWwindow;
@@ -17,6 +18,7 @@ private:
         VkInstance instance = VK_NULL_HANDLE;
         VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
         VkSurfaceKHR surface = VK_NULL_HANDLE;
+        Device device;
         static constexpr const char* VK_VALIDATION_LAYERS[] = {"VK_LAYER_KHRONOS_validation"};
 
 public:
