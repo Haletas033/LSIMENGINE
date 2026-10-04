@@ -11,6 +11,7 @@
 
 #include "device.h"
 #include "LSIMtypes.h"
+#include "swapchain.h"
 
 struct GLFWwindow;
 class Context {
@@ -19,7 +20,7 @@ private:
         VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
         VkSurfaceKHR surface = VK_NULL_HANDLE;
         Device device{};
-        VkSwapchainKHR swapchain = VK_NULL_HANDLE;
+        Swapchain swapchain{};
         static constexpr const char* VK_VALIDATION_LAYERS[] = {"VK_LAYER_KHRONOS_validation"};
 
 public:

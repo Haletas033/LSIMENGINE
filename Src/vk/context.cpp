@@ -8,19 +8,17 @@
 #include <GLFW/glfw3.h>
 
 #include "vk/device.h"
-#include "vk/swapchain.h"
 
 Context::Context(Context&& other) noexcept
         : instance(other.instance),
           debugMessenger(other.debugMessenger),
           surface(other.surface),
           device(std::move(other.device)),
-          swapchain(other.swapchain)
+          swapchain(std::move(other.swapchain))
 {
         other.instance = VK_NULL_HANDLE;
         other.debugMessenger = VK_NULL_HANDLE;
         other.surface = VK_NULL_HANDLE;
-        other.swapchain = VK_NULL_HANDLE;
 }
 
 Context& Context::operator=(Context&& other) noexcept {
@@ -33,12 +31,11 @@ Context& Context::operator=(Context&& other) noexcept {
         debugMessenger = other.debugMessenger;
         surface = other.surface;
         device = std::move(other.device);
-        swapchain = other.swapchain;
+        swapchain = std::move(other.swapchain);
 
         other.instance = VK_NULL_HANDLE;
         other.debugMessenger = VK_NULL_HANDLE;
         other.surface = VK_NULL_HANDLE;
-        other.swapchain = VK_NULL_HANDLE;
 
         return *this;
 }
@@ -233,17 +230,13 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
         if (auto swapchain = Swapchain::create(window, context.surface, context.device.device, context.device.logicalDevice); !swapchain)
                 return std::unexpected(swapchain.error());
         else
-                context.swapchain = *swapchain;
+                context.swapchain = std::move(*swapchain);
 
         return context;
 }
 
 void Context::destroy() {
-        if (swapchain != VK_NULL_HANDLE) {
-                vkDestroySwapchainKHR(device.logicalDevice, swapchain, nullptr);
-                swapchain = VK_NULL_HANDLE;
-        }
-
+        swapchain = {};
         device = {};
 
         if (surface != VK_NULL_HANDLE) {
