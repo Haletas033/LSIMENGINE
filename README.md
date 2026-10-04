@@ -102,7 +102,8 @@ ninja
 │   │   │   └── log.cpp
 │   │   └── texture.cpp
 │   └── vk
-│       └── context.cpp
+│       ├── context.cpp
+│       └── device.cpp
 ├── Website
 │   ├── LSIMdocs
 │   │   ├── 001welcome.md
@@ -220,7 +221,9 @@ ninja
 │   │   ├── meshPicking.h
 │   │   └── texture.h
 │   └── vk
-│       └── context.h
+│       ├── context.h
+│       ├── device.h
+│       └── vk.h
 ├── shaders
 │   ├── test.frag
 │   └── test.vert
@@ -234,7 +237,7 @@ ninja
 ├── tree.txt
 └── website.dsp
 
-35 directories, 146 files
+35 directories, 149 files
 ```
 <!-- TREE_END -->
 ## Contributing
