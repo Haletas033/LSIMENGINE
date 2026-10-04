@@ -77,12 +77,6 @@ ninja
 │   │   ├── terrain.cpp
 │   │   ├── transform.cpp
 │   │   └── transform.traits.cpp
-│   ├── gl
-│   │   ├── EBO.cpp
-│   │   ├── VAO.cpp
-│   │   ├── VBO.cpp
-│   │   ├── gl.cpp
-│   │   └── shaderClass.cpp
 │   ├── inputs
 │   │   ├── gui.cpp
 │   │   └── inputs.cpp
@@ -101,12 +95,14 @@ ninja
 │   ├── scene
 │   │   ├── camera.cpp
 │   │   └── scene.cpp
-│   └── utils
-│       ├── fileIO.cpp
-│       ├── json.cpp
-│       ├── logging
-│       │   └── log.cpp
-│       └── texture.cpp
+│   ├── utils
+│   │   ├── fileIO.cpp
+│   │   ├── json.cpp
+│   │   ├── logging
+│   │   │   └── log.cpp
+│   │   └── texture.cpp
+│   └── vk
+│       └── context.cpp
 ├── Website
 │   ├── LSIMdocs
 │   │   ├── 001welcome.md
@@ -151,14 +147,14 @@ ninja
 │   ├── editor.cmake
 │   ├── engine.cmake
 │   ├── geometry.cmake
-│   ├── gl.cmake
 │   ├── inputs.cmake
 │   ├── platform.cmake
 │   ├── rendering.cmake
 │   ├── resources.cmake
 │   ├── scene.cmake
 │   ├── shaderCompilation.cmake
-│   └── utils.cmake
+│   ├── utils.cmake
+│   └── vk.cmake
 ├── config
 │   └── config.json
 ├── include
@@ -192,12 +188,6 @@ ninja
 │   │   ├── transform.h
 │   │   ├── transform.traits.h
 │   │   └── transformSystem.h
-│   ├── gl
-│   │   ├── EBO.h
-│   │   ├── VAO.h
-│   │   ├── VBO.h
-│   │   ├── gl.h
-│   │   └── shaderClass.h
 │   ├── inputs
 │   │   ├── gui.h
 │   │   ├── inputs.h
@@ -220,15 +210,17 @@ ninja
 │   │   ├── camera.h
 │   │   ├── scene.h
 │   │   └── script.h
-│   └── utils
-│       ├── defaults.h
-│       ├── fileIO.h
-│       ├── json.h
-│       ├── logging
-│       │   ├── colorCodes.def
-│       │   └── log.h
-│       ├── meshPicking.h
-│       └── texture.h
+│   ├── utils
+│   │   ├── defaults.h
+│   │   ├── fileIO.h
+│   │   ├── json.h
+│   │   ├── logging
+│   │   │   ├── colorCodes.def
+│   │   │   └── log.h
+│   │   ├── meshPicking.h
+│   │   └── texture.h
+│   └── vk
+│       └── context.h
 ├── shaders
 │   ├── test.frag
 │   └── test.vert
@@ -242,7 +234,7 @@ ninja
 ├── tree.txt
 └── website.dsp
 
-35 directories, 154 files
+35 directories, 146 files
 ```
 <!-- TREE_END -->
 ## Contributing
