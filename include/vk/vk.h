@@ -23,7 +23,7 @@ namespace VK {
 
 #define VK_CHECK(result, errCode) do {\
         if (const auto err = VK::check((result), (errCode)); err) {\
-                std::cout << #errCode << '\n';\
+                std::cout << "FATAL: " << #errCode << '\n';\
                 return std::unexpected(*err);\
         }\
 } while (0)

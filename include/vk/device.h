@@ -14,8 +14,6 @@ struct PhysicalDeviceData {
 
 class Device {
 private:
-        VkPhysicalDevice device = VK_NULL_HANDLE;
-        VkDevice logicalDevice = VK_NULL_HANDLE;
         static constexpr const char* VK_SWAPCHAIN_EXTENSION[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
         [[nodiscard]] static std::expected<PhysicalDeviceData, LSIM::Error> pickPhysicalDevice(
@@ -24,6 +22,9 @@ private:
         static std::expected<VkDevice, LSIM::Error> createLogicalDevice(PhysicalDeviceData physicalDeviceData);
 
 public:
+        VkPhysicalDevice device = VK_NULL_HANDLE;
+        VkDevice logicalDevice = VK_NULL_HANDLE;
+
         Device() = default;
 
         Device(Device &&other) noexcept;

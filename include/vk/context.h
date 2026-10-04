@@ -18,7 +18,8 @@ private:
         VkInstance instance = VK_NULL_HANDLE;
         VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
         VkSurfaceKHR surface = VK_NULL_HANDLE;
-        Device device;
+        Device device{};
+        VkSwapchainKHR swapchain = VK_NULL_HANDLE;
         static constexpr const char* VK_VALIDATION_LAYERS[] = {"VK_LAYER_KHRONOS_validation"};
 
 public:

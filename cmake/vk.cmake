@@ -6,4 +6,7 @@ set(VK_SOURCES
 
     include/vk/device.h
     Src/vk/device.cpp
+
+    include/vk/swapchain.h
+    Src/vk/swapchain.cpp
 )
