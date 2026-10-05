@@ -213,9 +213,11 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
         if (!instance) return {std::unexpected(instance.error())};
         context.instance = instance.value();
 
+        #ifndef NDEBUG
         auto debugMessenger = createDebugMessenger(context.instance);
-        if (!debugMessenger) return {std::unexpected(debugMessenger.error())};
+        if (!debugMessenger) return std::unexpected(debugMessenger.error());
         context.debugMessenger = debugMessenger.value();
+        #endif
 
         if (const VkResult result = glfwCreateWindowSurface(context.instance, window, nullptr, &context.surface); result != VK_SUCCESS) {
                 return std::unexpected(
@@ -231,20 +233,28 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
         else
                 context.device = std::move(*device);
 
-        if (auto swapchain = Swapchain::create(window, context.surface, context.device.device, context.device.logicalDevice); !swapchain)
+        auto swapchain = Swapchain::create(
+                window,
+                context.surface,
+                context.device.getDevice(),
+                context.device.getLogicalDevice()
+        );
+        if (!swapchain)
                 return std::unexpected(swapchain.error());
-        else
-                context.swapchain = std::move(*swapchain);
+        context.swapchain = std::move(*swapchain);
 
-        if (auto renderPass = RenderPass::create(context.device.logicalDevice, context.swapchain); !renderPass)
+        auto renderPass = RenderPass::create(
+                context.device.getLogicalDevice(),
+                context.swapchain
+        );
+        if (!renderPass)
                 return std::unexpected(renderPass.error());
-        else
-                context.renderPass = std::move(*renderPass);
+        context.renderPass = std::move(*renderPass);
 
         context.framebuffers.reserve(context.swapchain.getImagesViews().size());
         for (const auto imageView : context.swapchain.getImagesViews()) {
                 auto framebuffer = Framebuffer::create(
-                        context.device.logicalDevice,
+                        context.device.getLogicalDevice(),
                         context.renderPass,
                         imageView,
                         context.swapchain.getExtent()

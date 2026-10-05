@@ -16,15 +16,15 @@ class Device {
 private:
         static constexpr const char* VK_SWAPCHAIN_EXTENSION[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
+        VkPhysicalDevice device = VK_NULL_HANDLE;
+        VkDevice logicalDevice = VK_NULL_HANDLE;
+
         [[nodiscard]] static std::expected<PhysicalDeviceData, LSIM::Error> pickPhysicalDevice(
                 const VkInstance &instance, const VkSurfaceKHR &surface);
 
         static std::expected<VkDevice, LSIM::Error> createLogicalDevice(PhysicalDeviceData physicalDeviceData);
 
 public:
-        VkPhysicalDevice device = VK_NULL_HANDLE;
-        VkDevice logicalDevice = VK_NULL_HANDLE;
-
         Device() = default;
 
         Device(Device &&other) noexcept;
@@ -34,6 +34,10 @@ public:
         Device& operator=(const Device&) = delete;
 
         static std::expected<Device, LSIM::Error> create(const VkInstance &instance, const VkSurfaceKHR &surface);
+
+        [[nodiscard]] VkPhysicalDevice getDevice() const { return device; }
+
+        [[nodiscard]] VkDevice getLogicalDevice() const { return logicalDevice; }
 
         void destroy();
 
