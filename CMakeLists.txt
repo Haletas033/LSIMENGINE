@@ -87,6 +87,9 @@ add_executable(LSIM
         ${SCRIPTS_SOURCES}
         Src/main.cpp
         include/LSIMtypes.h
+        include/geometry/meshData.h
+        include/utils/fileIO.h
+        Src/utils/fileIO.cpp
 #        ${ECS_SOURCES}
 #        ${EDITOR_SOURCES}
 #        ${ENGINE_SOURCES}

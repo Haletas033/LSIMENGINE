@@ -19,6 +19,12 @@ private:
         VkPhysicalDevice device = VK_NULL_HANDLE;
         VkDevice logicalDevice = VK_NULL_HANDLE;
 
+        VkQueue graphicsQueue = VK_NULL_HANDLE;
+        VkQueue presentQueue = VK_NULL_HANDLE;
+
+        uint32_t graphicsQueueFamily{};
+        uint32_t presentQueueFamily{};
+
         [[nodiscard]] static std::expected<PhysicalDeviceData, LSIM::Error> pickPhysicalDevice(
                 const VkInstance &instance, const VkSurfaceKHR &surface);
 
@@ -36,8 +42,11 @@ public:
         static std::expected<Device, LSIM::Error> create(const VkInstance &instance, const VkSurfaceKHR &surface);
 
         [[nodiscard]] VkPhysicalDevice getDevice() const { return device; }
-
         [[nodiscard]] VkDevice getLogicalDevice() const { return logicalDevice; }
+        [[nodiscard]] VkQueue getGraphicsQueue() const { return graphicsQueue; }
+        [[nodiscard]] VkQueue getPresentQueue() const { return presentQueue; }
+        [[nodiscard]] uint32_t getGraphicsQueueFamily() const { return graphicsQueueFamily; }
+        [[nodiscard]] uint32_t getPresentQueueFamily() const { return presentQueueFamily;}
 
         void destroy();
 

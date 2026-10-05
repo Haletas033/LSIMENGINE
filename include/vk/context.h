@@ -9,9 +9,11 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "command.h"
 #include "device.h"
 #include "framebuffer.h"
 #include "LSIMtypes.h"
+#include "pipeline.h"
 #include "renderPass.h"
 #include "swapchain.h"
 
@@ -25,7 +27,12 @@ private:
         Swapchain swapchain{};
         RenderPass renderPass{};
         std::vector<Framebuffer> framebuffers{};
+        Pipeline pipeline{};
+        Command command{};
+        uint32_t currentFrame{};
+        std::vector<VkFence> imagesInFlight{};
         static constexpr const char* VK_VALIDATION_LAYERS[] = {"VK_LAYER_KHRONOS_validation"};
+        static constexpr VkPipelineStageFlags WAIT_STAGES[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
 public:
         static constexpr auto APPLICATION_NAME = "TODO: Application name";
@@ -55,6 +62,8 @@ public:
         void destroyDebugMessenger();
 
         static std::expected<Context, LSIM::Error> create(GLFWwindow *window);
+
+        std::expected<void, LSIM::Error> render();
 
         void destroy();
 

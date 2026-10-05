@@ -15,4 +15,10 @@ set(VK_SOURCES
 
     include/vk/framebuffer.h
     Src/vk/framebuffer.cpp
+
+    include/vk/pipeline.h
+    Src/vk/pipeline.cpp
+
+    include/vk/command.h
+    Src/vk/command.cpp
 )

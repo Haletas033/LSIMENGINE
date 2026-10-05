@@ -15,20 +15,12 @@
 #include <commdlg.h>
 #endif
 
-#include "utils/logging/log.h"
-#include "scene/scene.h"
-#include "inputs/gui.h"
-
-#include <glad/gl.h>
 #include <glm/glm.hpp>
 
 class IO {
 public:
 #ifdef _WIN32
     typedef BOOL (__stdcall *FileDialogFunc)(LPOPENFILENAMEA);
-#endif
-    static void InitIO();
-#ifdef _WIN32
     static std::string Dialog(const char* filter, FileDialogFunc func);
 #else
     static std::string Dialog(const char* filter);
@@ -39,8 +31,6 @@ public:
 
     static std::string GetFileContents(const std::string& filePath);
 
-    static void saveToFile(std::ofstream &file, Registry &registry);
-    static void loadFromFile(std::ifstream &file, Registry &registry, SharedState &sharedState, const std::string &workingDir);
 };
 
 #endif //FILEIO_CLASS_H

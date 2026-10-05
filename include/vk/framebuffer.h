@@ -29,6 +29,8 @@ public:
                 VkExtent2D extent
         );
 
+        [[nodiscard]] VkFramebuffer getFramebuffer() const { return framebuffer; }
+
         void destroy();
 
         ~Framebuffer();

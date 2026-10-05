@@ -32,6 +32,7 @@ public:
                                                             const VkPhysicalDevice &physicalDevice,
                                                             const VkDevice &device);
 
+        [[nodiscard]] const VkSwapchainKHR& getSwapchain() const { return swapchain; }
         [[nodiscard]] VkFormat getImageFormat() const { return imageFormat; }
         [[nodiscard]] const std::vector<VkImageView>& getImagesViews() const { return imageViews; }
         [[nodiscard]] VkExtent2D getExtent() const { return extent; }

@@ -1,18 +1,25 @@
 #include "vk/device.h"
 
 #include <expected>
-#include <set>
 #include <vector>
 
 #include "LSIMtypes.h"
 #include "vk/vk.h"
 
 Device::Device(Device&& other) noexcept
-    : device(other.device),
-      logicalDevice(other.logicalDevice)
+        : device(other.device),
+          logicalDevice(other.logicalDevice),
+          graphicsQueue(other.graphicsQueue),
+          presentQueue(other.presentQueue),
+          graphicsQueueFamily(other.graphicsQueueFamily),
+          presentQueueFamily(other.presentQueueFamily)
 {
         other.device = VK_NULL_HANDLE;
         other.logicalDevice = VK_NULL_HANDLE;
+        other.graphicsQueue = VK_NULL_HANDLE;
+        other.presentQueue = VK_NULL_HANDLE;
+        other.graphicsQueueFamily = {};
+        other.presentQueueFamily = {};
 }
 
 Device& Device::operator=(Device&& other) noexcept {
@@ -23,9 +30,17 @@ Device& Device::operator=(Device&& other) noexcept {
 
         device = other.device;
         logicalDevice = other.logicalDevice;
+        graphicsQueue = other.graphicsQueue;
+        presentQueue = other.presentQueue;
+        graphicsQueueFamily = other.graphicsQueueFamily;
+        presentQueueFamily = other.presentQueueFamily;
 
         other.device = VK_NULL_HANDLE;
         other.logicalDevice = VK_NULL_HANDLE;
+        other.graphicsQueue = VK_NULL_HANDLE;
+        other.presentQueue = VK_NULL_HANDLE;
+        other.graphicsQueueFamily = {};
+        other.presentQueueFamily = {};
 
         return *this;
 }
@@ -173,16 +188,19 @@ std::expected<VkDevice, LSIM::Error> Device::createLogicalDevice(const PhysicalD
 std::expected<Device, LSIM::Error> Device::create(const VkInstance& instance, const VkSurfaceKHR& surface) {
         Device device{};
         const auto physicalDevice = pickPhysicalDevice(instance, surface);
-        if (!physicalDevice)
-                return std::unexpected(physicalDevice.error());
+        if (!physicalDevice) return std::unexpected(physicalDevice.error());
 
         device.device = physicalDevice->device;
+        device.graphicsQueueFamily = physicalDevice->graphicsQueueFamily;
+        device.presentQueueFamily = physicalDevice->presentQueueFamily;
 
         const auto logicalDevice = createLogicalDevice(*physicalDevice);
-        if (!logicalDevice)
-                return std::unexpected(logicalDevice.error());
+        if (!logicalDevice) return std::unexpected(logicalDevice.error());
 
         device.logicalDevice = *logicalDevice;
+
+        vkGetDeviceQueue(device.logicalDevice, physicalDevice->graphicsQueueFamily, 0, &device.graphicsQueue);
+        vkGetDeviceQueue(device.logicalDevice, physicalDevice->presentQueueFamily, 0, &device.presentQueue);
 
         return std::move(device);
 }
@@ -194,6 +212,10 @@ void Device::destroy() {
         }
 
         device = VK_NULL_HANDLE;
+        graphicsQueue = VK_NULL_HANDLE;
+        presentQueue = VK_NULL_HANDLE;
+        graphicsQueueFamily = {};
+        presentQueueFamily = {};
 }
 
 Device::~Device() {
