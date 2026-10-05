@@ -7,15 +7,15 @@
 #include "vk/vk.h"
 
 Device::Device(Device&& other) noexcept
-        : device(other.device),
-          logicalDevice(other.logicalDevice),
+        : physical(other.physical),
+          logical(other.logical),
           graphicsQueue(other.graphicsQueue),
           presentQueue(other.presentQueue),
           graphicsQueueFamily(other.graphicsQueueFamily),
           presentQueueFamily(other.presentQueueFamily)
 {
-        other.device = VK_NULL_HANDLE;
-        other.logicalDevice = VK_NULL_HANDLE;
+        other.physical = VK_NULL_HANDLE;
+        other.logical = VK_NULL_HANDLE;
         other.graphicsQueue = VK_NULL_HANDLE;
         other.presentQueue = VK_NULL_HANDLE;
         other.graphicsQueueFamily = {};
@@ -28,15 +28,15 @@ Device& Device::operator=(Device&& other) noexcept {
 
         destroy();
 
-        device = other.device;
-        logicalDevice = other.logicalDevice;
+        physical = other.physical;
+        logical = other.logical;
         graphicsQueue = other.graphicsQueue;
         presentQueue = other.presentQueue;
         graphicsQueueFamily = other.graphicsQueueFamily;
         presentQueueFamily = other.presentQueueFamily;
 
-        other.device = VK_NULL_HANDLE;
-        other.logicalDevice = VK_NULL_HANDLE;
+        other.physical = VK_NULL_HANDLE;
+        other.logical = VK_NULL_HANDLE;
         other.graphicsQueue = VK_NULL_HANDLE;
         other.presentQueue = VK_NULL_HANDLE;
         other.graphicsQueueFamily = {};
@@ -185,33 +185,59 @@ std::expected<VkDevice, LSIM::Error> Device::createLogicalDevice(const PhysicalD
         return device;
 }
 
+std::expected<uint32_t, LSIM::Error> Device::getMemoryType(const VkMemoryRequirements& memoryBits, const VkMemoryPropertyFlags properties) const {
+        VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties{};
+        vkGetPhysicalDeviceMemoryProperties(
+                physical,
+                &physicalDeviceMemoryProperties
+        );
+
+        const auto memoryTypes = physicalDeviceMemoryProperties.memoryTypes;
+        const uint32_t memoryCount = physicalDeviceMemoryProperties.memoryTypeCount;
+        for (uint32_t i{}; i < memoryCount; ++i) {
+                if (
+                        memoryBits.memoryTypeBits & (1 << i)
+                        && (memoryTypes[i].propertyFlags & properties) == properties
+                ) {
+                        return i;
+                }
+        }
+
+        return std::unexpected(
+                LSIM::Error{
+                        LSIM::ErrorCode::VK_NO_VALID_MEMORY_TYPE,
+                        LSIM::FatalityLevel::FATAL
+                }
+        );
+}
+
 std::expected<Device, LSIM::Error> Device::create(const VkInstance& instance, const VkSurfaceKHR& surface) {
         Device device{};
         const auto physicalDevice = pickPhysicalDevice(instance, surface);
         if (!physicalDevice) return std::unexpected(physicalDevice.error());
 
-        device.device = physicalDevice->device;
+        device.physical = physicalDevice->device;
         device.graphicsQueueFamily = physicalDevice->graphicsQueueFamily;
         device.presentQueueFamily = physicalDevice->presentQueueFamily;
 
         const auto logicalDevice = createLogicalDevice(*physicalDevice);
         if (!logicalDevice) return std::unexpected(logicalDevice.error());
 
-        device.logicalDevice = *logicalDevice;
+        device.logical = *logicalDevice;
 
-        vkGetDeviceQueue(device.logicalDevice, physicalDevice->graphicsQueueFamily, 0, &device.graphicsQueue);
-        vkGetDeviceQueue(device.logicalDevice, physicalDevice->presentQueueFamily, 0, &device.presentQueue);
+        vkGetDeviceQueue(device.logical, physicalDevice->graphicsQueueFamily, 0, &device.graphicsQueue);
+        vkGetDeviceQueue(device.logical, physicalDevice->presentQueueFamily, 0, &device.presentQueue);
 
         return std::move(device);
 }
 
 void Device::destroy() {
-        if (logicalDevice != VK_NULL_HANDLE) {
-                vkDestroyDevice(logicalDevice, nullptr);
-                logicalDevice = VK_NULL_HANDLE;
+        if (logical != VK_NULL_HANDLE) {
+                vkDestroyDevice(logical, nullptr);
+                logical = VK_NULL_HANDLE;
         }
 
-        device = VK_NULL_HANDLE;
+        physical = VK_NULL_HANDLE;
         graphicsQueue = VK_NULL_HANDLE;
         presentQueue = VK_NULL_HANDLE;
         graphicsQueueFamily = {};

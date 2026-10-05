@@ -7,18 +7,30 @@
 
 #include <GLFW/glfw3.h>
 
+#include "vk/device.h"
+
 Swapchain::Swapchain(Swapchain&& other) noexcept
         : device(other.device),
+          physicalDevice(other.physicalDevice),
           swapchain(other.swapchain),
           imageFormat(other.imageFormat),
           extent(other.extent),
           images(std::move(other.images)),
-          imageViews(std::move(other.imageViews))
+          imageViews(std::move(other.imageViews)),
+          depthImage(other.depthImage),
+          depthMemory(other.depthMemory),
+          depthImageView(other.depthImageView)
 {
         other.device = VK_NULL_HANDLE;
+        other.physicalDevice = VK_NULL_HANDLE;
         other.swapchain = VK_NULL_HANDLE;
         other.imageFormat = VK_FORMAT_UNDEFINED;
         other.extent = {};
+        other.images.clear();
+        other.imageViews.clear();
+        other.depthImage = VK_NULL_HANDLE;
+        other.depthMemory = VK_NULL_HANDLE;
+        other.depthImageView = VK_NULL_HANDLE;
 }
 
 Swapchain& Swapchain::operator=(Swapchain&& other) noexcept {
@@ -28,28 +40,61 @@ Swapchain& Swapchain::operator=(Swapchain&& other) noexcept {
         destroy();
 
         device = other.device;
+        physicalDevice = other.physicalDevice;
         swapchain = other.swapchain;
         imageFormat = other.imageFormat;
         extent = other.extent;
         images = std::move(other.images);
         imageViews = std::move(other.imageViews);
+        depthImage = other.depthImage;
+        depthMemory = other.depthMemory;
+        depthImageView = other.depthImageView;
 
         other.device = VK_NULL_HANDLE;
+        other.physicalDevice = VK_NULL_HANDLE;
         other.swapchain = VK_NULL_HANDLE;
         other.imageFormat = VK_FORMAT_UNDEFINED;
         other.extent = {};
+        other.images.clear();
+        other.imageViews.clear();
+        other.depthImage = VK_NULL_HANDLE;
+        other.depthMemory = VK_NULL_HANDLE;
+        other.depthImageView = VK_NULL_HANDLE;
 
         return *this;
 }
 
+std::expected<VkFormat, LSIM::Error> Swapchain::getOptimalDepthBufferFormat() const {
+        constexpr std::array candidates = {
+                VK_FORMAT_D32_SFLOAT,
+                VK_FORMAT_D32_SFLOAT_S8_UINT,
+                VK_FORMAT_D24_UNORM_S8_UINT
+            };
+
+        for (const auto format : candidates) {
+                VkFormatProperties props{};
+                vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
+                if (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+                        return format;
+        }
+
+        return std::unexpected(
+                LSIM::Error{
+                        LSIM::ErrorCode::VK_NO_VALID_DEPTH_BUFFER_FORMAT,
+                        LSIM::FatalityLevel::FATAL
+                }
+        );
+}
+
 std::expected<Swapchain, LSIM::Error> Swapchain::create(
         GLFWwindow *window, const VkSurfaceKHR &surface,
-        const VkPhysicalDevice &physicalDevice, const VkDevice &device
+        const VkPhysicalDevice &physicalDevice, const Device &device
 ) {
         Swapchain swapchain{};
         VkSurfaceCapabilitiesKHR surfaceCapabilities{};
 
-        swapchain.device = device;
+        swapchain.device = device.getLogicalDevice();
+        swapchain.physicalDevice = device.getDevice();
 
         VK_CHECK(
                 vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities),
@@ -164,18 +209,18 @@ std::expected<Swapchain, LSIM::Error> Swapchain::create(
         };
 
         VK_CHECK(
-                vkCreateSwapchainKHR(device, &swapchainCreateInfo, nullptr, &swapchain.swapchain),
+                vkCreateSwapchainKHR(swapchain.device, &swapchainCreateInfo, nullptr, &swapchain.swapchain),
                 LSIM::ErrorCode::VK_CREATE_SWAPCHAIN_FAILURE
         );
 
         uint32_t swapchainImageCount{};
         VK_CHECK(
-                vkGetSwapchainImagesKHR(device, swapchain.swapchain, &swapchainImageCount,nullptr),
+                vkGetSwapchainImagesKHR(swapchain.device, swapchain.swapchain, &swapchainImageCount,nullptr),
                 LSIM::ErrorCode::VK_GET_SWAPCHAIN_IMAGES_FAILURE
         );
         swapchain.images.resize(swapchainImageCount);
         VK_CHECK(
-                vkGetSwapchainImagesKHR(device, swapchain.swapchain, &swapchainImageCount, swapchain.images.data()),
+                vkGetSwapchainImagesKHR(swapchain.device, swapchain.swapchain, &swapchainImageCount, swapchain.images.data()),
                 LSIM::ErrorCode::VK_GET_SWAPCHAIN_IMAGES_FAILURE
         );
 
@@ -205,7 +250,7 @@ std::expected<Swapchain, LSIM::Error> Swapchain::create(
 
                 VK_CHECK(
                         vkCreateImageView(
-                                device,
+                                swapchain.device,
                                 &imageViewCreateInfo,
                                 nullptr,
                                 &imageView
@@ -216,6 +261,86 @@ std::expected<Swapchain, LSIM::Error> Swapchain::create(
                 swapchain.imageViews.push_back(imageView);
         }
 
+        auto depthFormat = swapchain.getOptimalDepthBufferFormat();
+        if (!depthFormat)
+                return std::unexpected(depthFormat.error());
+
+        VkImageCreateInfo imageCreateInfo{
+                .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+                .imageType = VK_IMAGE_TYPE_2D,
+                .format = *depthFormat,
+                .extent = {swapchain.extent.width, swapchain.extent.height, 1},
+                .mipLevels = 1,
+                .arrayLayers = 1,
+                .samples = VK_SAMPLE_COUNT_1_BIT,
+                .tiling = VK_IMAGE_TILING_OPTIMAL,
+                .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+                .queueFamilyIndexCount = 0,
+                .pQueueFamilyIndices = nullptr,
+                .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
+        };
+
+        VK_CHECK(
+                vkCreateImage(
+                        swapchain.device,
+                        &imageCreateInfo,
+                        nullptr,
+                        &swapchain.depthImage
+                ),
+                LSIM::ErrorCode::VK_CREATE_IMAGE_FAILURE
+        );
+
+        VkMemoryRequirements memoryRequirements{};
+        vkGetImageMemoryRequirements(swapchain.device, swapchain.depthImage, &memoryRequirements);
+
+        auto memoryType = device.getMemoryType(memoryRequirements, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        if (!memoryType)
+                return std::unexpected(memoryType.error());
+
+        VkMemoryAllocateInfo allocInfo{
+                .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+                .allocationSize = memoryRequirements.size,
+                .memoryTypeIndex = *memoryType
+        };
+
+        VK_CHECK(
+                vkAllocateMemory(swapchain.device, &allocInfo, nullptr, &swapchain.depthMemory),
+                LSIM::ErrorCode::VK_MEMORY_ALLOCATION_FAILURE
+        );
+
+        vkBindImageMemory(swapchain.device, swapchain.depthImage, swapchain.depthMemory, 0);
+
+        VkImageViewCreateInfo imageViewCreateInfo{
+                .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                .image = swapchain.depthImage,
+                .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                .format = *depthFormat,
+                .components = {
+                        .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                        .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                        .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                        .a = VK_COMPONENT_SWIZZLE_IDENTITY
+                },
+                .subresourceRange = {
+                        .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+                        .baseMipLevel = 0,
+                        .levelCount = 1,
+                        .baseArrayLayer = 0,
+                        .layerCount = 1
+                }
+        };
+
+        VK_CHECK(
+                vkCreateImageView(
+                        swapchain.device,
+                        &imageViewCreateInfo,
+                        nullptr,
+                        &swapchain.depthImageView
+                ),
+                LSIM::ErrorCode::VK_CREATE_IMAGE_VIEW_FAILURE
+        );
+
         return swapchain;
 }
 
@@ -225,6 +350,21 @@ void Swapchain::destroy() {
 
         images.clear();
         imageViews.clear();
+
+        if (depthImageView != VK_NULL_HANDLE) {
+                vkDestroyImageView(device, depthImageView, nullptr);
+                depthImageView = VK_NULL_HANDLE;
+        }
+
+        if (depthMemory != VK_NULL_HANDLE) {
+                vkFreeMemory(device, depthMemory, nullptr);
+                depthMemory = VK_NULL_HANDLE;
+        }
+
+        if (depthImage != VK_NULL_HANDLE) {
+                vkDestroyImage(device, depthImage, nullptr);
+                depthImage = VK_NULL_HANDLE;
+        }
 
         if (swapchain != VK_NULL_HANDLE) {
                 vkDestroySwapchainKHR(
@@ -237,6 +377,7 @@ void Swapchain::destroy() {
         }
 
         device = VK_NULL_HANDLE;
+        physicalDevice = VK_NULL_HANDLE;
 }
 
 Swapchain::~Swapchain() {

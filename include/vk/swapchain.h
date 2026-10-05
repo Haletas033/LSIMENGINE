@@ -5,12 +5,14 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
+#include "device.h"
 #include "LSIMtypes.h"
 #include "GLFW/glfw3.h"
 
 class Swapchain {
 private:
         VkDevice device = VK_NULL_HANDLE;
+        VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 
         VkFormat imageFormat{};
@@ -18,6 +20,10 @@ private:
 
         std::vector<VkImage> images{};
         std::vector<VkImageView> imageViews{};
+
+        VkImage depthImage{VK_NULL_HANDLE};
+        VkDeviceMemory depthMemory{VK_NULL_HANDLE};
+        VkImageView depthImageView{VK_NULL_HANDLE};
 
 public:
         Swapchain() = default;
@@ -28,9 +34,11 @@ public:
         Swapchain(Swapchain&& other) noexcept;
         Swapchain& operator=(Swapchain&& other) noexcept;
 
+        std::expected<VkFormat, LSIM::Error> getOptimalDepthBufferFormat() const;
+
         static std::expected<Swapchain, LSIM::Error> create(GLFWwindow *window, const VkSurfaceKHR &surface,
                                                             const VkPhysicalDevice &physicalDevice,
-                                                            const VkDevice &device);
+                                                            const Device &device);
 
         [[nodiscard]] const VkSwapchainKHR& getSwapchain() const { return swapchain; }
         [[nodiscard]] VkFormat getImageFormat() const { return imageFormat; }

@@ -249,7 +249,7 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 window,
                 context.surface,
                 context.device.getDevice(),
-                context.device.getLogicalDevice()
+                context.device
         );
         if (!swapchain)
                 return std::unexpected(swapchain.error());
