@@ -32,6 +32,8 @@ public:
                                                             const VkPhysicalDevice &physicalDevice,
                                                             const VkDevice &device);
 
+        [[nodiscard]] VkFormat getImageFormat() const { return imageFormat; }
+
         void destroy();
 
         ~Swapchain();

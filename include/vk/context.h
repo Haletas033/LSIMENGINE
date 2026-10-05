@@ -11,6 +11,7 @@
 
 #include "device.h"
 #include "LSIMtypes.h"
+#include "renderPass.h"
 #include "swapchain.h"
 
 struct GLFWwindow;
@@ -21,6 +22,7 @@ private:
         VkSurfaceKHR surface = VK_NULL_HANDLE;
         Device device{};
         Swapchain swapchain{};
+        RenderPass renderPass{};
         static constexpr const char* VK_VALIDATION_LAYERS[] = {"VK_LAYER_KHRONOS_validation"};
 
 public:

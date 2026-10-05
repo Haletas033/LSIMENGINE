@@ -19,8 +19,7 @@ Device& Device::operator=(Device&& other) noexcept {
         if (this == &other)
                 return *this;
 
-        if (logicalDevice != VK_NULL_HANDLE)
-                vkDestroyDevice(logicalDevice, nullptr);
+        destroy();
 
         device = other.device;
         logicalDevice = other.logicalDevice;
@@ -188,11 +187,15 @@ std::expected<Device, LSIM::Error> Device::create(const VkInstance& instance, co
         return std::move(device);
 }
 
-Device::~Device() {
+void Device::destroy() {
         if (logicalDevice != VK_NULL_HANDLE) {
                 vkDestroyDevice(logicalDevice, nullptr);
                 logicalDevice = VK_NULL_HANDLE;
         }
 
         device = VK_NULL_HANDLE;
+}
+
+Device::~Device() {
+        destroy();
 }

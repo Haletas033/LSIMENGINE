@@ -34,6 +34,9 @@ public:
         Device& operator=(const Device&) = delete;
 
         static std::expected<Device, LSIM::Error> create(const VkInstance &instance, const VkSurfaceKHR &surface);
+
+        void destroy();
+
         ~Device();
 };
 

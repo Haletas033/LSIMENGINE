@@ -9,4 +9,7 @@ set(VK_SOURCES
 
     include/vk/swapchain.h
     Src/vk/swapchain.cpp
+
+    include/vk/renderPass.h
+    Src/vk/renderPass.cpp
 )

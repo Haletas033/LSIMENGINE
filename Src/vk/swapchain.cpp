@@ -10,11 +10,15 @@
 Swapchain::Swapchain(Swapchain&& other) noexcept
         : device(other.device),
           swapchain(other.swapchain),
+          imageFormat(other.imageFormat),
+          extent(other.extent),
           images(std::move(other.images)),
           imageViews(std::move(other.imageViews))
 {
         other.device = VK_NULL_HANDLE;
         other.swapchain = VK_NULL_HANDLE;
+        other.imageFormat = VK_FORMAT_UNDEFINED;
+        other.extent = {};
 }
 
 Swapchain& Swapchain::operator=(Swapchain&& other) noexcept {
@@ -25,11 +29,15 @@ Swapchain& Swapchain::operator=(Swapchain&& other) noexcept {
 
         device = other.device;
         swapchain = other.swapchain;
+        imageFormat = other.imageFormat;
+        extent = other.extent;
         images = std::move(other.images);
         imageViews = std::move(other.imageViews);
 
         other.device = VK_NULL_HANDLE;
         other.swapchain = VK_NULL_HANDLE;
+        other.imageFormat = VK_FORMAT_UNDEFINED;
+        other.extent = {};
 
         return *this;
 }

@@ -232,10 +232,16 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
         else
                 context.swapchain = std::move(*swapchain);
 
+        if (auto renderPass = RenderPass::create(context.device.logicalDevice, context.swapchain); !renderPass)
+                return std::unexpected(renderPass.error());
+        else
+                context.renderPass = std::move(*renderPass);
+
         return context;
 }
 
 void Context::destroy() {
+        renderPass = {};
         swapchain = {};
         device = {};
 
