@@ -18,6 +18,8 @@ public:
         RenderPass(const RenderPass&) = delete;
         RenderPass& operator=(const RenderPass&) = delete;
 
+        [[nodiscard]] VkRenderPass get() const { return renderPass; }
+
         RenderPass(RenderPass&& other) noexcept;
         RenderPass& operator=(RenderPass&& other) noexcept;
 

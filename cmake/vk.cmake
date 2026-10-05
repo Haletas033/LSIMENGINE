@@ -12,4 +12,7 @@ set(VK_SOURCES
 
     include/vk/renderPass.h
     Src/vk/renderPass.cpp
+
+    include/vk/framebuffer.h
+    Src/vk/framebuffer.cpp
 )

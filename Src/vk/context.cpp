@@ -14,7 +14,9 @@ Context::Context(Context&& other) noexcept
           debugMessenger(other.debugMessenger),
           surface(other.surface),
           device(std::move(other.device)),
-          swapchain(std::move(other.swapchain))
+          swapchain(std::move(other.swapchain)),
+          renderPass(std::move(other.renderPass)),
+          framebuffers(std::move(other.framebuffers))
 {
         other.instance = VK_NULL_HANDLE;
         other.debugMessenger = VK_NULL_HANDLE;
@@ -32,6 +34,8 @@ Context& Context::operator=(Context&& other) noexcept {
         surface = other.surface;
         device = std::move(other.device);
         swapchain = std::move(other.swapchain);
+        renderPass = std::move(other.renderPass);
+        framebuffers = std::move(other.framebuffers);
 
         other.instance = VK_NULL_HANDLE;
         other.debugMessenger = VK_NULL_HANDLE;
@@ -237,10 +241,25 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
         else
                 context.renderPass = std::move(*renderPass);
 
+        context.framebuffers.reserve(context.swapchain.getImagesViews().size());
+        for (const auto imageView : context.swapchain.getImagesViews()) {
+                auto framebuffer = Framebuffer::create(
+                        context.device.logicalDevice,
+                        context.renderPass,
+                        imageView,
+                        context.swapchain.getExtent()
+                );
+
+                if (!framebuffer)
+                        return std::unexpected(framebuffer.error());
+                context.framebuffers.push_back(std::move(*framebuffer));
+        }
+
         return context;
 }
 
 void Context::destroy() {
+        framebuffers.clear();
         renderPass = {};
         swapchain = {};
         device = {};

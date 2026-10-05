@@ -10,6 +10,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include "device.h"
+#include "framebuffer.h"
 #include "LSIMtypes.h"
 #include "renderPass.h"
 #include "swapchain.h"
@@ -23,6 +24,7 @@ private:
         Device device{};
         Swapchain swapchain{};
         RenderPass renderPass{};
+        std::vector<Framebuffer> framebuffers{};
         static constexpr const char* VK_VALIDATION_LAYERS[] = {"VK_LAYER_KHRONOS_validation"};
 
 public:

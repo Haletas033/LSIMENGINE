@@ -33,6 +33,8 @@ public:
                                                             const VkDevice &device);
 
         [[nodiscard]] VkFormat getImageFormat() const { return imageFormat; }
+        [[nodiscard]] const std::vector<VkImageView>& getImagesViews() const { return imageViews; }
+        [[nodiscard]] VkExtent2D getExtent() const { return extent; }
 
         void destroy();
 
