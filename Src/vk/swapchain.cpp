@@ -17,6 +17,7 @@ Swapchain::Swapchain(Swapchain&& other) noexcept
           extent(other.extent),
           images(std::move(other.images)),
           imageViews(std::move(other.imageViews)),
+          depthFormat(other.depthFormat),
           depthImage(other.depthImage),
           depthMemory(other.depthMemory),
           depthImageView(other.depthImageView)
@@ -28,6 +29,7 @@ Swapchain::Swapchain(Swapchain&& other) noexcept
         other.extent = {};
         other.images.clear();
         other.imageViews.clear();
+        other.depthFormat = VK_FORMAT_UNDEFINED;
         other.depthImage = VK_NULL_HANDLE;
         other.depthMemory = VK_NULL_HANDLE;
         other.depthImageView = VK_NULL_HANDLE;
@@ -46,6 +48,7 @@ Swapchain& Swapchain::operator=(Swapchain&& other) noexcept {
         extent = other.extent;
         images = std::move(other.images);
         imageViews = std::move(other.imageViews);
+        depthFormat = other.depthFormat;
         depthImage = other.depthImage;
         depthMemory = other.depthMemory;
         depthImageView = other.depthImageView;
@@ -57,6 +60,7 @@ Swapchain& Swapchain::operator=(Swapchain&& other) noexcept {
         other.extent = {};
         other.images.clear();
         other.imageViews.clear();
+        other.depthFormat = VK_FORMAT_UNDEFINED;
         other.depthImage = VK_NULL_HANDLE;
         other.depthMemory = VK_NULL_HANDLE;
         other.depthImageView = VK_NULL_HANDLE;
@@ -264,11 +268,12 @@ std::expected<Swapchain, LSIM::Error> Swapchain::create(
         auto depthFormat = swapchain.getOptimalDepthBufferFormat();
         if (!depthFormat)
                 return std::unexpected(depthFormat.error());
+        swapchain.depthFormat = *depthFormat;
 
         VkImageCreateInfo imageCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
                 .imageType = VK_IMAGE_TYPE_2D,
-                .format = *depthFormat,
+                .format = swapchain.depthFormat,
                 .extent = {swapchain.extent.width, swapchain.extent.height, 1},
                 .mipLevels = 1,
                 .arrayLayers = 1,
@@ -315,7 +320,7 @@ std::expected<Swapchain, LSIM::Error> Swapchain::create(
                 .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
                 .image = swapchain.depthImage,
                 .viewType = VK_IMAGE_VIEW_TYPE_2D,
-                .format = *depthFormat,
+                .format = swapchain.depthFormat,
                 .components = {
                         .r = VK_COMPONENT_SWIZZLE_IDENTITY,
                         .g = VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -348,6 +353,8 @@ void Swapchain::destroy() {
         for (const auto imageView : imageViews)
                 vkDestroyImageView(device, imageView, nullptr);
 
+        imageFormat = VK_FORMAT_UNDEFINED;
+        depthFormat = VK_FORMAT_UNDEFINED;
         images.clear();
         imageViews.clear();
 

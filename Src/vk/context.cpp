@@ -272,7 +272,7 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 auto framebuffer = Framebuffer::create(
                         context.device.getLogicalDevice(),
                         context.renderPass,
-                        imageView,
+                        {imageView, context.swapchain.getDepthImageView()},
                         context.swapchain.getExtent()
                 );
 
@@ -371,14 +371,26 @@ std::expected<void, LSIM::Error> Context::render() {
         );
 
         const VkRect2D rect = {.offset = {0, 0}, .extent = swapchain.getExtent()};
-        VkClearValue clearValue = {.color = {.float32 = {0.0f, 0.0f, 0.0f, 1.0f}}};
+        std::array clearValues{
+                VkClearValue{
+                        .color = {
+                                .float32 = {0.0f, 0.0f, 0.0f, 1.0f}
+                        }
+                },
+                VkClearValue{
+                        .depthStencil = {
+                                .depth = 1.0f,
+                                .stencil = 0
+                            }
+                }
+        };
         const VkRenderPassBeginInfo renderPassBeginInfo{
                 .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
                 .renderPass = renderPass.get(),
                 .framebuffer = framebuffers[imageIndex].getFramebuffer(),
                 .renderArea = rect,
-                .clearValueCount = 1,
-                .pClearValues = &clearValue
+                .clearValueCount = clearValues.size(),
+                .pClearValues = clearValues.data()
         };
         vkCmdBeginRenderPass(
                 buffers[currentFrame],
@@ -419,7 +431,7 @@ std::expected<void, LSIM::Error> Context::render() {
 
         vkCmdDraw(
                 buffers[currentFrame],
-                3, 1, 0, 0
+                6, 1, 0, 0
         );
 
         vkCmdEndRenderPass(buffers[currentFrame]);

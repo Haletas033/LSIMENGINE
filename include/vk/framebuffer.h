@@ -24,9 +24,8 @@ public:
 
         static std::expected<Framebuffer, LSIM::Error> create(
                 VkDevice device,
-                const RenderPass& renderPass,
-                VkImageView imageView,
-                VkExtent2D extent
+                const RenderPass &renderPass,
+                std::array<VkImageView, 2> imageViews, VkExtent2D extent
         );
 
         [[nodiscard]] VkFramebuffer getFramebuffer() const { return framebuffer; }
