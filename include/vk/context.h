@@ -9,6 +9,7 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include "buffer.h"
 #include "command.h"
 #include "device.h"
 #include "framebuffer.h"
@@ -29,6 +30,8 @@ private:
         std::vector<Framebuffer> framebuffers{};
         Pipeline pipeline{};
         Command command{};
+        Buffer vertexBuffer{};
+        Buffer indexBuffer{};
         uint32_t currentFrame{};
         std::vector<VkFence> imagesInFlight{};
         static constexpr const char* VK_VALIDATION_LAYERS[] = {"VK_LAYER_KHRONOS_validation"};

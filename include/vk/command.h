@@ -27,6 +27,12 @@ public:
         Command(Command&& other) noexcept;
         Command& operator=(Command&& other) noexcept;
 
+        std::expected<void, LSIM::Error> copyBuffer(
+                VkBuffer source,
+                VkBuffer destination,
+                VkDeviceSize size, VkQueue graphicsQueue
+        );
+
         static std::expected<Command, LSIM::Error> create(const Device &device, uint32_t swapchainImageCount);
 
         [[nodiscard]] std::array<VkCommandBuffer, 2> getBuffers() const { return buffers; }

@@ -21,6 +21,8 @@ Context::Context(Context&& other) noexcept
           framebuffers(std::move(other.framebuffers)),
           pipeline(std::move(other.pipeline)),
           command(std::move(other.command)),
+          vertexBuffer(std::move(other.vertexBuffer)),
+          indexBuffer(std::move(other.indexBuffer)),
           currentFrame(other.currentFrame),
           imagesInFlight(std::move(other.imagesInFlight))
 {
@@ -45,6 +47,8 @@ Context& Context::operator=(Context&& other) noexcept {
         framebuffers = std::move(other.framebuffers);
         pipeline = std::move(other.pipeline);
         command = std::move(other.command);
+        vertexBuffer = std::move(other.vertexBuffer);
+        indexBuffer = std::move(other.indexBuffer);
         currentFrame = other.currentFrame;
         imagesInFlight = std::move(other.imagesInFlight);
 
@@ -292,8 +296,6 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
         };
 
         PipelineConfig config {};
-        config.cullModeFlags = VK_CULL_MODE_NONE;
-
 
         auto pipeline = Pipeline::create(
                 context.device.getLogicalDevice(),
@@ -310,6 +312,41 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
         if (!command)
                 return std::unexpected(command.error());
         context.command = std::move(*command);
+
+        // POS | NORMAL (color for testing) | TANGENT | UV
+        std::vector<Vertex> vertices {
+                {{-.5f, -.5f, .2f},       {1.f, 0.f, 0.f}, {}, {}},
+                {{-.5f,  .5f, .2f},       {0.f, 1.f, 0.f}, {}, {}},
+                {{ .5f,  .5f, .2f},       {0.f, 0.f, 1.f}, {}, {}},
+                {{ .5f, -.5f, .2f},       {1.f, 1.f, 1.f}, {}, {}},
+        };
+
+        std::vector<uint32_t> indices {
+                0, 1, 2,
+                0, 2, 3
+        };
+
+        auto vertexBuffer = Buffer::createFromData(
+                context.device,
+                context.command,
+                vertices.data(),
+                vertices.size() * sizeof(Vertex),
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+        );
+        if (!vertexBuffer)
+                return std::unexpected(vertexBuffer.error());
+        context.vertexBuffer = std::move(*vertexBuffer);
+
+        auto indexBuffer = Buffer::createFromData(
+                context.device,
+                context.command,
+                indices.data(),
+                indices.size() * sizeof(uint32_t),
+                VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+        );
+        if (!indexBuffer)
+                return std::unexpected(indexBuffer.error());
+        context.indexBuffer = std::move(*indexBuffer);
 
         return context;
 }
@@ -429,9 +466,32 @@ std::expected<void, LSIM::Error> Context::render() {
                 &scissor
         );
 
-        vkCmdDraw(
+        const VkBuffer vertexBuffers[] = { vertexBuffer.getBuffer() };
+
+        constexpr VkDeviceSize offsets[] = {0};
+
+        vkCmdBindVertexBuffers(
                 buffers[currentFrame],
-                6, 1, 0, 0
+                0,
+                1,
+                vertexBuffers,
+                offsets
+        );
+
+        vkCmdBindIndexBuffer(
+                buffers[currentFrame],
+                indexBuffer.getBuffer(),
+                0,
+                VK_INDEX_TYPE_UINT32
+        );
+
+        vkCmdDrawIndexed(
+                buffers[currentFrame],
+                6,
+                1,
+                0,
+                0,
+                0
         );
 
         vkCmdEndRenderPass(buffers[currentFrame]);
@@ -480,6 +540,8 @@ void Context::destroy() {
         }
 
         imagesInFlight.clear();
+        vertexBuffer = {};
+        indexBuffer = {};
         command = {};
         pipeline = {};
         framebuffers.clear();

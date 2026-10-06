@@ -21,4 +21,7 @@ set(VK_SOURCES
 
     include/vk/command.h
     Src/vk/command.cpp
+
+    include/vk/buffer.h
+    Src/vk/buffer.cpp
 )

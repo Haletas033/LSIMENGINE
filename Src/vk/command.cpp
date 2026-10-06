@@ -42,6 +42,121 @@ Command &Command::operator=(Command &&other) noexcept {
         return *this;
 }
 
+std::expected<void, LSIM::Error> Command::copyBuffer(
+        VkBuffer source,
+        VkBuffer destination,
+        const VkDeviceSize size,
+        VkQueue graphicsQueue
+) {
+        const VkCommandBufferAllocateInfo allocateInfo{
+                .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+                .commandPool = pool,
+                .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+                .commandBufferCount = 1
+        };
+
+        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+
+        VK_CHECK(
+                vkAllocateCommandBuffers(
+                        device,
+                        &allocateInfo,
+                        &commandBuffer
+                ),
+                LSIM::ErrorCode::VK_ALLOCATE_COMMAND_BUFFERS_FAILURE
+        );
+
+        constexpr VkCommandBufferBeginInfo beginInfo{
+                .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+                .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+        };
+
+        VK_CHECK(
+                vkBeginCommandBuffer(
+                        commandBuffer,
+                        &beginInfo
+                ),
+                LSIM::ErrorCode::VK_BEGIN_COMMAND_BUFFER_FAILURE
+        );
+
+        const VkBufferCopy copyRegion{
+                .srcOffset = 0,
+                .dstOffset = 0,
+                .size = size
+        };
+
+        vkCmdCopyBuffer(
+                commandBuffer,
+                source,
+                destination,
+                1,
+                &copyRegion
+        );
+
+        VK_CHECK(
+                vkEndCommandBuffer(commandBuffer),
+                LSIM::ErrorCode::VK_END_COMMAND_BUFFER_FAILURE
+        );
+
+        const VkSubmitInfo submitInfo{
+                .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+                .commandBufferCount = 1,
+                .pCommandBuffers = &commandBuffer
+        };
+
+        VkFence fence = VK_NULL_HANDLE;
+
+        constexpr VkFenceCreateInfo fenceCreateInfo{
+                .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+        };
+
+        VK_CHECK(
+                vkCreateFence(
+                        device,
+                        &fenceCreateInfo,
+                        nullptr,
+                        &fence
+                ),
+                LSIM::ErrorCode::VK_CREATE_FENCE_FAILURE
+        );
+
+        VK_CHECK(
+                vkQueueSubmit(
+                        graphicsQueue,
+                        1,
+                        &submitInfo,
+                        fence
+                ),
+                LSIM::ErrorCode::VK_QUEUE_SUBMIT_FAILURE
+        );
+
+        VK_CHECK(
+                vkWaitForFences(
+                        device,
+                        1,
+                        &fence,
+                        VK_TRUE,
+                        UINT64_MAX
+                ),
+                LSIM::ErrorCode::VK_WAIT_FOR_FENCE_FAILURE
+        );
+
+        vkDestroyFence(
+                device,
+                fence,
+                nullptr
+        );
+
+        vkFreeCommandBuffers(
+                device,
+                pool,
+                1,
+                &commandBuffer
+        );
+
+        return {};
+}
+
 std::expected<Command, LSIM::Error> Command::create(const Device& device, const uint32_t swapchainImageCount) {
         Command command{};
         command.device = device.getLogicalDevice();
