@@ -1,202 +1,266 @@
 #include "geometry/primitive.h"
-#include "geometry/mesh.h"
 
 constexpr float PI = 3.14159265359f;
 
 MeshData Primitive::GeneratePlane(const float tileScale) {
-    std::vector<GLfloat> vertices = {
-        -0.5f, 0.0f, -0.5f,  0, 1, 0,  0, 0,
-         0.5f, 0.0f, -0.5f,  0, 1, 0,  tileScale, 0,
-         0.5f, 0.0f,  0.5f,  0, 1, 0,  tileScale, tileScale,
-        -0.5f, 0.0f,  0.5f,  0, 1, 0,  0, tileScale,
-    };
+        MeshData mesh{
+                .vertices{
+                        {.position = {-0.5f, 0.0f, -0.5f,}, .normal = {0.f, 1.f, 0.f}, .tangent = {}, .uv = {0.f, 0.f}},
+                        {.position = {0.5f, 0.0f, -0.5f}, .normal = {0.f, 1.f, 0.f}, .tangent = {}, .uv = {tileScale, 0.f}},
+                        {.position = {0.5f, 0.0f, 0.5f}, .normal = {0.f, 1.f, 0.f}, .tangent = {}, .uv = {tileScale, tileScale}},
+                        {.position = {-0.5f, 0.0f, 0.5f}, .normal = {0.f, 1.f, 0.f}, .tangent = {}, .uv = {0.f, tileScale}},
+                },
+                .indices{
+                        0, 1, 2,
+                        2, 3, 0
+                }
+        };
 
-    std::vector<GLuint> indices = {
-        0, 1, 2,
-        2, 3, 0
-    };
-    return MeshData{.vertices=vertices, .indices=indices};
+        mesh.GenerateTangents();
+        return mesh;
 }
 
 MeshData Primitive::GenerateCube(const float tileScale) {
-    std::vector<GLfloat> vertices = {
+        MeshData mesh{
+                .vertices{
+                        // Front
+                        {.position = {-0.5f, -0.5f, 0.5f}, .normal = {0.f, 0.f, 1.f}, .tangent = {}, .uv = {0.f, 0.f}},
+                        {.position = {0.5f, -0.5f, 0.5f}, .normal = {0.f, 0.f, 1.f}, .tangent = {}, .uv = {tileScale, 0.f}},
+                        {.position = {0.5f, 0.5f, 0.5f}, .normal = {0.f, 0.f, 1.f}, .tangent = {}, .uv = {tileScale, tileScale}},
+                        {.position = {-0.5f, 0.5f, 0.5f}, .normal = {0.f, 0.f, 1.f}, .tangent = {}, .uv = {0.f, tileScale}},
 
-        -0.5f, -0.5f,  0.5f,  0, 0, 1,  0, 0,
-         0.5f, -0.5f,  0.5f,  0, 0, 1,  tileScale, 0,
-         0.5f,  0.5f,  0.5f,  0, 0, 1,  tileScale, tileScale,
-        -0.5f,  0.5f,  0.5f,  0, 0, 1,  0, tileScale,
+                        // Back
+                        {.position = {0.5f, -0.5f, -0.5f}, .normal = {0.f, 0.f, -1.f}, .tangent = {}, .uv = {0.f, 0.f}},
+                        {.position = {-0.5f, -0.5f, -0.5f}, .normal = {0.f, 0.f, -1.f}, .tangent = {}, .uv = {tileScale, 0.f}},
+                        {.position = {-0.5f, 0.5f, -0.5f}, .normal = {0.f, 0.f, -1.f}, .tangent = {}, .uv = {tileScale, tileScale}},
+                        {.position = {0.5f, 0.5f, -0.5f}, .normal = {0.f, 0.f, -1.f}, .tangent = {}, .uv = {0.f, tileScale}},
 
-        -0.5f, -0.5f, -0.5f,  0, 0, -1,  tileScale, 0,
-        -0.5f,  0.5f, -0.5f,  0, 0, -1,  tileScale, tileScale,
-         0.5f,  0.5f, -0.5f,  0, 0, -1,  0, tileScale,
-         0.5f, -0.5f, -0.5f,  0, 0, -1,  0, 0,
+                        // Left
+                        {.position = {-0.5f, -0.5f, -0.5f}, .normal = {-1.f, 0.f, 0.f}, .tangent = {}, .uv = {0.f, 0.f}},
+                        {.position = {-0.5f, -0.5f, 0.5f}, .normal = {-1.f, 0.f, 0.f}, .tangent = {}, .uv = {tileScale, 0.f}},
+                        {.position = {-0.5f, 0.5f, 0.5f}, .normal = {-1.f, 0.f, 0.f}, .tangent = {}, .uv = {tileScale, tileScale}},
+                        {.position = {-0.5f, 0.5f, -0.5f}, .normal = {-1.f, 0.f, 0.f}, .tangent = {}, .uv = {0.f, tileScale}},
 
-        -0.5f, -0.5f, -0.5f, -1, 0, 0,  0, 0,
-        -0.5f, -0.5f,  0.5f, -1, 0, 0,  tileScale, 0,
-        -0.5f,  0.5f,  0.5f, -1, 0, 0,  tileScale, tileScale,
-        -0.5f,  0.5f, -0.5f, -1, 0, 0,  0, tileScale,
+                        // Right
+                        {.position = {0.5f, -0.5f, 0.5f}, .normal = {1.f, 0.f, 0.f}, .tangent = {}, .uv = {0.f, 0.f}},
+                        {.position = {0.5f, -0.5f, -0.5f}, .normal = {1.f, 0.f, 0.f}, .tangent = {}, .uv = {tileScale, 0.f}},
+                        {.position = {0.5f, 0.5f, -0.5f}, .normal = {1.f, 0.f, 0.f}, .tangent = {}, .uv = {tileScale, tileScale}},
+                        {.position = {0.5f, 0.5f, 0.5f}, .normal = {1.f, 0.f, 0.f}, .tangent = {}, .uv = {0.f, tileScale}},
 
-         0.5f, -0.5f, -0.5f,  1, 0, 0,  tileScale, 0,
-         0.5f,  0.5f, -0.5f,  1, 0, 0,  tileScale, tileScale,
-         0.5f,  0.5f,  0.5f,  1, 0, 0,  0, tileScale,
-         0.5f, -0.5f,  0.5f,  1, 0, 0,  0, 0,
+                        // Top
+                        {.position = {-0.5f, 0.5f, 0.5f}, .normal = {0.f, 1.f, 0.f}, .tangent = {}, .uv = {0.f, 0.f}},
+                        {.position = {0.5f, 0.5f, 0.5f}, .normal = {0.f, 1.f, 0.f}, .tangent = {}, .uv = {tileScale, 0.f}},
+                        {.position = {0.5f, 0.5f, -0.5f}, .normal = {0.f, 1.f, 0.f}, .tangent = {}, .uv = {tileScale, tileScale}},
+                        {.position = {-0.5f, 0.5f, -0.5f}, .normal = {0.f, 1.f, 0.f}, .tangent = {}, .uv = {0.f, tileScale}},
 
-        -0.5f, -0.5f, -0.5f,  0, -1, 0,  0, tileScale,
-         0.5f, -0.5f, -0.5f,  0, -1, 0,  tileScale, tileScale,
-         0.5f, -0.5f,  0.5f,  0, -1, 0,  tileScale, 0,
-        -0.5f, -0.5f,  0.5f,  0, -1, 0,  0, 0,
+                        // Bottom
+                        {.position = {-0.5f, -0.5f, -0.5f}, .normal = {0.f, -1.f, 0.f}, .tangent = {}, .uv = {0.f, 0.f}},
+                        {.position = {0.5f, -0.5f, -0.5f}, .normal = {0.f, -1.f, 0.f}, .tangent = {}, .uv = {1.f, 0.f}},
+                        {.position = {0.5f, -0.5f, 0.5f}, .normal = {0.f, -1.f, 0.f}, .tangent = {}, .uv = {1.f, 1.f}},
+                        {.position = {-0.5f, -0.5f, 0.5f}, .normal = {0.f, -1.f, 0.f}, .tangent = {}, .uv = {0.f, 1.f}},
+                },
+                .indices{
+                        // Front
+                        0, 1, 2,
+                        0, 2, 3,
 
-        -0.5f,  0.5f, -0.5f,  0, 1, 0,  0, 0,
-        -0.5f,  0.5f,  0.5f,  0, 1, 0,  0, tileScale,
-         0.5f,  0.5f,  0.5f,  0, 1, 0,  tileScale, tileScale,
-         0.5f,  0.5f, -0.5f,  0, 1, 0,  tileScale, 0
-    };
+                        // Back
+                        4, 5, 6,
+                        4, 6, 7,
 
-    std::vector<GLuint> indices = {
+                        // Left
+                        8, 9, 10,
+                        8, 10, 11,
 
-        0, 1, 2,  2, 3, 0,
+                        // Right
+                        12, 13, 14,
+                        12, 14, 15,
 
-        4, 5, 6,  6, 7, 4,
+                        // Top
+                        16, 17, 18,
+                        16, 18, 19,
 
-        8, 9,10, 10,11, 8,
+                        // Bottom
+                        20, 21, 22,
+                        20, 22, 23,
+                }
+        };
 
-       12,13,14, 14,15,12,
-
-       16,17,18, 18,19,16,
-
-       20,21,22, 22,23,20
-    };
-
-    return MeshData{.vertices=vertices, .indices=indices};
+        mesh.GenerateTangents();
+        return mesh;
 }
 
 MeshData Primitive::GeneratePyramid(const float tileScale) {
-    // Vertices coordinates
-    std::vector<GLfloat>vertices =
-    { //     COORDINATES     /        COLORS      /   TexCoord  //
-        -0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-        -0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	tileScale, 0.0f,
-         0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	0.0f, 0.0f,
-         0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	tileScale, 0.0f,
-         0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	tileScale / 2, tileScale
-    };
+        MeshData mesh;
 
-    // Indices for vertices order
-    std::vector<GLuint> indices =
-    {
-        0, 1, 2,
-        0, 2, 3,
-        0, 1, 4,
-        1, 2, 4,
-        2, 3, 4,
-        3, 0, 4
-    };
+        constexpr glm::vec3 v0{-0.5f, 0.0f, 0.5f};
+        constexpr glm::vec3 v1{0.5f, 0.0f, 0.5f};
+        constexpr glm::vec3 v2{0.5f, 0.0f, -0.5f};
+        constexpr glm::vec3 v3{-0.5f, 0.0f, -0.5f};
+        constexpr glm::vec3 tip{0.0f, 0.8f, 0.0f};
 
-    return MeshData{.vertices=vertices, .indices=indices};
+        auto addFace = [&](const glm::vec3 &a,
+                           const glm::vec3 &b,
+                           const glm::vec3 &c) {
+                const glm::vec3 normal =
+                                glm::normalize(glm::cross(b - a, c - a));
+
+                const auto base = static_cast<uint32_t>(mesh.vertices.size());
+
+                mesh.vertices.push_back({
+                        .position = a,
+                        .normal = normal,
+                        .tangent = {},
+                        .uv = {0.0f, 0.0f}
+                });
+
+                mesh.vertices.push_back({
+                        .position = b,
+                        .normal = normal,
+                        .tangent = {},
+                        .uv = {tileScale, 0.0f}
+                });
+
+                mesh.vertices.push_back({
+                        .position = c,
+                        .normal = normal,
+                        .tangent = {},
+                        .uv = {tileScale * 0.5f, tileScale}
+                });
+
+                mesh.indices.insert(mesh.indices.end(), {
+                        base, base + 1, base + 2
+                });
+        };
+
+        // Sides
+        addFace(v0, v1, tip);
+        addFace(v1, v2, tip);
+        addFace(v2, v3, tip);
+        addFace(v3, v0, tip);
+
+        // Bottom
+        const auto base = static_cast<uint32_t>(mesh.vertices.size());
+
+        mesh.vertices.insert(mesh.vertices.end(), {
+                {.position = v3, .normal = {0.0f, -1.0f, 0.0f}, .tangent = {}, .uv = {0.0f, 0.0f}},
+                {.position = v2, .normal = {0.0f, -1.0f, 0.0f}, .tangent = {}, .uv = {tileScale, 0.0f}},
+                {.position = v1, .normal = {0.0f, -1.0f, 0.0f}, .tangent = {}, .uv = {tileScale, tileScale}},
+                {.position = v0, .normal = {0.0f, -1.0f, 0.0f}, .tangent = {}, .uv = {0.0f, tileScale}}
+        });
+
+        mesh.indices.insert(mesh.indices.end(), {
+                base, base + 1, base + 2,
+                base, base + 2, base + 3
+        });
+
+        mesh.GenerateTangents();
+        return mesh;
 }
 
-MeshData Primitive::GenerateSphere(const int stacks = 20, const int slices = 30, const float tileScale = 1) {
-    std::vector<GLfloat> vertices;
-    std::vector<GLuint> indices;
+MeshData Primitive::GenerateSphere(const int stacks, const int slices, const float tileScale) {
+        MeshData mesh{};
 
-    for (int i = 0; i <= stacks; ++i) {
-        float V = static_cast<float>(i) / stacks;
-        const float phi = V * PI;
+        for (int i = 0; i <= stacks; ++i) {
+                const float V = static_cast<float>(i) / static_cast<float>(stacks);
+                const float phi = V * PI;
 
-        for (int j = 0; j <= slices; ++j) {
-            float U = static_cast<float>(j) / slices;
-            const float theta = U * 2.0f * PI;
+                for (int j = 0; j <= slices; ++j) {
+                        const float U = static_cast<float>(j) / static_cast<float>(slices);
+                        const float theta = U * 2.0f * PI;
 
-            float x = cosf(theta) * sinf(phi);
-            float y = cosf(phi);
-            float z = sinf(theta) * sinf(phi);
+                        float x = cosf(theta) * sinf(phi);
+                        float y = cosf(phi);
+                        float z = sinf(theta) * sinf(phi);
 
-            // position
-            vertices.push_back(x * 0.5f);
-            vertices.push_back(y * 0.5f);
-            vertices.push_back(z * 0.5f);
-
-            // normal (same as position normalized)
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(z);
-
-            // texture coords
-            vertices.push_back(U * tileScale);
-            vertices.push_back(V * tileScale);
+                        mesh.vertices.push_back({
+                                .position = {
+                                        x * 0.5f,
+                                        y * 0.5f,
+                                        z * 0.5f
+                                },
+                                .normal = {x, y, z},
+                                .tangent = {},
+                                .uv = {
+                                        U * tileScale,
+                                        V * tileScale
+                                }
+                        });
+                }
         }
-    }
 
-    // Indices
-    for (int i = 0; i < stacks; ++i) {
-        for (int j = 0; j < slices; ++j) {
-            const int first = (i * (slices + 1)) + j;
-            const int second = first + slices + 1;
+        // Indices
+        for (int i = 0; i < stacks; ++i) {
+                for (int j = 0; j < slices; ++j) {
+                        const int first = i * (slices + 1) + j;
+                        const int second = first + slices + 1;
 
-            indices.push_back(first);
-            indices.push_back(second);
-            indices.push_back(first + 1);
+                        mesh.indices.push_back(first);
+                        mesh.indices.push_back(first + 1);
+                        mesh.indices.push_back(second);
 
-            indices.push_back(second);
-            indices.push_back(second + 1);
-            indices.push_back(first + 1);
+                        mesh.indices.push_back(second);
+                        mesh.indices.push_back(first + 1);
+                        mesh.indices.push_back(second + 1);
+                }
         }
-    }
 
-    return MeshData{.vertices=vertices, .indices=indices};
+        mesh.GenerateTangents();
+        return mesh;
 }
 
-MeshData Primitive::GenerateTorus(const int ringSegments = 30, const int tubeSegments = 20, const float ringRadius = 0.3f, const float tubeRadius = 0.1f, const float tileScale = 1) {
-    std::vector<GLfloat> vertices;
-    std::vector<GLuint> indices;
+MeshData Primitive::GenerateTorus(const int ringSegments, const int tubeSegments,
+                                  const float ringRadius, const float tubeRadius,
+                                  const float tileScale
+) {
+        MeshData mesh{};
 
-    for (int i = 0; i <= ringSegments; ++i) {
-        const float u = static_cast<float>(i) / ringSegments * 2.0f * PI;
-        const float cosU = cosf(u);
-        const float sinU = sinf(u);
+        for (int i = 0; i <= ringSegments; ++i) {
+                const float u = static_cast<float>(i) / static_cast<float>(ringSegments) * 2.0f * PI;
+                const float cosU = cosf(u);
+                const float sinU = sinf(u);
 
-        for (int j = 0; j <= tubeSegments; ++j) {
-            const float v = static_cast<float>(j) / tubeSegments * 2.0f * PI;
-            const float cosV = cosf(v);
-            const float sinV = sinf(v);
+                for (int j = 0; j <= tubeSegments; ++j) {
+                        const float v = static_cast<float>(j) / static_cast<float>(tubeSegments) * 2.0f * PI;
+                        const float cosV = cosf(v);
+                        const float sinV = sinf(v);
 
-            float x = (ringRadius + tubeRadius * cosV) * cosU;
-            float y = tubeRadius * sinV;
-            float z = (ringRadius + tubeRadius * cosV) * sinU;
+                        float x = (ringRadius + tubeRadius * cosV) * cosU;
+                        float y = tubeRadius * sinV;
+                        float z = (ringRadius + tubeRadius * cosV) * sinU;
 
-            // position
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(z);
+                        // Normals
+                        float nx = cosU * cosV;
+                        float ny = sinV;
+                        float nz = sinU * cosV;
 
-            // normal (computed from parametric surface)
-            float nx = cosU * cosV;
-            float ny = sinV;
-            float nz = sinU * cosV;
-            vertices.push_back(nx);
-            vertices.push_back(ny);
-            vertices.push_back(nz);
-
-            // texture coords
-            vertices.push_back((static_cast<float>(i) / ringSegments) * tileScale);
-            vertices.push_back((static_cast<float>(j) / tubeSegments) * tileScale);
+                        mesh.vertices.push_back({
+                                .position = {x, y, z},
+                                .normal = {nx, ny, nz},
+                                .tangent = {},
+                                .uv = {
+                                        static_cast<float>(i) / static_cast<float>(ringSegments) * tileScale,
+                                        static_cast<float>(j) / static_cast<float>(tubeSegments) * tileScale
+                                }
+                        });
+                }
         }
-    }
 
-    for (int i = 0; i < ringSegments; ++i) {
-        for (int j = 0; j < tubeSegments; ++j) {
-            const int first = i * (tubeSegments + 1) + j;
-            const int second = first + tubeSegments + 1;
+        for (int i = 0; i < ringSegments; ++i) {
+                for (int j = 0; j < tubeSegments; ++j) {
+                        const int first = i * (tubeSegments + 1) + j;
+                        const int second = first + tubeSegments + 1;
 
-            indices.push_back(first);
-            indices.push_back(second);
-            indices.push_back(first + 1);
+                        mesh.indices.push_back(first);
+                        mesh.indices.push_back(first + 1);
+                        mesh.indices.push_back(second);
 
-            indices.push_back(second);
-            indices.push_back(second + 1);
-            indices.push_back(first + 1);
+                        mesh.indices.push_back(second);
+                        mesh.indices.push_back(first + 1);
+                        mesh.indices.push_back(second + 1);
+                }
         }
-    }
 
-    return MeshData{.vertices=vertices, .indices=indices};
+        mesh.GenerateTangents();
+        return mesh;
 }

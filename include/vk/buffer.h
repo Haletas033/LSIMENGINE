@@ -22,7 +22,7 @@ public:
 
         Buffer(Buffer&& other) noexcept;
 
-        std::expected<void, LSIM::Error> upload(const void *data);
+        std::expected<void, LSIM::Error> upload(const void *data) const;
 
         Buffer& operator=(Buffer&& other) noexcept;
 

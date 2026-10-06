@@ -17,6 +17,8 @@
 #include "pipeline.h"
 #include "renderPass.h"
 #include "swapchain.h"
+#include "ubo.h"
+#include "uniformBuffer.h"
 
 struct GLFWwindow;
 class Context {
@@ -32,6 +34,9 @@ private:
         Command command{};
         Buffer vertexBuffer{};
         Buffer indexBuffer{};
+        UBO ubo{};
+        UniformBuffer uniformBuffer{};
+        uint32_t indexCount{};
         uint32_t currentFrame{};
         std::vector<VkFence> imagesInFlight{};
         static constexpr const char* VK_VALIDATION_LAYERS[] = {"VK_LAYER_KHRONOS_validation"};

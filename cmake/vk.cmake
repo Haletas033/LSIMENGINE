@@ -24,4 +24,9 @@ set(VK_SOURCES
 
     include/vk/buffer.h
     Src/vk/buffer.cpp
+
+    include/vk/ubo.h
+
+    include/vk/uniformBuffer.h
+    Src/vk/uniformBuffer.cpp
 )

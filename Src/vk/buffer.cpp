@@ -22,7 +22,7 @@ Buffer::Buffer(Buffer &&other) noexcept
         other.deviceMemory = VK_NULL_HANDLE;
 }
 
-std::expected<void, LSIM::Error> Buffer::upload(const void* data) {
+std::expected<void, LSIM::Error> Buffer::upload(const void* data) const {
         void* mapped = nullptr;
 
         VK_CHECK(

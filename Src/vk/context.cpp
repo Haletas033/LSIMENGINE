@@ -6,10 +6,14 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <chrono>
-#include <iomanip>
 #include <GLFW/glfw3.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "geometry/primitive.h"
 #include "vk/device.h"
+#include "vk/ubo.h"
+#include "vk/vk.h"
 
 Context::Context(Context&& other) noexcept
         : instance(other.instance),
@@ -23,12 +27,16 @@ Context::Context(Context&& other) noexcept
           command(std::move(other.command)),
           vertexBuffer(std::move(other.vertexBuffer)),
           indexBuffer(std::move(other.indexBuffer)),
+          ubo(other.ubo),
+          uniformBuffer(std::move(other.uniformBuffer)),
+          indexCount(other.indexCount),
           currentFrame(other.currentFrame),
           imagesInFlight(std::move(other.imagesInFlight))
 {
         other.instance = VK_NULL_HANDLE;
         other.debugMessenger = VK_NULL_HANDLE;
         other.surface = VK_NULL_HANDLE;
+        other.indexCount = {};
         other.currentFrame = {};
 }
 
@@ -49,12 +57,18 @@ Context& Context::operator=(Context&& other) noexcept {
         command = std::move(other.command);
         vertexBuffer = std::move(other.vertexBuffer);
         indexBuffer = std::move(other.indexBuffer);
+
+        ubo = other.ubo;
+        uniformBuffer = std::move(other.uniformBuffer);
+
+        indexCount = other.indexCount;
         currentFrame = other.currentFrame;
         imagesInFlight = std::move(other.imagesInFlight);
 
         other.instance = VK_NULL_HANDLE;
         other.debugMessenger = VK_NULL_HANDLE;
         other.surface = VK_NULL_HANDLE;
+        other.indexCount = {};
         other.currentFrame = {};
 
         return *this;
@@ -285,6 +299,35 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 context.framebuffers.push_back(std::move(*framebuffer));
         }
 
+        context.ubo.cameraPos = glm::vec3(0.0f, 1.0f, 3.0f);
+
+        context.ubo.view = glm::lookAt(
+                context.ubo.cameraPos,
+                glm::vec3(0.0f),
+                glm::vec3(0.0f, 1.0f, 0.0f)
+        );
+
+        context.ubo.proj = glm::perspective(
+                glm::radians(45.0f),
+                static_cast<float>(context.swapchain.getExtent().width) /
+                static_cast<float>(context.swapchain.getExtent().height),
+                0.1f,
+                10000.0f
+        );
+
+        // Vulkan has inverted Y compared to OpenGL.
+        context.ubo.proj[1][1] *= -1.0f;
+
+        auto uniformBuffer = UniformBuffer::create(
+                context.device,
+                &context.ubo,
+                sizeof(context.ubo)
+        );
+
+        if (!uniformBuffer)
+                return std::unexpected(uniformBuffer.error());
+        context.uniformBuffer = std::move(*uniformBuffer);
+
         ShaderStage vertex {
                 "shaders/test.vert.spv",
                 VK_SHADER_STAGE_VERTEX_BIT
@@ -302,6 +345,7 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 context.swapchain.getExtent(),
                 context.renderPass.get(),
                 {vertex, fragment},
+        {context.uniformBuffer.getDescriptorSetLayout()},
                 config
         );
         if (!pipeline)
@@ -313,18 +357,8 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 return std::unexpected(command.error());
         context.command = std::move(*command);
 
-        // POS | NORMAL (color for testing) | TANGENT | UV
-        std::vector<Vertex> vertices {
-                {{-.5f, -.5f, .2f},       {1.f, 0.f, 0.f}, {}, {}},
-                {{-.5f,  .5f, .2f},       {0.f, 1.f, 0.f}, {}, {}},
-                {{ .5f,  .5f, .2f},       {0.f, 0.f, 1.f}, {}, {}},
-                {{ .5f, -.5f, .2f},       {1.f, 1.f, 1.f}, {}, {}},
-        };
-
-        std::vector<uint32_t> indices {
-                0, 1, 2,
-                0, 2, 3
-        };
+        auto [vertices, indices] = Primitive::GenerateTorus();
+        context.indexCount = indices.size();
 
         auto vertexBuffer = Buffer::createFromData(
                 context.device,
@@ -358,6 +392,10 @@ std::expected<void, LSIM::Error> Context::render() {
         const auto& renderFinishedSemaphores = command.getRenderFinishedSemaphores();
         const auto& fences = command.getInFlightFences();
 
+        const float time = std::chrono::duration<float>(
+            std::chrono::steady_clock::now().time_since_epoch()
+        ).count();
+
         vkWaitForFences(
                 logicalDevice,
                 1,
@@ -365,6 +403,29 @@ std::expected<void, LSIM::Error> Context::render() {
                 VK_TRUE,
                 UINT64_MAX
         );
+
+        ubo.model = glm::mat4(1.0f);
+
+        ubo.model = glm::rotate(
+            ubo.model,
+            time,
+            glm::vec3(1.0f, 0.0f, 0.0f)
+        );
+
+        ubo.model = glm::rotate(
+            ubo.model,
+            time,
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
+
+        ubo.model = glm::rotate(
+            ubo.model,
+            time,
+            glm::vec3(0.0f, 0.0f, 1.0f)
+        );
+
+        if (const auto result = uniformBuffer.getBuffers()[currentFrame].upload(&ubo); !result)
+                return std::unexpected(result.error());
 
         uint32_t imageIndex{};
         vkAcquireNextImageKHR(
@@ -441,6 +502,17 @@ std::expected<void, LSIM::Error> Context::render() {
                 pipeline.getPipeline()
         );
 
+        vkCmdBindDescriptorSets(
+                buffers[currentFrame],
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipeline.getPipelineLayout(),
+                0,
+                1,
+                &uniformBuffer.getDescriptorSets()[currentFrame],
+                0,
+                nullptr
+        );
+
         const VkViewport viewport{
                 .x = 0.0f,
                 .y = 0.0f,
@@ -487,7 +559,7 @@ std::expected<void, LSIM::Error> Context::render() {
 
         vkCmdDrawIndexed(
                 buffers[currentFrame],
-                6,
+                indexCount,
                 1,
                 0,
                 0,
@@ -540,13 +612,18 @@ void Context::destroy() {
         }
 
         imagesInFlight.clear();
+
         vertexBuffer = {};
         indexBuffer = {};
+        uniformBuffer = {};
+
         command = {};
         pipeline = {};
+
         framebuffers.clear();
         renderPass = {};
         swapchain = {};
+
         device = {};
 
         if (surface != VK_NULL_HANDLE) {
@@ -561,6 +638,7 @@ void Context::destroy() {
                 instance = VK_NULL_HANDLE;
         }
 
+        indexCount = {};
         currentFrame = {};
 }
 

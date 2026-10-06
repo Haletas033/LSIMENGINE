@@ -36,6 +36,7 @@ std::expected<Pipeline, LSIM::Error> Pipeline::create(
         VkExtent2D extent,
         VkRenderPass renderPass,
         const std::vector<ShaderStage>& shaderStages,
+        const std::vector<VkDescriptorSetLayout>& descriptorSetLayouts,
         PipelineConfig config
 ) {
         Pipeline pipeline{};
@@ -214,6 +215,8 @@ std::expected<Pipeline, LSIM::Error> Pipeline::create(
 
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+                .setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size()),
+                .pSetLayouts = descriptorSetLayouts.data()
         };
 
         VK_CHECK(

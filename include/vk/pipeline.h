@@ -52,10 +52,11 @@ public:
                 VkExtent2D extent,
                 VkRenderPass renderPass,
                 const std::vector<ShaderStage> &shaderStages,
-                PipelineConfig config
+                const std::vector<VkDescriptorSetLayout> &descriptorSetLayouts, PipelineConfig config
         );
 
         [[nodiscard]] VkPipeline getPipeline() const { return pipeline; }
+        [[nodiscard]] VkPipelineLayout getPipelineLayout() const { return pipelineLayout; }
 
         void destroy();
 
