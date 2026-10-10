@@ -149,9 +149,12 @@ std::expected<Swapchain, LSIM::Error> Swapchain::create(
         VkPresentModeKHR bestPresentMode = VK_PRESENT_MODE_FIFO_KHR;
 
         for (const auto presentMode : surfacePresentModes) {
+                if (presentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+                        bestPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+                        break;
+                }
                 if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
                         bestPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-                        break;
                 }
         }
 

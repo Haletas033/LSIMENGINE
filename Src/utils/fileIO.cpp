@@ -3,14 +3,17 @@
 #include "utils/json.h"
 
 #ifdef _WIN32
+#include <windows.h>
+#include <shlobj.h>
+#include <commdlg.h>
 OPENFILENAME ofn;                           //common dialog box structure
 char szFile[260] = {"untitled.lsim"};       //File size buffer
 HWND hwnd;                                  //owner window
 #endif
 
 #ifdef _WIN32
-std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
-    logger("stdInfo", "Initializing file dialog");
+typedef BOOL (__stdcall *FileDialogFunc)(LPOPENFILENAMEA);
+std::string Dialog(const char *filter, const FileDialogFunc func) {
     //Initialize OPENFILENAME
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
     ofn.lStructSize = sizeof(OPENFILENAME);
@@ -22,17 +25,14 @@ std::string IO::Dialog(const char *filter, const FileDialogFunc func) {
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR | OFN_OVERWRITEPROMPT;
 
     // Display the dialog box
-    logger("stdInfo", "Displaying file dialog");
     if (func(&ofn) == TRUE) {
         return ofn.lpstrFile;
     }
-    logger("stdInfo", "File dialog closed without selecting a file");
     return {};
 }
 
 // For directory
 std::string IO::DirectoryDialog() {
-    logger("stdInfo", "Initializing directory dialog");
     //Initialize OPENFILENAME
     BROWSEINFOA bi = {nullptr};
     bi.lpszTitle = "Select Directory";
@@ -47,7 +47,6 @@ std::string IO::DirectoryDialog() {
         }
         CoTaskMemFree(pidl);
     }
-    logger("stdInfo", "Directory dialog closed without selecting a directory");
     return {};
 }
 
