@@ -103,15 +103,17 @@ ninja
 │   │   ├── serialization.cpp
 │   │   └── texture.cpp
 │   └── vk
+│       ├── attachment.cpp
 │       ├── buffer.cpp
 │       ├── command.cpp
 │       ├── context.cpp
+│       ├── descriptorSet.cpp
 │       ├── device.cpp
 │       ├── framebuffer.cpp
 │       ├── pipeline.cpp
 │       ├── renderPass.cpp
-│       ├── swapchain.cpp
-│       └── uniformBuffer.cpp
+│       ├── ssbo.cpp
+│       └── swapchain.cpp
 ├── Website
 │   ├── LSIMdocs
 │   │   ├── 001welcome.md
@@ -230,20 +232,24 @@ ninja
 │   │   ├── serialization.h
 │   │   └── texture.h
 │   └── vk
+│       ├── attachment.h
 │       ├── buffer.h
 │       ├── command.h
 │       ├── context.h
+│       ├── descriptorSet.h
 │       ├── device.h
 │       ├── framebuffer.h
 │       ├── pipeline.h
 │       ├── renderPass.h
+│       ├── ssbo.h
 │       ├── swapchain.h
 │       ├── ubo.h
-│       ├── uniformBuffer.h
 │       └── vk.h
 ├── shaders
 │   ├── gbuffer.frag
-│   └── gbuffer.vert
+│   ├── gbuffer.vert
+│   ├── lighting.frag
+│   └── lighting.vert
 ├── skybox
 │   ├── back.jpg
 │   ├── bottom.jpg
@@ -254,7 +260,7 @@ ninja
 ├── tree.txt
 └── website.dsp
 
-35 directories, 166 files
+35 directories, 172 files
 ```
 <!-- TREE_END -->
 ## Contributing
