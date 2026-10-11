@@ -28,7 +28,7 @@ Framebuffer &Framebuffer::operator=(Framebuffer &&other) noexcept {
 std::expected<Framebuffer, LSIM::Error> Framebuffer::create(
         VkDevice device,
         const RenderPass &renderPass,
-        std::array<VkImageView, 2> imageViews,
+        std::vector<VkImageView> imageViews,
         const VkExtent2D extent
 ) {
         Framebuffer framebuffer{};
@@ -37,7 +37,7 @@ std::expected<Framebuffer, LSIM::Error> Framebuffer::create(
         const VkFramebufferCreateInfo framebufferCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
                 .renderPass = renderPass.get(),
-                .attachmentCount = imageViews.size(),
+                .attachmentCount = static_cast<uint32_t>(imageViews.size()),
                 .pAttachments = imageViews.data(),
                 .width = extent.width,
                 .height = extent.height,

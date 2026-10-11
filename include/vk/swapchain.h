@@ -21,11 +21,6 @@ private:
         std::vector<VkImage> images{};
         std::vector<VkImageView> imageViews{};
 
-        VkFormat depthFormat{VK_FORMAT_UNDEFINED};
-        VkImage depthImage{VK_NULL_HANDLE};
-        VkDeviceMemory depthMemory{VK_NULL_HANDLE};
-        VkImageView depthImageView{VK_NULL_HANDLE};
-
 public:
         Swapchain() = default;
 
@@ -35,17 +30,13 @@ public:
         Swapchain(Swapchain&& other) noexcept;
         Swapchain& operator=(Swapchain&& other) noexcept;
 
-        [[nodiscard]] std::expected<VkFormat, LSIM::Error> getOptimalDepthBufferFormat() const;
-
         static std::expected<Swapchain, LSIM::Error> create(GLFWwindow *window, const VkSurfaceKHR &surface,
                                                             const VkPhysicalDevice &physicalDevice,
                                                             const Device &device);
 
         [[nodiscard]] const VkSwapchainKHR& getSwapchain() const { return swapchain; }
         [[nodiscard]] VkFormat getImageFormat() const { return imageFormat; }
-        [[nodiscard]] VkFormat getDepthFormat() const { return depthFormat; }
         [[nodiscard]] const std::vector<VkImageView>& getImagesViews() const { return imageViews; }
-        [[nodiscard]] VkImageView getDepthImageView() const { return depthImageView; }
         [[nodiscard]] VkExtent2D getExtent() const { return extent; }
 
         void destroy();

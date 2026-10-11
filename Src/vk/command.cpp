@@ -4,14 +4,14 @@
 #include "vk/vk.h"
 
 Command::Command(Command &&other) noexcept
-        : buffers(other.buffers),
+        : buffers(std::move(other.buffers)),
           imageAvailableSemaphores(other.imageAvailableSemaphores),
           renderFinishedSemaphores(other.renderFinishedSemaphores),
           inFlightFences(other.inFlightFences),
           device(other.device),
           pool(other.pool)
 {
-        other.buffers.fill(VK_NULL_HANDLE);
+        other.buffers.clear();
         other.imageAvailableSemaphores.fill(VK_NULL_HANDLE);
         other.renderFinishedSemaphores.clear();
         other.inFlightFences.fill(VK_NULL_HANDLE);
@@ -25,14 +25,14 @@ Command &Command::operator=(Command &&other) noexcept {
 
         destroy();
 
-        buffers = other.buffers;
+        buffers = std::move(other.buffers);
         imageAvailableSemaphores = other.imageAvailableSemaphores;
         renderFinishedSemaphores = other.renderFinishedSemaphores;
         inFlightFences = other.inFlightFences;
         device = other.device;
         pool = other.pool;
 
-        other.buffers.fill(VK_NULL_HANDLE);
+        other.buffers.clear();
         other.imageAvailableSemaphores.fill(VK_NULL_HANDLE);
         other.renderFinishedSemaphores.clear();
         other.inFlightFences.fill(VK_NULL_HANDLE);
@@ -176,11 +176,12 @@ std::expected<Command, LSIM::Error> Command::create(const Device& device, const 
                 LSIM::ErrorCode::VK_CREATE_COMMAND_POOL_FAILURE
         );
 
+        command.buffers.resize(swapchainImageCount);
         const VkCommandBufferAllocateInfo commandBufferAllocateInfo{
                 .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
                 .commandPool = command.pool,
                 .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-                .commandBufferCount = 2
+                .commandBufferCount = swapchainImageCount
         };
         VK_CHECK(
                 vkAllocateCommandBuffers(
@@ -195,9 +196,7 @@ std::expected<Command, LSIM::Error> Command::create(const Device& device, const 
                 .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
         };
 
-        for (uint32_t i{}; i < command.buffers.size(); ++i) {
-
-
+        for (uint32_t i{}; i < FRAMES_IN_FLIGHT; ++i) {
                 VK_CHECK(
                         vkCreateSemaphore(
                                 command.device,
@@ -268,7 +267,7 @@ void Command::destroy() {
                 pool = VK_NULL_HANDLE;
         }
 
-        buffers.fill(VK_NULL_HANDLE);
+        buffers.clear();
         device = VK_NULL_HANDLE;
 }
 

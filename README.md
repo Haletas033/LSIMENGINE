@@ -242,8 +242,8 @@ ninja
 │       ├── uniformBuffer.h
 │       └── vk.h
 ├── shaders
-│   ├── test.frag
-│   └── test.vert
+│   ├── gbuffer.frag
+│   └── gbuffer.vert
 ├── skybox
 │   ├── back.jpg
 │   ├── bottom.jpg

@@ -3,14 +3,15 @@
 
 #include <optional>
 #include <string>
-#include <utility>
 #include <vector>
 #include <expected>
 
 #include <vulkan/vulkan_core.h>
 
+#include "attachment.h"
 #include "buffer.h"
 #include "command.h"
+#include "descriptorSet.h"
 #include "device.h"
 #include "framebuffer.h"
 #include "LSIMtypes.h"
@@ -18,7 +19,6 @@
 #include "renderPass.h"
 #include "swapchain.h"
 #include "ubo.h"
-#include "uniformBuffer.h"
 
 struct GLFWwindow;
 class Context {
@@ -28,14 +28,24 @@ private:
         VkSurfaceKHR surface = VK_NULL_HANDLE;
         Device device{};
         Swapchain swapchain{};
-        RenderPass renderPass{};
-        std::vector<Framebuffer> framebuffers{};
-        Pipeline pipeline{};
+        std::vector<Attachment> attachments{};
+
+        RenderPass gbufferRenderPass{};
+        std::vector<Framebuffer> gbufferFramebuffers{};
+        Pipeline gbufferPipeline{};
+        DescriptorSet gbufferDescriptorSet{};
+
+        RenderPass lightingRenderPass;
+        std::vector<Framebuffer> lightingFramebuffers;
+        Pipeline lightingPipeline;
+        DescriptorSet lightingDescriptorSet;
+
         Command command{};
         Buffer vertexBuffer{};
         Buffer indexBuffer{};
         UBO ubo{};
-        UniformBuffer uniformBuffer{};
+        std::array<Buffer, 2> uniformBuffers{};
+        VkSampler sampler{VK_NULL_HANDLE};
         uint32_t indexCount{};
         uint32_t currentFrame{};
         std::vector<VkFence> imagesInFlight{};

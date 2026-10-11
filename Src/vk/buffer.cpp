@@ -14,32 +14,18 @@ Buffer::Buffer(Buffer &&other) noexcept
         : size(other.size),
           device(other.device),
           buffer(other.buffer),
-          deviceMemory(other.deviceMemory)
+          deviceMemory(other.deviceMemory),
+          mapped(other.mapped)
 {
         other.size = {};
         other.device = VK_NULL_HANDLE;
         other.buffer = VK_NULL_HANDLE;
         other.deviceMemory = VK_NULL_HANDLE;
+        other.mapped = nullptr;
 }
 
 std::expected<void, LSIM::Error> Buffer::upload(const void* data) const {
-        void* mapped = nullptr;
-
-        VK_CHECK(
-                vkMapMemory(
-                        device,
-                        deviceMemory,
-                        0,
-                        size,
-                        0,
-                        &mapped
-                ),
-                LSIM::ErrorCode::VK_MEMORY_MAP_FAILURE
-        );
-
         memcpy(mapped, data, size);
-
-        vkUnmapMemory(device, deviceMemory);
 
         return {};
 }
@@ -54,11 +40,13 @@ Buffer &Buffer::operator=(Buffer &&other) noexcept {
         device = other.device;
         buffer = other.buffer;
         deviceMemory = other.deviceMemory;
+        mapped = other.mapped;
 
         other.size = {};
         other.device = VK_NULL_HANDLE;
         other.buffer = VK_NULL_HANDLE;
         other.deviceMemory = VK_NULL_HANDLE;
+        other.mapped = nullptr;
 
         return *this;
 }
@@ -167,11 +155,30 @@ std::expected<Buffer, LSIM::Error> Buffer::create(
                 LSIM::ErrorCode::VK_BIND_BUFFER_FAILURE
         );
 
+        if (memoryProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
+                VK_CHECK(
+                        vkMapMemory(
+                                buffer.device,
+                                buffer.deviceMemory,
+                                0,
+                                size,
+                                0,
+                                &buffer.mapped
+                        ),
+                        LSIM::ErrorCode::VK_MEMORY_MAP_FAILURE
+                );
+        }
+
         return buffer;
 }
 
 void Buffer::destroy() {
         size = {};
+
+        if (mapped != nullptr) {
+                vkUnmapMemory(device, deviceMemory);
+                mapped = nullptr;
+        }
 
         if (buffer != VK_NULL_HANDLE) {
                 vkDestroyBuffer(

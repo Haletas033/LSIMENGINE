@@ -8,12 +8,14 @@
 #include "device.h"
 #include "LSIMtypes.h"
 
+#define FRAMES_IN_FLIGHT 2
+
 class Command {
 private:
-        std::array<VkCommandBuffer, 2> buffers{VK_NULL_HANDLE};
-        std::array<VkSemaphore, 2> imageAvailableSemaphores{VK_NULL_HANDLE};
+        std::vector<VkCommandBuffer> buffers{};
+        std::array<VkSemaphore, FRAMES_IN_FLIGHT> imageAvailableSemaphores{VK_NULL_HANDLE};
         std::vector<VkSemaphore> renderFinishedSemaphores{};
-        std::array<VkFence, 2> inFlightFences{VK_NULL_HANDLE};
+        std::array<VkFence, FRAMES_IN_FLIGHT> inFlightFences{VK_NULL_HANDLE};
 
         VkDevice device{VK_NULL_HANDLE};
         VkCommandPool pool{VK_NULL_HANDLE};
@@ -35,8 +37,8 @@ public:
 
         static std::expected<Command, LSIM::Error> create(const Device &device, uint32_t swapchainImageCount);
 
-        [[nodiscard]] std::array<VkCommandBuffer, 2> getBuffers() const { return buffers; }
-        [[nodiscard]] std::array<VkSemaphore, 2> getImageAvailableSemaphores() const {
+        [[nodiscard]] std::vector<VkCommandBuffer> getBuffers() const { return buffers; }
+        [[nodiscard]] std::array<VkSemaphore, FRAMES_IN_FLIGHT> getImageAvailableSemaphores() const {
                 return imageAvailableSemaphores;
         }
         [[nodiscard]] std::vector<VkSemaphore> getRenderFinishedSemaphores() const {

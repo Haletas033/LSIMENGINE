@@ -27,6 +27,9 @@ set(VK_SOURCES
 
     include/vk/ubo.h
 
-    include/vk/uniformBuffer.h
-    Src/vk/uniformBuffer.cpp
+    include/vk/descriptorSet.h
+    Src/vk/descriptorSet.cpp
+
+    include/vk/attachment.h
+    Src/vk/attachment.cpp
 )

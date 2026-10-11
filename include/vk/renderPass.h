@@ -2,17 +2,26 @@
 #define LSIM_RENDERPASS_H
 
 #include <expected>
+#include <span>
 #include <vulkan/vulkan_core.h>
 
 #include "LSIMtypes.h"
 #include "swapchain.h"
-
 class RenderPass {
 private:
         VkDevice device = VK_NULL_HANDLE;
         VkRenderPass renderPass = VK_NULL_HANDLE;
 
 public:
+        struct AttachmentDescriptor {
+                VkFormat format;
+                VkAttachmentLoadOp loadOp;
+                VkAttachmentStoreOp storeOp;
+                VkImageLayout initialLayout;
+                VkImageLayout finalLayout;
+                bool isDepth;
+        };
+
         RenderPass() = default;
 
         RenderPass(const RenderPass&) = delete;
@@ -23,7 +32,7 @@ public:
         RenderPass(RenderPass&& other) noexcept;
         RenderPass& operator=(RenderPass&& other) noexcept;
 
-        static std::expected<RenderPass, LSIM::Error> create(VkDevice device, const Swapchain &swapchain);
+        static std::expected<RenderPass, LSIM::Error> create(VkDevice device, std::span<const AttachmentDescriptor> attachments);
 
         void destroy();
 

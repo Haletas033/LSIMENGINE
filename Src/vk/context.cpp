@@ -11,6 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "geometry/primitive.h"
+#include "vk/attachment.h"
 #include "vk/device.h"
 #include "vk/ubo.h"
 #include "vk/vk.h"
@@ -21,14 +22,24 @@ Context::Context(Context&& other) noexcept
           surface(other.surface),
           device(std::move(other.device)),
           swapchain(std::move(other.swapchain)),
-          renderPass(std::move(other.renderPass)),
-          framebuffers(std::move(other.framebuffers)),
-          pipeline(std::move(other.pipeline)),
+          attachments(std::move(other.attachments)),
+
+          gbufferRenderPass(std::move(other.gbufferRenderPass)),
+          gbufferFramebuffers(std::move(other.gbufferFramebuffers)),
+          gbufferPipeline(std::move(other.gbufferPipeline)),
+          gbufferDescriptorSet(std::move(other.gbufferDescriptorSet)),
+
+          lightingRenderPass(std::move(other.lightingRenderPass)),
+          lightingFramebuffers(std::move(other.lightingFramebuffers)),
+          lightingPipeline(std::move(other.lightingPipeline)),
+          lightingDescriptorSet(std::move(other.lightingDescriptorSet)),
+
           command(std::move(other.command)),
           vertexBuffer(std::move(other.vertexBuffer)),
           indexBuffer(std::move(other.indexBuffer)),
           ubo(other.ubo),
-          uniformBuffer(std::move(other.uniformBuffer)),
+          uniformBuffers(std::move(other.uniformBuffers)),
+          sampler(other.sampler),
           indexCount(other.indexCount),
           currentFrame(other.currentFrame),
           imagesInFlight(std::move(other.imagesInFlight))
@@ -36,6 +47,7 @@ Context::Context(Context&& other) noexcept
         other.instance = VK_NULL_HANDLE;
         other.debugMessenger = VK_NULL_HANDLE;
         other.surface = VK_NULL_HANDLE;
+        other.sampler = VK_NULL_HANDLE;
         other.indexCount = {};
         other.currentFrame = {};
 }
@@ -51,15 +63,25 @@ Context& Context::operator=(Context&& other) noexcept {
         surface = other.surface;
         device = std::move(other.device);
         swapchain = std::move(other.swapchain);
-        renderPass = std::move(other.renderPass);
-        framebuffers = std::move(other.framebuffers);
-        pipeline = std::move(other.pipeline);
+        attachments = std::move(other.attachments);
+
+        gbufferRenderPass = std::move(other.gbufferRenderPass);
+        gbufferFramebuffers = std::move(other.gbufferFramebuffers);
+        gbufferPipeline = std::move(other.gbufferPipeline);
+        gbufferDescriptorSet = std::move(other.gbufferDescriptorSet);
+
+        lightingRenderPass = std::move(other.lightingRenderPass);
+        lightingFramebuffers = std::move(other.lightingFramebuffers);
+        lightingPipeline = std::move(other.lightingPipeline);
+        lightingDescriptorSet = std::move(other.lightingDescriptorSet);
+
         command = std::move(other.command);
         vertexBuffer = std::move(other.vertexBuffer);
         indexBuffer = std::move(other.indexBuffer);
 
         ubo = other.ubo;
-        uniformBuffer = std::move(other.uniformBuffer);
+        uniformBuffers = std::move(other.uniformBuffers);
+        sampler = other.sampler;
 
         indexCount = other.indexCount;
         currentFrame = other.currentFrame;
@@ -68,6 +90,7 @@ Context& Context::operator=(Context&& other) noexcept {
         other.instance = VK_NULL_HANDLE;
         other.debugMessenger = VK_NULL_HANDLE;
         other.surface = VK_NULL_HANDLE;
+        other.sampler = VK_NULL_HANDLE;
         other.indexCount = {};
         other.currentFrame = {};
 
@@ -277,26 +300,133 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
             VK_NULL_HANDLE
         );
 
+        const auto extent = context.swapchain.getExtent();
+
+        // Albedo
+        auto albedoAttachment = Attachment::create(
+                context.device,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                extent,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_ASPECT_COLOR_BIT
+        );
+
+        if (!albedoAttachment)
+                return std::unexpected(albedoAttachment.error());
+
+        context.attachments.push_back(std::move(*albedoAttachment));
+
+        // Normal
+        auto normalAttachment = Attachment::create(
+                context.device,
+                VK_FORMAT_R16G16B16A16_SFLOAT,
+                extent,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_ASPECT_COLOR_BIT
+        );
+
+        if (!normalAttachment)
+                return std::unexpected(normalAttachment.error());
+
+        context.attachments.push_back(std::move(*normalAttachment));
+
+        // Emissive
+        auto emissiveAttachment = Attachment::create(
+                context.device,
+                VK_FORMAT_R8G8B8A8_UNORM,
+                extent,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_ASPECT_COLOR_BIT
+        );
+
+        if (!emissiveAttachment)
+                return std::unexpected(emissiveAttachment.error());
+
+        context.attachments.push_back(std::move(*emissiveAttachment));
+
+        // Depth
+        auto depthFormat =
+                Attachment::getOptimalDepthBufferFormat(context.device.getDevice());
+
+        if (!depthFormat)
+                return std::unexpected(depthFormat.error());
+
+        auto depthAttachment = Attachment::create(
+                context.device,
+                *depthFormat,
+                extent,
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                VK_IMAGE_ASPECT_DEPTH_BIT
+        );
+
+        if (!depthAttachment)
+                return std::unexpected(depthAttachment.error());
+
+        context.attachments.push_back(std::move(*depthAttachment));
+
+        RenderPass::AttachmentDescriptor colorDescriptor {
+                .format = VK_FORMAT_R8G8B8A8_UNORM,
+                .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+                .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+                .finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                .isDepth = false
+        };
+
+        RenderPass::AttachmentDescriptor normalDescriptor {
+                .format = VK_FORMAT_R16G16B16A16_SFLOAT,
+                .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+                .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+                .finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                .isDepth = false
+        };
+
+        RenderPass::AttachmentDescriptor emissiveDescriptor {
+                .format = VK_FORMAT_R8G8B8A8_UNORM,
+                .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+                .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+                .finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                .isDepth = false
+        };
+
+        RenderPass::AttachmentDescriptor depthDescriptor {
+                .format = context.attachments[3].getFormat(),
+                .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+                .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                .isDepth = true
+        };
+
+        std::array descriptors{colorDescriptor, normalDescriptor, emissiveDescriptor, depthDescriptor};
+
         auto renderPass = RenderPass::create(
                 context.device.getLogicalDevice(),
-                context.swapchain
+                descriptors
         );
         if (!renderPass)
                 return std::unexpected(renderPass.error());
-        context.renderPass = std::move(*renderPass);
+        context.gbufferRenderPass = std::move(*renderPass);
 
-        context.framebuffers.reserve(context.swapchain.getImagesViews().size());
+        context.gbufferFramebuffers.reserve(context.swapchain.getImagesViews().size());
         for (const auto imageView : context.swapchain.getImagesViews()) {
                 auto framebuffer = Framebuffer::create(
                         context.device.getLogicalDevice(),
-                        context.renderPass,
-                        {imageView, context.swapchain.getDepthImageView()},
+                        context.gbufferRenderPass,
+                        {
+                                context.attachments[0].getView(),
+                                context.attachments[1].getView(),
+                                context.attachments[2].getView(),
+                                context.attachments[3].getView()
+                        },
                         context.swapchain.getExtent()
                 );
 
                 if (!framebuffer)
                         return std::unexpected(framebuffer.error());
-                context.framebuffers.push_back(std::move(*framebuffer));
+                context.gbufferFramebuffers.push_back(std::move(*framebuffer));
         }
 
         context.ubo.cameraPos = glm::vec3(0.0f, 1.0f, 3.0f);
@@ -315,47 +445,263 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 10000.0f
         );
 
-        // Vulkan has inverted Y compared to OpenGL.
         context.ubo.proj[1][1] *= -1.0f;
 
-        auto uniformBuffer = UniformBuffer::create(
-                context.device,
-                &context.ubo,
-                sizeof(context.ubo)
+        for (auto& buffer : context.uniformBuffers) {
+                auto uniformBuffer = Buffer::create(
+                        context.device,
+                        sizeof(context.ubo),
+                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+                );
+
+                if (!uniformBuffer)
+                        return std::unexpected(uniformBuffer.error());
+                buffer = std::move(*uniformBuffer);
+        }
+
+        DescriptorSet::BindingDescriptor binding{
+                .binding = 0,
+                .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .stage = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
+        };
+
+        std::array bindings = {binding};
+
+        VkDescriptorBufferInfo bufferInfo0{
+                .buffer = context.uniformBuffers[0].getBuffer(),
+                .offset = 0,
+                .range = sizeof(UBO)
+        };
+
+        VkDescriptorBufferInfo bufferInfo1{
+                .buffer = context.uniformBuffers[1].getBuffer(),
+                .offset = 0,
+                .range = sizeof(UBO)
+        };
+
+        DescriptorSet::WriteDescriptor write0{
+                .binding = 0,
+                .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .info = bufferInfo0
+        };
+
+        DescriptorSet::WriteDescriptor write1{
+                .binding = 0,
+                .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .info = bufferInfo1
+        };
+
+        std::array gbufferFrame0Writes{write0};
+        std::array gbufferFrame1Writes{write1};
+
+        std::array<std::span<const DescriptorSet::WriteDescriptor>, 2> writes{
+                std::span{gbufferFrame0Writes},
+                std::span{gbufferFrame1Writes}
+        };
+
+        auto descriptorSet = DescriptorSet::create(
+                context.device.getLogicalDevice(),
+                bindings,
+                writes
         );
 
-        if (!uniformBuffer)
-                return std::unexpected(uniformBuffer.error());
-        context.uniformBuffer = std::move(*uniformBuffer);
+        if (!descriptorSet)
+                return std::unexpected(descriptorSet.error());
+
+        context.gbufferDescriptorSet = std::move(*descriptorSet);
+
+        VkSamplerCreateInfo samplerCreateInfo{
+                .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+                .magFilter = VK_FILTER_NEAREST,
+                .minFilter = VK_FILTER_NEAREST,
+                .mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST,
+                .addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                .addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                .addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                .anisotropyEnable = VK_FALSE,
+                .minLod = 0.f,
+                .maxLod = 0.f,
+        };
+
+        VK_CHECK(
+                vkCreateSampler(
+                        context.device.getLogicalDevice(),
+                        &samplerCreateInfo,
+                        nullptr,
+                        &context.sampler
+                ),
+                LSIM::ErrorCode::VK_CREATE_SAMPLER_FAILURE
+        );
 
         ShaderStage vertex {
-                "shaders/test.vert.spv",
+                "shaders/gbuffer.vert.spv",
                 VK_SHADER_STAGE_VERTEX_BIT
         };
 
         ShaderStage fragment {
-                "shaders/test.frag.spv",
+                "shaders/gbuffer.frag.spv",
                 VK_SHADER_STAGE_FRAGMENT_BIT
         };
 
         PipelineConfig config {};
 
-        auto pipeline = Pipeline::create(
+        auto gbufferPipeline = Pipeline::create(
                 context.device.getLogicalDevice(),
                 context.swapchain.getExtent(),
-                context.renderPass.get(),
+                context.gbufferRenderPass.get(),
                 {vertex, fragment},
-        {context.uniformBuffer.getDescriptorSetLayout()},
+        {context.gbufferDescriptorSet.getLayout()},
                 config
         );
-        if (!pipeline)
-                return std::unexpected(pipeline.error());
-        context.pipeline = std::move(*pipeline);
+        if (!gbufferPipeline)
+                return std::unexpected(gbufferPipeline.error());
+        context.gbufferPipeline = std::move(*gbufferPipeline);
+
+        // Lighting
+        RenderPass::AttachmentDescriptor presentDescriptor{
+                .format = context.swapchain.getImageFormat(),
+                .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+                .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+                .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                .isDepth = false
+        };
+
+        std::array lightingDescriptors = {presentDescriptor};
+
+        auto lightingRenderPass = RenderPass::create(context.device.getLogicalDevice(), lightingDescriptors);
+
+        if (!lightingRenderPass)
+                return std::unexpected(lightingRenderPass.error());
+        context.lightingRenderPass = std::move(*lightingRenderPass);
+
+        for (const auto imageView : context.swapchain.getImagesViews()) {
+                auto framebuffer = Framebuffer::create(
+                        context.device.getLogicalDevice(),
+                        context.lightingRenderPass,
+                        {imageView},
+                        context.swapchain.getExtent()
+                );
+
+                if (!framebuffer)
+                        return std::unexpected(framebuffer.error());
+
+                context.lightingFramebuffers.push_back(std::move(*framebuffer));
+        }
+
+        std::array lightingBindings{
+                DescriptorSet::BindingDescriptor{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT},
+                DescriptorSet::BindingDescriptor{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+                DescriptorSet::BindingDescriptor{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+                DescriptorSet::BindingDescriptor{3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+        };
+
+        VkDescriptorImageInfo albedoInfo{
+                .sampler = context.sampler,
+                .imageView = context.attachments[0].getView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+
+        VkDescriptorImageInfo normalInfo{
+                .sampler = context.sampler,
+                .imageView = context.attachments[1].getView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+
+        VkDescriptorImageInfo emissiveInfo{
+                .sampler = context.sampler,
+                .imageView = context.attachments[2].getView(),
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            };
+
+        DescriptorSet::WriteDescriptor albedoWrite{
+                .binding = 1,
+                .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .info = albedoInfo
+        };
+        DescriptorSet::WriteDescriptor normalWrite{
+                .binding = 2,
+                .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .info = normalInfo
+        };
+        DescriptorSet::WriteDescriptor emissiveWrite{
+                .binding = 3,
+                .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .info = emissiveInfo
+        };
+
+        std::array lightingFrame0Writes{write0, albedoWrite, normalWrite, emissiveWrite};
+        std::array lightingFrame1Writes{write1, albedoWrite, normalWrite, emissiveWrite};
+
+        auto lightingDescriptorSet = DescriptorSet::create(
+                context.device.getLogicalDevice(),
+                lightingBindings,
+                {lightingFrame0Writes, lightingFrame1Writes}
+        );
+
+        if (!lightingDescriptorSet)
+                return std::unexpected(lightingDescriptorSet.error());
+
+        context.lightingDescriptorSet = std::move(*lightingDescriptorSet);
+
+        ShaderStage lightingVertex {
+                "shaders/lighting.vert.spv",
+                VK_SHADER_STAGE_VERTEX_BIT
+        };
+
+        ShaderStage lightingFragment {
+                "shaders/lighting.frag.spv",
+                VK_SHADER_STAGE_FRAGMENT_BIT
+        };
+
+        PipelineConfig lightingConfig {};
+        lightingConfig.cullModeFlags = VK_CULL_MODE_NONE;
+        lightingConfig.fullscreen = true;
+        lightingConfig.colorAttachmentCount = 1;
+        lightingConfig.depthTest = false;
+        lightingConfig.depthWrite = false;
+
+        auto lightingPipeline = Pipeline::create(
+                context.device.getLogicalDevice(),
+                context.swapchain.getExtent(),
+                context.lightingRenderPass.get(),
+                {lightingVertex, lightingFragment},
+                {context.lightingDescriptorSet.getLayout()},
+                lightingConfig
+        );
+
+        if (!lightingPipeline)
+                return std::unexpected(lightingPipeline.error());
+        context.lightingPipeline = std::move(*lightingPipeline);
+
 
         auto command = Command::create(context.device, context.swapchain.getImagesViews().size());
         if (!command)
                 return std::unexpected(command.error());
         context.command = std::move(*command);
+
+        const VkRect2D rect = {.offset = {0, 0}, .extent = context.swapchain.getExtent()};
+        std::array<VkClearValue, 4> clearValues{};
+
+        clearValues[0].color.float32[0] = 0.0f;
+        clearValues[0].color.float32[1] = 0.0f;
+        clearValues[0].color.float32[2] = 0.0f;
+        clearValues[0].color.float32[3] = 1.0f;
+
+        clearValues[1].color.float32[0] = 0.0f;
+        clearValues[1].color.float32[1] = 0.0f;
+        clearValues[1].color.float32[2] = 0.0f;
+        clearValues[1].color.float32[3] = 1.0f;
+
+        clearValues[2].color.float32[0] = 0.0f;
+        clearValues[2].color.float32[1] = 0.0f;
+        clearValues[2].color.float32[2] = 0.0f;
+        clearValues[2].color.float32[3] = 1.0f;
+
+        clearValues[3].depthStencil.depth = 1.0f;
+        clearValues[3].depthStencil.stencil = 0;
+
 
         auto [vertices, indices] = Primitive::GenerateTorus();
         context.indexCount = indices.size();
@@ -381,6 +727,149 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
         if (!indexBuffer)
                 return std::unexpected(indexBuffer.error());
         context.indexBuffer = std::move(*indexBuffer);
+
+        for (uint32_t i{}; i < context.swapchain.getImagesViews().size(); ++i) {
+                constexpr VkCommandBufferBeginInfo commandBufferBeginInfo{
+                        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+                };
+                vkBeginCommandBuffer(
+                        context.command.getBuffers()[i],
+                        &commandBufferBeginInfo
+                );
+
+                const VkRenderPassBeginInfo gbufferRenderPassBeginInfo{
+                        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+                        .renderPass = context.gbufferRenderPass.get(),
+                        .framebuffer = context.gbufferFramebuffers[i].getFramebuffer(),
+                        .renderArea = rect,
+                        .clearValueCount = clearValues.size(),
+                        .pClearValues = clearValues.data()
+                };
+                vkCmdBeginRenderPass(
+                        context.command.getBuffers()[i],
+                        &gbufferRenderPassBeginInfo,
+                        VK_SUBPASS_CONTENTS_INLINE
+                );
+
+                vkCmdBindPipeline(
+                        context.command.getBuffers()[i],
+                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        context.gbufferPipeline.getPipeline()
+                );
+
+                vkCmdBindDescriptorSets(
+                        context.command.getBuffers()[i],
+                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        context.gbufferPipeline.getPipelineLayout(),
+                        0,
+                        1,
+                        &context.gbufferDescriptorSet.getSets()[i % 2],
+                        0,
+                        nullptr
+                );
+
+                const VkViewport viewport{
+                        .x = 0.0f,
+                        .y = 0.0f,
+                        .width = static_cast<float>(context.swapchain.getExtent().width),
+                        .height = static_cast<float>(context.swapchain.getExtent().height),
+                        .minDepth = 0.0f,
+                        .maxDepth = 1.0f
+                };
+                vkCmdSetViewport(
+                        context.command.getBuffers()[i],
+                        0,1,
+                        &viewport
+                );
+
+                const VkRect2D scissor{
+                        .offset = {0, 0},
+                        .extent = context.swapchain.getExtent()
+                };
+                vkCmdSetScissor(
+                        context.command.getBuffers()[i],
+                        0,
+                        1,
+                        &scissor
+                );
+
+                const VkBuffer vertexBuffers[] = { context.vertexBuffer.getBuffer() };
+
+                constexpr VkDeviceSize offsets[] = {0};
+
+                vkCmdBindVertexBuffers(
+                        context.command.getBuffers()[i],
+                        0,
+                        1,
+                        vertexBuffers,
+                        offsets
+                );
+
+                vkCmdBindIndexBuffer(
+                        context.command.getBuffers()[i],
+                        context.indexBuffer.getBuffer(),
+                        0,
+                        VK_INDEX_TYPE_UINT32
+                );
+
+                vkCmdDrawIndexed(
+                        context.command.getBuffers()[i],
+                        context.indexCount,
+                        1,
+                        0,
+                        0,
+                        0
+                );
+
+                vkCmdEndRenderPass(context.command.getBuffers()[i]);
+
+
+                // Lighting
+                constexpr VkClearValue lightingClearValue{
+                        .color = {{0.0f, 0.0f, 0.0f, 1.0f}}
+                };
+
+                const VkRenderPassBeginInfo lightingRenderPassBeginInfo{
+                        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+                        .renderPass = context.lightingRenderPass.get(),
+                        .framebuffer = context.lightingFramebuffers[i].getFramebuffer(),
+                        .renderArea = rect,
+                        .clearValueCount = 1,
+                        .pClearValues = &lightingClearValue
+                };
+
+                vkCmdBeginRenderPass(
+                        context.command.getBuffers()[i],
+                        &lightingRenderPassBeginInfo,
+                        VK_SUBPASS_CONTENTS_INLINE
+                );
+
+                vkCmdBindPipeline(
+                        context.command.getBuffers()[i],
+                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        context.lightingPipeline.getPipeline()
+                );
+
+                vkCmdBindDescriptorSets(
+                        context.command.getBuffers()[i],
+                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        context.lightingPipeline.getPipelineLayout(),
+                        0,
+                        1,
+                        &context.lightingDescriptorSet.getSets()[i % 2],
+                        0,
+                        nullptr
+                );
+
+                vkCmdDraw(
+                        context.command.getBuffers()[i],
+                        3, 1, 0, 0
+                );
+
+                vkCmdEndRenderPass(context.command.getBuffers()[i]);
+
+                vkEndCommandBuffer(context.command.getBuffers()[i]);
+        }
 
         return context;
 }
@@ -424,7 +913,7 @@ std::expected<void, LSIM::Error> Context::render() {
             glm::vec3(0.0f, 0.0f, 1.0f)
         );
 
-        if (const auto result = uniformBuffer.getBuffers()[currentFrame].upload(&ubo); !result)
+        if (const auto result = uniformBuffers[currentFrame].upload(&ubo); !result)
                 return std::unexpected(result.error());
 
         uint32_t imageIndex{};
@@ -455,131 +944,17 @@ std::expected<void, LSIM::Error> Context::render() {
             &fences[currentFrame]
         );
 
-        vkResetCommandBuffer(
-                command.getBuffers()[currentFrame],
-                {}
-        );
-
-        constexpr VkCommandBufferBeginInfo commandBufferBeginInfo{
-                .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        };
-        vkBeginCommandBuffer(
-                command.getBuffers()[currentFrame],
-                &commandBufferBeginInfo
-        );
-
-        const VkRect2D rect = {.offset = {0, 0}, .extent = swapchain.getExtent()};
-        std::array clearValues{
-                VkClearValue{
-                        .color = {
-                                .float32 = {0.0f, 0.0f, 0.0f, 1.0f}
-                        }
-                },
-                VkClearValue{
-                        .depthStencil = {
-                                .depth = 1.0f,
-                                .stencil = 0
-                            }
-                }
-        };
-        const VkRenderPassBeginInfo renderPassBeginInfo{
-                .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-                .renderPass = renderPass.get(),
-                .framebuffer = framebuffers[imageIndex].getFramebuffer(),
-                .renderArea = rect,
-                .clearValueCount = clearValues.size(),
-                .pClearValues = clearValues.data()
-        };
-        vkCmdBeginRenderPass(
-                buffers[currentFrame],
-                &renderPassBeginInfo,
-                VK_SUBPASS_CONTENTS_INLINE
-        );
-
-        vkCmdBindPipeline(
-                buffers[currentFrame],
-                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pipeline.getPipeline()
-        );
-
-        vkCmdBindDescriptorSets(
-                buffers[currentFrame],
-                VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pipeline.getPipelineLayout(),
-                0,
-                1,
-                &uniformBuffer.getDescriptorSets()[currentFrame],
-                0,
-                nullptr
-        );
-
-        const VkViewport viewport{
-                .x = 0.0f,
-                .y = 0.0f,
-                .width = static_cast<float>(swapchain.getExtent().width),
-                .height = static_cast<float>(swapchain.getExtent().height),
-                .minDepth = 0.0f,
-                .maxDepth = 1.0f
-        };
-        vkCmdSetViewport(
-                buffers[currentFrame],
-                0,1,
-                &viewport
-        );
-
-        const VkRect2D scissor{
-                .offset = {0, 0},
-                .extent = swapchain.getExtent()
-        };
-        vkCmdSetScissor(
-                buffers[currentFrame],
-                0,
-                1,
-                &scissor
-        );
-
-        const VkBuffer vertexBuffers[] = { vertexBuffer.getBuffer() };
-
-        constexpr VkDeviceSize offsets[] = {0};
-
-        vkCmdBindVertexBuffers(
-                buffers[currentFrame],
-                0,
-                1,
-                vertexBuffers,
-                offsets
-        );
-
-        vkCmdBindIndexBuffer(
-                buffers[currentFrame],
-                indexBuffer.getBuffer(),
-                0,
-                VK_INDEX_TYPE_UINT32
-        );
-
-        vkCmdDrawIndexed(
-                buffers[currentFrame],
-                indexCount,
-                1,
-                0,
-                0,
-                0
-        );
-
-        vkCmdEndRenderPass(buffers[currentFrame]);
-
-        vkEndCommandBuffer(command.getBuffers()[currentFrame]);
-
         const VkSubmitInfo submitInfo{
                 .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
                 .waitSemaphoreCount = 1,
                 .pWaitSemaphores = &imageAvailableSemaphores[currentFrame],
                 .pWaitDstStageMask = WAIT_STAGES,
                 .commandBufferCount = 1,
-                .pCommandBuffers = &buffers[currentFrame],
+                .pCommandBuffers = &buffers[imageIndex],
                 .signalSemaphoreCount = 1,
                 .pSignalSemaphores = &renderFinishedSemaphores[imageIndex]
         };
+
         vkQueueSubmit(
                 device.getGraphicsQueue(),
                 1,
@@ -595,6 +970,8 @@ std::expected<void, LSIM::Error> Context::render() {
                 .pSwapchains = &swapchain.getSwapchain(),
                 .pImageIndices = &imageIndex
         };
+
+        auto t6 = std::chrono::steady_clock::now();
 
         vkQueuePresentKHR(
                 device.getPresentQueue(),
@@ -615,13 +992,27 @@ void Context::destroy() {
 
         vertexBuffer = {};
         indexBuffer = {};
-        uniformBuffer = {};
+
+        if (sampler != VK_NULL_HANDLE) {
+                vkDestroySampler(device.getLogicalDevice(), sampler, nullptr);
+                sampler = VK_NULL_HANDLE;
+        }
+
+        uniformBuffers = {};
 
         command = {};
-        pipeline = {};
 
-        framebuffers.clear();
-        renderPass = {};
+        lightingPipeline = {};
+        lightingFramebuffers.clear();
+        lightingRenderPass = {};
+        lightingDescriptorSet = {};
+
+        gbufferPipeline = {};
+        gbufferFramebuffers.clear();
+        gbufferRenderPass = {};
+        gbufferDescriptorSet = {};
+
+        attachments.clear();
         swapchain = {};
 
         device = {};

@@ -4,17 +4,16 @@
 #include "vk/vk.h"
 
 
-Pipeline::Pipeline(Pipeline &&other) noexcept
+Pipeline::Pipeline(Pipeline&& other) noexcept
         : device(other.device),
           pipeline(other.pipeline),
-          pipelineLayout(other.pipelineLayout)
-{
+          pipelineLayout(other.pipelineLayout) {
         other.device = VK_NULL_HANDLE;
         other.pipeline = VK_NULL_HANDLE;
         other.pipelineLayout = VK_NULL_HANDLE;
 }
 
-Pipeline &Pipeline::operator=(Pipeline &&other) noexcept {
+Pipeline& Pipeline::operator=(Pipeline&& other) noexcept {
         if (this == &other)
                 return *this;
 
@@ -46,9 +45,9 @@ std::expected<Pipeline, LSIM::Error> Pipeline::create(
         shaderModules.reserve(shaderStages.size());
         std::vector<VkPipelineShaderStageCreateInfo> pipelineShaderStageCreateInfos{};
         pipelineShaderStageCreateInfos.reserve(shaderStages.size());
-        for (const auto&[path, stage] : shaderStages) {
+        for (const auto& [path, stage] : shaderStages) {
                 std::string fileData = IO::GetFileContents(path);
-                const auto data = reinterpret_cast<const uint32_t *>(fileData.data());
+                const auto data = reinterpret_cast<const uint32_t*>(fileData.data());
 
                 VkShaderModuleCreateInfo shaderModuleCreateInfo{
                         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -115,13 +114,14 @@ std::expected<Pipeline, LSIM::Error> Pipeline::create(
         vkVertexInputAttributeDescriptions[2] = tangentAttributeDescription;
         vkVertexInputAttributeDescriptions[3] = UVAttributeDescription;
 
-        VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo{
-                .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-                .vertexBindingDescriptionCount = 1,
-                .pVertexBindingDescriptions = &vertexInputBindingDescription,
-                .vertexAttributeDescriptionCount = 4,
-                .pVertexAttributeDescriptions = vkVertexInputAttributeDescriptions.data()
-        };
+        VkPipelineVertexInputStateCreateInfo
+                pipelineVertexInputStateCreateInfo{
+                        .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+                        .vertexBindingDescriptionCount = config.fullscreen ? 0u : 1u,
+                        .pVertexBindingDescriptions = config.fullscreen ? nullptr : &vertexInputBindingDescription,
+                        .vertexAttributeDescriptionCount = config.fullscreen ? 0u : static_cast<uint32_t>(vkVertexInputAttributeDescriptions.size()),
+                        .pVertexAttributeDescriptions = config.fullscreen ? nullptr : vkVertexInputAttributeDescriptions.data()
+                };
 
         VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -129,7 +129,7 @@ std::expected<Pipeline, LSIM::Error> Pipeline::create(
                 .primitiveRestartEnable = VK_FALSE
         };
 
-        std::vector dynamicStates {
+        std::vector dynamicStates{
                 VK_DYNAMIC_STATE_VIEWPORT,
                 VK_DYNAMIC_STATE_SCISSOR
         };
@@ -172,46 +172,57 @@ std::expected<Pipeline, LSIM::Error> Pipeline::create(
                 .stencilTestEnable = VK_FALSE,
         };
 
-        VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState{};
 
+        std::vector<VkPipelineColorBlendAttachmentState> pipelineColorBlendAttachmentStates(config.colorAttachmentCount);
 
-        switch (config.blendFactor) {
-                case BlendFactor::OPAQUE: {
-                        pipelineColorBlendAttachmentState.blendEnable = VK_FALSE;
+        for (auto& attachment : pipelineColorBlendAttachmentStates) {
+                switch (config.blendFactor) {
+                case BlendFactor::OPAQUE:
+                        attachment.blendEnable = VK_FALSE;
+                        break;
+
+                case BlendFactor::TRANSPARENT:
+                        attachment.blendEnable = VK_TRUE;
+                        attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+                        attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+                        attachment.colorBlendOp = VK_BLEND_OP_ADD;
+
+                        attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+                        attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+                        attachment.alphaBlendOp = VK_BLEND_OP_ADD;
+                        break;
+
+                case BlendFactor::ADDITIVE:
+                        attachment.blendEnable = VK_TRUE;
+                        attachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+                        attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+                        attachment.colorBlendOp = VK_BLEND_OP_ADD;
+
+                        attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+                        attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+                        attachment.alphaBlendOp = VK_BLEND_OP_ADD;
                         break;
                 }
-                case BlendFactor::TRANSPARENT: {
-                        pipelineColorBlendAttachmentState.blendEnable = VK_TRUE;
-                        pipelineColorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-                        pipelineColorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-                        pipelineColorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-                        pipelineColorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-                        break;
-                }
-                case BlendFactor::ADDITIVE: {
-                        pipelineColorBlendAttachmentState.blendEnable = VK_TRUE;
-                        pipelineColorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-                        pipelineColorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
-                        pipelineColorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-                        pipelineColorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-                        break;
-                }
+
+                attachment.colorWriteMask =
+                        VK_COLOR_COMPONENT_R_BIT |
+                        VK_COLOR_COMPONENT_G_BIT |
+                        VK_COLOR_COMPONENT_B_BIT |
+                        VK_COLOR_COMPONENT_A_BIT;
         }
 
-        pipelineColorBlendAttachmentState.colorWriteMask =
-                VK_COLOR_COMPONENT_R_BIT
-                | VK_COLOR_COMPONENT_G_BIT
-                | VK_COLOR_COMPONENT_B_BIT
-                | VK_COLOR_COMPONENT_A_BIT;
-
-        VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo{
-                .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-                .logicOpEnable = VK_FALSE,
-                .logicOp = VK_LOGIC_OP_COPY,
-                .attachmentCount = 1,
-                .pAttachments = &pipelineColorBlendAttachmentState,
-                .blendConstants = {0.f, 0.f, 0.f, 0.f}
-        };
+        VkPipelineColorBlendStateCreateInfo
+                pipelineColorBlendStateCreateInfo{
+                        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+                        .logicOpEnable = VK_FALSE,
+                        .logicOp = VK_LOGIC_OP_COPY,
+                        .attachmentCount =
+                        static_cast<uint32_t>(
+                                pipelineColorBlendAttachmentStates.size()
+                        ),
+                        .pAttachments = pipelineColorBlendAttachmentStates.data(),
+                        .blendConstants = {0.f, 0.f, 0.f, 0.f}
+                };
 
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
@@ -284,4 +295,3 @@ void Pipeline::destroy() {
 Pipeline::~Pipeline() {
         destroy();
 }
-

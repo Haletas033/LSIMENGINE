@@ -28,74 +28,89 @@ RenderPass& RenderPass::operator=(RenderPass&& other) noexcept {
         return *this;
 }
 
-std::expected<RenderPass, LSIM::Error> RenderPass::create(VkDevice device, const Swapchain& swapchain) {
+std::expected<RenderPass, LSIM::Error> RenderPass::create(VkDevice device, const std::span<const AttachmentDescriptor> attachments) {
         RenderPass renderPass{};
         renderPass.device = device;
 
-        // Color
-        VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = swapchain.getImageFormat();
-        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        std::vector<VkAttachmentDescription> attachmentDescriptions{};
+        std::vector<VkAttachmentReference> attachmentRefs{};
+        VkAttachmentReference depthAttachmentRef{};
+        bool hasDepth = false;
+        for (const auto [format, loadOp, storeOp, initialLayout, finalLayout, isDepth] : attachments) {
+                VkAttachmentDescription attachmentDescription{};
+                attachmentDescription.format = format;
+                attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
 
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                attachmentDescription.loadOp = loadOp;
+                attachmentDescription.storeOp = storeOp;
 
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+                attachmentDescription.initialLayout = initialLayout;
+                attachmentDescription.finalLayout = finalLayout;
 
+                const VkImageLayout refLayout = isDepth
+                        ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                        : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        constexpr VkAttachmentReference colorAttachmentRef{
-                .attachment = 0,
-                .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-        };
+                const VkAttachmentReference attachmentRef{
+                        .attachment = static_cast<uint32_t>(attachmentDescriptions.size()),
+                        .layout = refLayout
+                };
 
-        // Depth
-        const VkAttachmentDescription depthAttachment {
-                .format = swapchain.getDepthFormat(),
-                .samples = VK_SAMPLE_COUNT_1_BIT,
-                .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-                .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-                .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-        };
+                attachmentDescriptions.push_back(attachmentDescription);
 
-        constexpr VkAttachmentReference depthAttachmentRef {
-                .attachment = 1,
-                .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-        };
+                if (isDepth) {
+                        hasDepth = true;
+                        depthAttachmentRef = attachmentRef;
+                } else {
+                        attachmentRefs.push_back(attachmentRef);
+                }
+        }
 
         VkSubpassDescription subpass{};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+        subpass.colorAttachmentCount = attachmentRefs.size();
+        subpass.pColorAttachments = attachmentRefs.data();
 
-        VkSubpassDependency subpassDependency {
+        if (hasDepth)
+                subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        std::vector<VkSubpassDependency> dependencies{};
+        constexpr VkSubpassDependency colorDependency {
                 .srcSubpass = VK_SUBPASS_EXTERNAL,
                 .dstSubpass = 0,
-                .srcStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-                .dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-                .srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
+                .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                .srcAccessMask = 0,
+                .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                 .dependencyFlags = 0
         };
+        dependencies.push_back(colorDependency);
 
-        std::array attachments = {colorAttachment, depthAttachment};
+        if (hasDepth) {
+                constexpr VkSubpassDependency depthDependency {
+                        .srcSubpass = VK_SUBPASS_EXTERNAL,
+                        .dstSubpass = 0,
+                        .srcStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                        .dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                        .srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                        .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
+                        .dependencyFlags = 0
+                };
+                dependencies.push_back(depthDependency);
+        }
 
         const VkRenderPassCreateInfo renderPassCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-                .attachmentCount = attachments.size(),
-                .pAttachments = attachments.data(),
+                .attachmentCount = static_cast<uint32_t>(attachmentDescriptions.size()),
+                .pAttachments = attachmentDescriptions.data(),
                 .subpassCount = 1,
                 .pSubpasses = &subpass,
-                .dependencyCount = 1,
-                .pDependencies = &subpassDependency
+                .dependencyCount = static_cast<uint32_t>(dependencies.size()),
+                .pDependencies = dependencies.data()
         };
 
         VK_CHECK(

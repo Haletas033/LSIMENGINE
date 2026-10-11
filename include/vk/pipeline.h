@@ -22,9 +22,11 @@ struct PipelineConfig {
         VkSampleCountFlagBits sampleCountFlagBits = VK_SAMPLE_COUNT_1_BIT;
         VkCompareOp depthCompareOp = VK_COMPARE_OP_LESS;
         BlendFactor blendFactor = BlendFactor::OPAQUE;
+        uint32_t colorAttachmentCount = 3;
         bool blendingEnabled = true;
         bool depthTest = true;
         bool depthWrite = true;
+        bool fullscreen = false;
 };
 
 struct ShaderStage {
