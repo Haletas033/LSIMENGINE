@@ -12,7 +12,7 @@ void main() {
         float metallic = 0.0;
 
         vec3 normal = normalize(fragNormal);
-        float roughness = 1.0;
+        float roughness = 0.1;
 
         vec3 emissive = vec3(0.0);
 
