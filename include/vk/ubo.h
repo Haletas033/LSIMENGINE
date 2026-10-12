@@ -7,6 +7,8 @@ struct UBO {
         glm::mat4 model{1.0f};
         glm::mat4 view{1.0f};
         glm::mat4 proj{1.0f};
+        glm::mat4 invView = glm::inverse(view);
+        glm::mat4 invProj = glm::inverse(view);
         glm::vec3 cameraPos{0.f, 0.f, 0.f};
         float _padding{};
 };

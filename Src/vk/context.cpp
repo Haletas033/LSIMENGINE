@@ -355,7 +355,7 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 context.device,
                 *depthFormat,
                 extent,
-                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                 VK_IMAGE_ASPECT_DEPTH_BIT
         );
 
@@ -396,7 +396,7 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
                 .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
                 .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-                .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
                 .isDepth = true
         };
 
@@ -595,25 +595,32 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 DescriptorSet::BindingDescriptor{1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
                 DescriptorSet::BindingDescriptor{2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
                 DescriptorSet::BindingDescriptor{3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT},
+                DescriptorSet::BindingDescriptor{4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT}
         };
 
         VkDescriptorImageInfo albedoInfo{
                 .sampler = context.sampler,
                 .imageView = context.attachments[0].getView(),
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
+        };
 
         VkDescriptorImageInfo normalInfo{
                 .sampler = context.sampler,
                 .imageView = context.attachments[1].getView(),
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
+        };
 
         VkDescriptorImageInfo emissiveInfo{
                 .sampler = context.sampler,
                 .imageView = context.attachments[2].getView(),
                 .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            };
+        };
+
+        VkDescriptorImageInfo depthInfo{
+                .sampler = context.sampler,
+                .imageView = context.attachments[3].getView(),
+                .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+        };
 
         DescriptorSet::WriteDescriptor albedoWrite{
                 .binding = 1,
@@ -630,9 +637,14 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
                 .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                 .info = emissiveInfo
         };
+        DescriptorSet::WriteDescriptor depthWrite{
+                .binding = 4,
+                .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .info = depthInfo
+        };
 
-        std::array lightingFrame0Writes{write0, albedoWrite, normalWrite, emissiveWrite};
-        std::array lightingFrame1Writes{write1, albedoWrite, normalWrite, emissiveWrite};
+        std::array lightingFrame0Writes{write0, albedoWrite, normalWrite, emissiveWrite, depthWrite};
+        std::array lightingFrame1Writes{write1, albedoWrite, normalWrite, emissiveWrite, depthWrite};
 
         auto lightingDescriptorSet = DescriptorSet::create(
                 context.device.getLogicalDevice(),
@@ -970,8 +982,6 @@ std::expected<void, LSIM::Error> Context::render() {
                 .pSwapchains = &swapchain.getSwapchain(),
                 .pImageIndices = &imageIndex
         };
-
-        auto t6 = std::chrono::steady_clock::now();
 
         vkQueuePresentKHR(
                 device.getPresentQueue(),
