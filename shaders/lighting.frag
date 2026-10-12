@@ -101,6 +101,5 @@ void main() {
         vec3 ambient = albedo * 0.03;
         vec3 color = Lo + emissive + ambient;
         color = ACESFilmic(color);
-        color = pow(color, vec3(1.0 / 2.2));
         fragColor = vec4(color, 1.0);
 }
