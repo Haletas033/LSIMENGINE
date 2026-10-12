@@ -45,6 +45,15 @@ vec3 F_Burley(float NdotL, float NdotV, float HdotV, float roughness, vec3 albed
         return albedo * (FL * FV / PI);
 }
 
+vec3 ACESFilmic(vec3 x) {
+        float a = 2.51;
+        float b = 0.03;
+        float c = 2.43;
+        float d = 0.59;
+        float e = 0.14;
+        return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+}
+
 void main() {
         vec4 albedoMetallic = texture(inAlbedo, fragUV);
         vec4 normalRoughness = texture(inNormal, fragUV);
@@ -75,7 +84,7 @@ void main() {
         float NdotH = max(dot(normal, H), 0.0);
         float NdotV = max(dot(normal, V), 0.0);
         float NdotL = max(dot(normal, lightDir), 0.0);
-        float HdotV = max(dot(normal, V), 0.0);
+        float HdotV = max(dot(H, V), 0.0);
 
         vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
@@ -87,6 +96,10 @@ void main() {
         vec3 kD = (1.0 - F) * (1.0 - metallic);
         vec3 diffuse = kD * F_Burley(NdotL, NdotV, HdotV, roughness, albedo);
 
-        vec3 Lo = (diffuse + specular) * lightColor * NdotL;
-        fragColor = vec4(Lo + emissive, 1.0);
+        const float lightIntensity = 5.0;
+        vec3 Lo = (diffuse + specular) * lightColor * lightIntensity * NdotL;
+        vec3 ambient = albedo * 0.03;
+        vec3 color = Lo + emissive + ambient;
+        color = ACESFilmic(color);
+        fragColor = vec4(color, 1.0);
 }
