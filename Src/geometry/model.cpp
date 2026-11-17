@@ -30,7 +30,7 @@ std::vector<unsigned char> Model::getData() {
 
     const auto fileStr = std::string(file);
     const std::string fileDir = std::filesystem::path(fileStr).parent_path().string();
-    std::string bytesText = IO::GetFileContents(std::filesystem::path(fileDir) / uri);
+    std::string bytesText = IO::GetFileContents((std::filesystem::path(fileDir) / uri).string());
 
     std::vector<unsigned char> fileData(bytesText.begin(), bytesText.end());
     return fileData;

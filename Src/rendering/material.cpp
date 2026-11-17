@@ -1,6 +1,5 @@
 #include <rendering/material.h>
 
-#include "gl/shaderClass.h"
 #include "utils/logging/log.h"
 
 void Material::addTexture(const std::string &name, const std::string &path) {
@@ -31,46 +30,42 @@ void Material::addTexture(const std::string &name) {
     }
 }
 
-void Material::addShader(const std::string& name, Shader&& shaderObj) {
-    if (!shader.empty()) {
-        engineLogger("stdError", "Material already has a shader.");
+void Material::addPipeline(const std::string& name) {
+    if (!pipeline.empty()) {
+        engineLogger("stdError", "Material already has pipeline");
         return;
     }
 
-    setShader(name, std::move(shaderObj));
-}
-
-void Material::setShader(const std::string &name, Shader&& shaderObj) {
-    const auto& shaders = ResourceManager::getShaders();
-
-    if (!shaders.contains(name)) {
-        ResourceManager::addShader(name, std::move(shaderObj));
-    }
-
-    shader = name;
-}
-
-void Material::addShader(const std::string &name) {
-    if (!shader.empty()) {
-        engineLogger("stdError", "\"" + name + "\" already exists.");
-        return;
-    }
-
-    const auto& shaders = ResourceManager::getShaders();
-
-    if (shaders.contains(name)) {
-        shader = name;
+    const auto &pipelines = ResourceManager::getPipelines();
+    if (const auto it = pipelines.find(name); it != pipelines.end()) {
+        pipeline = it->first;
     } else {
-        engineLogger(
-            "stdError",
-            "No shader named: \"" + name + "\" exists."
-        );
+        engineLogger("stdError", "No pipeline named: \"" + name + "\" exists.");
     }
+}
+
+void Material::setPipeline(const std::string &name, Pipeline&& pipelineToUse) {
+    const auto& pipelines = ResourceManager::getPipelines();
+
+    if (!pipelines.contains(name)) {
+        ResourceManager::addPipeline(name, std::move(pipelineToUse));
+    }
+
+    pipeline = name;
+}
+
+void Material::addPipeline(const std::string &name, Pipeline&& pipelineTouse) {
+    if (!pipeline.empty()) {
+        engineLogger("stdError", "Material already has a pipeline.");
+        return;
+    }
+
+    setPipeline(name, std::move(pipelineTouse));
 }
 
 Material Material::createStandardPBR() {
     Material mat;
-    mat.addShader("PBRShader");
+    mat.addPipeline("PBRShader");
     mat.addProperty("roughness", 0.5f);
     mat.addProperty("F0", 0.03f);
     mat.addProperty("emissiveIntensity", 0.f);

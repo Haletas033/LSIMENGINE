@@ -1,8 +1,9 @@
 #include "../../include/editor/IOInputs.h"
 #include "utils/fileIO.h"
+#include "utils/serialization.h"
 
 
-void IOInputs::Init(Registry &registry, SharedState &sharedState, const std::string &workingDir, Inputs &inputs) {
+void IOInputs::Init(const Device& device, Command& command, Registry &registry, SharedState &sharedState, const std::string &workingDir, Inputs &inputs) {
 	Inputs::BindingTable ioInputs = {
 		1,
 		true
@@ -14,13 +15,13 @@ void IOInputs::Init(Registry &registry, SharedState &sharedState, const std::str
 	ioInputs.addFunctionForAction("save", [&](const Inputs::InputContext& context) {
 		const std::string fileName = IO::SaveDialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0");
 		if (std::ofstream file(fileName, std::ios::out | std::ios::binary); file.is_open()) {
-		    IO::saveToFile(file, registry);
+		    Serialization::saveToFile(file, registry);
 		}
 	});
 	ioInputs.addFunctionForAction("load", [&](const Inputs::InputContext& context) {
 		const std::string fileName = IO::OpenDialog("LSIM Files\0*.lsim\0All Files\0*.*\0\0");
 		if (std::ifstream file(fileName, std::ios::in | std::ios::binary); file.is_open()) {
-		    IO::loadFromFile(file, registry, sharedState, workingDir);
+		    Serialization::loadFromFile(device, command, file, registry, sharedState, workingDir);
 		}
 	});
 

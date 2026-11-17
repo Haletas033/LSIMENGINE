@@ -38,9 +38,9 @@ EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, 
 
                         const auto uID = static_cast<long long>(glfwGetTime() * 1'000'000'000LL);
                         const std::string outputPath = std::string(EngineContext::getWorkingDir()) + "resources/" + std::to_string(uID) + "terrain.png";
-                        const uint32_t noiseMapTexture = Terrain::noiseMapToTexture(noiseMap, outputPath.c_str());
+                        const TextureResource noiseMapTexture = Terrain::noiseMapToTexture(noiseMap, outputPath.c_str());
 
-                        std::vector<float> vertices;
+                        std::vector<Vertex> vertices;
                         std::vector<uint32_t> indices;
 
                         Terrain::noiseMapToMesh(noiseMap, vertices, indices, defaults.heightScale, defaults.gridScale);
@@ -69,7 +69,7 @@ EntityHandle Mesh::create(const std::vector<float>& vertices, const std::vector<
 {
         const EntityHandle e = registry.create();
         MeshData data{ vertices, {}, indices };
-        const MeshHandle handle = meshPool.upload(data, mode);
+        const MeshHandle handle = meshPool.upload(TODO, TODO, data, mode);
         registry.addComponent<Name>(e, {"Mesh"});
         registry.addComponent<Transform>(e, transform);
         registry.addComponent<Material>(e, material);

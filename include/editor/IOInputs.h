@@ -7,7 +7,8 @@ class IOInputs {
 private:
 	Inputs::BindingTable bindingTable;
 public:
-	void Init(Registry &registry, SharedState &sharedState, const std::string &workingDir, Inputs &inputs);
+	void Init(const Device& device, Command& command, Registry& registry, SharedState& sharedState, const std::string& workingDir, Inputs
+	          & inputs);
 };
 
 #endif //LSIM_IOINPUTS_H

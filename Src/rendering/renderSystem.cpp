@@ -98,7 +98,7 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                 shader->SetVec3(
                         "viewPos",
                         1,
-                        glm::value_ptr(camera.Position)
+                        glm::value_ptr(camera.position)
                 );
 
                 // Material textures

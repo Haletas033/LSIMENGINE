@@ -10,8 +10,8 @@ public:
 
         static void saveToFile(std::ofstream &file, Registry &registry);
 
-        void loadFromFile(std::ifstream &file, Registry &registry, SharedState &sharedState,
-                          const std::string &workingDir);
+        static void loadFromFile(const Device& device, Command& command, std::ifstream& file,
+                                 Registry& registry, SharedState& sharedState, const std::string& workingDir);
 };
 
 #endif //LSIM_SERIALIZATION_H

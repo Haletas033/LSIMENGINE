@@ -3,57 +3,62 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #define GLFW_INCLUDE_NONE
+#include <expected>
 #include<GLFW/glfw3.h>
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
-#include<glm/gtx/rotate_vector.hpp>
 #include<glm/gtx/vector_angle.hpp>
-#include "utils/defaults.h"
 
-class Shader;
+#include "LSIMtypes.h"
+#include "vk/buffer.h"
+#include "vk/descriptorSet.h"
+#include "vk/device.h"
 
-class Camera
-{
+struct CameraUBO {
+        glm::mat4 view{};
+        glm::mat4 projection{};
+};
+
+class Camera {
+private:
+        glm::vec3 position{};
+        glm::vec3 orientation = glm::vec3(0.0f, 0.0f, -1.0f);
+        glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+        bool firstMouseMove = true;
+
+        int width{};
+        int height{};
+
+        double lastMouseX = 0.0;
+        double lastMouseY = 0.0;
+
+        float FOV = 90.f;
+        float near = 0.f;
+        float far = 1000.f;
+
+        CameraUBO UBO;
+
+        std::array<Buffer, 2> perFrameUBOs{};
+        DescriptorSet descriptorSet{};
+
 public:
-    struct CameraDirection {
-        glm::vec3 forward, side;
-    };
+        struct CameraDirection {
+                glm::vec3 forward, side;
+        };
 
-    //Stores the main vectors of the camera
-    glm::vec3 Position{};
-    glm::vec3 Orientation = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);
+        Camera() = default;
 
-    //Prevents the camera from jumping around when first clicking left click
-    bool firstMouseMove = true;
+        static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 
-    //Stores the width and height of the window
-    int width;
-    int height;
+        static std::expected<Camera, LSIM::Error> create(const Device&, int width, int height, glm::vec3 position);
+        std::expected<void, LSIM::Error> update(uint32_t frameIndex);
+        [[nodiscard]] const DescriptorSet& getDescriptorSet() const { return descriptorSet; }
 
-    //Variables to store mouse position for delta calculation
-    double lastMouseX = 0.0;
-    double lastMouseY = 0.0;
+        void Inputs(GLFWwindow* window, float deltaTime);
 
-    glm::mat4 view;
-    glm::mat4 projection;
-
-    //Default constructor
-    Camera() = default;
-
-    //Camera constructor to set up initial values
-    Camera(int width, int height, glm::vec3 position);
-
-    static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
-
-    //Updates and exports the camera matrix to the Vertex Shader
-    void Matrix(float FOVdeg, float nearPlane, float farPlane, const Shader &shader, const char *uniform, float aspect);
-
-    //Handles camera inputs (keyboard and mouse)
-    void Inputs(GLFWwindow* window, float deltaTime);
-
-    CameraDirection getDirection() const;
+        [[nodiscard]] CameraDirection getDirection() const;
 };
 
 #endif

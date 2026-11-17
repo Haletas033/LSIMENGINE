@@ -68,8 +68,8 @@ void Gui::AddTexture(const std::string &slotName, std::string &fileName,
                 std::filesystem::copy(filePath.c_str(), std::string(workingDir + "resources/") + fileName,
                                       std::filesystem::copy_options::overwrite_existing);
 
-                const unsigned int texture = Texture::GetTexId(
-                        (std::string(workingDir + "resources/") + fileName).c_str(), GL_NEAREST);
+                const TextureResource texture = Texture::LoadTexture(
+                        (std::string(workingDir + "resources/") + fileName).c_str(), VK_FILTER_NEAREST);
                 for (const EntityHandle &mesh: currentMeshes) {
                         auto *material = registry.getComponent<Material>(mesh);
                         if (!material) continue;

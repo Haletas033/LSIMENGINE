@@ -159,14 +159,14 @@ void Inputs::handleInputs(const InputContext& context) {
 std::optional<LSIM::Error> Inputs::initializeInput(Inputs& inputs, GLFWwindow* window, EditorInputs& editorInputs, Scene& scene, SharedState& sharedState, const Camera& camera) {
     inputs.InitInputs(window);
     editorInputs.Init(
+        TODO,
+        TODO,
         Registry::getDefaultRegistry(),
         MeshPool::getDefaultMeshPool(),
         scene,
         EngineContext::getWorkingDir(),
         sharedState,
-        EngineContext::getDefaults(),
-        camera,
-        inputs
+        EngineContext::getDefaults(), camera, inputs
     );
 
     return std::nullopt;

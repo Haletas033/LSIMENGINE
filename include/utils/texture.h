@@ -1,25 +1,70 @@
-//
-// Created by halet on 9/10/2025.
-//
-
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include <glad/gl.h>
 #include <stb_image_write.h>
+#include <vulkan/vulkan_core.h>
+
 #include "utils/json.h"
 #include "utils/logging/log.h"
+#include "vk/command.h"
+#include "vk/device.h"
+
+
+struct TextureResource {
+        VkDevice device = VK_NULL_HANDLE;
+        VkImage image = VK_NULL_HANDLE;
+        VkDeviceMemory memory = VK_NULL_HANDLE;
+        VkImageView imageView = VK_NULL_HANDLE;
+        VkSampler sampler = VK_NULL_HANDLE;
+
+        uint32_t width = 0;
+        uint32_t height = 0;
+        uint32_t channels = 0;
+
+        TextureResource() = default;
+
+        TextureResource(const TextureResource&) = delete;
+        TextureResource& operator=(const TextureResource&) = delete;
+
+        TextureResource(TextureResource&& other) noexcept;
+        TextureResource& operator=(TextureResource&& other) noexcept;
+
+        void Destroy();
+
+        ~TextureResource();
+};
+
+enum class TextureType {
+        COLOR,
+        DATA
+};
 
 class Texture {
 private:
-    static GLenum ChannelsToFormat(int nrChannels);
+        static std::expected<VkFormat, LSIM::Error> channelsToFormat(int nrChannels, TextureType type);
+
 public:
-    static void InitTextures();
+        static std::expected<TextureResource, LSIM::Error> loadTexture(
+                const Device& device,
+                Command& command,
+                const char* path,
+                VkFilter filter, TextureType type
+        );
 
-    static unsigned int GetTexId(const char *path, int texFilter);
-    static unsigned int GetCubemapId(const std::array<std::string, 6>& faces, int texFilter);
+        static TextureResource LoadCubemap(
+                const Device& device,
+                Command& command,
+                const std::array<std::string, 6>& faces,
+                VkFilter filter
+        );
 
-    static void ByteArrayToPNG(const char *filename, const unsigned char *texture, unsigned int width, unsigned int height, unsigned int channels);
+        static void ByteArrayToPNG(
+                const char* filename,
+                const unsigned char* texture,
+                int width,
+                int height,
+                int channels
+        );
 };
 
 #endif //TEXTURE_H

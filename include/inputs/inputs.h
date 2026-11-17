@@ -10,7 +10,6 @@
 #include <unordered_map>
 #include <map>
 #include <variant>
-#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <vector>
 

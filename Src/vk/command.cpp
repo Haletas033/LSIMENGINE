@@ -42,20 +42,13 @@ Command &Command::operator=(Command &&other) noexcept {
         return *this;
 }
 
-std::expected<void, LSIM::Error> Command::copyBuffer(
-        VkBuffer source,
-        VkBuffer destination,
-        const VkDeviceSize size,
-        VkQueue graphicsQueue
-) {
+std::expected<void, LSIM::Error> Command::beginOneTimeBuffer(VkCommandBuffer& commandBuffer) {
         const VkCommandBufferAllocateInfo allocateInfo{
                 .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
                 .commandPool = pool,
                 .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
                 .commandBufferCount = 1
         };
-
-        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
 
         VK_CHECK(
                 vkAllocateCommandBuffers(
@@ -79,20 +72,10 @@ std::expected<void, LSIM::Error> Command::copyBuffer(
                 LSIM::ErrorCode::VK_BEGIN_COMMAND_BUFFER_FAILURE
         );
 
-        const VkBufferCopy copyRegion{
-                .srcOffset = 0,
-                .dstOffset = 0,
-                .size = size
-        };
+        return {};
+}
 
-        vkCmdCopyBuffer(
-                commandBuffer,
-                source,
-                destination,
-                1,
-                &copyRegion
-        );
-
+std::expected<void, LSIM::Error> Command::endOneTimeBuffer( VkCommandBuffer& commandBuffer, VkQueue graphicsQueue) {
         VK_CHECK(
                 vkEndCommandBuffer(commandBuffer),
                 LSIM::ErrorCode::VK_END_COMMAND_BUFFER_FAILURE
@@ -153,6 +136,37 @@ std::expected<void, LSIM::Error> Command::copyBuffer(
                 1,
                 &commandBuffer
         );
+
+        return {};
+}
+
+std::expected<void, LSIM::Error> Command::copyBuffer(
+        VkBuffer source,
+        VkBuffer destination,
+        const VkDeviceSize size,
+        VkQueue graphicsQueue
+) {
+        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+
+        auto beginOneTimeBufferRes = beginOneTimeBuffer(commandBuffer);
+        if (!beginOneTimeBufferRes) return std::unexpected(beginOneTimeBufferRes.error());
+
+        const VkBufferCopy copyRegion{
+                .srcOffset = 0,
+                .dstOffset = 0,
+                .size = size
+        };
+
+        vkCmdCopyBuffer(
+                commandBuffer,
+                source,
+                destination,
+                1,
+                &copyRegion
+        );
+
+        auto endOneTimeBufferRes = endOneTimeBuffer(commandBuffer, graphicsQueue);
+        if (!endOneTimeBufferRes) return std::unexpected(endOneTimeBufferRes.error());
 
         return {};
 }

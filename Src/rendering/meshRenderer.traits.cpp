@@ -1,6 +1,8 @@
 #include <cstring>
 #include <rendering/meshRenderer.traits.h>
 
+#include "vk/command.h"
+
 std::vector<uint8_t> ComponentTraits<MeshRenderer>::serialize(
         Registry &registry,
         const EntityHandle self
@@ -22,7 +24,7 @@ std::vector<uint8_t> ComponentTraits<MeshRenderer>::serialize(
 
         if (vertexCount > 0) {
                 const auto vertexBytes =
-                                renderer->vertices.size() * sizeof(float);
+                                renderer->vertices.size() * sizeof(Vertex);
 
                 append(renderer->vertices.data(), vertexBytes);
         }
@@ -48,6 +50,8 @@ std::vector<uint8_t> ComponentTraits<MeshRenderer>::serialize(
 
 
 std::any ComponentTraits<MeshRenderer>::deserialize(
+        const Device& device,
+        Command& command,
         const std::vector<uint8_t> &data,
         size_t &ptr
 ) {
@@ -63,12 +67,12 @@ std::any ComponentTraits<MeshRenderer>::deserialize(
         std::uint32_t vertexCount{};
         read(&vertexCount, sizeof(vertexCount));
 
-        std::vector<float> vertices;
+        std::vector<Vertex> vertices;
         vertices.resize(vertexCount);
 
         if (vertexCount > 0) {
                 const auto vertexBytes =
-                                static_cast<size_t>(vertexCount) * sizeof(float);
+                                static_cast<size_t>(vertexCount) * sizeof(Vertex);
 
                 read(vertices.data(), vertexBytes);
         }
@@ -91,18 +95,20 @@ std::any ComponentTraits<MeshRenderer>::deserialize(
 
         MeshData meshData{
                 vertices,
-                {},
                 indices
         };
 
-        const MeshHandle meshHandle =
+        const auto meshHandle =
                 MeshPool::getDefaultMeshPool().upload(
-                        meshData,
-                        mode
+                        device,
+                        command, meshData, mode
                 );
 
+        if (!meshHandle)
+                return std::unexpected(meshHandle.error());
+
         return MeshRenderer{
-                .meshHandle = meshHandle,
+                .meshHandle = *meshHandle,
                 .vertices = std::move(vertices),
                 .indices = std::move(indices),
                 .mode = mode

@@ -6,8 +6,8 @@
 #include <string>
 
 #include <FastNoiseLite.h>
-#include <glad/gl.h>
 
+#include "meshData.h"
 #include "../utils/texture.h"
 
 class Terrain {
@@ -31,8 +31,8 @@ public:
     static std::vector<std::vector<float>> GenerateNoiseMap(unsigned int width, unsigned int height, int seed, float scale, int octaves, float persistence, float lacunarity);
 
     //Converts a generated noise map into an RGBA opengl Texture
-    static GLuint noiseMapToTexture(std::vector<std::vector<float>> &noiseMap, const char *outputLocation);
+    static TextureResource noiseMapToTexture(std::vector<std::vector<float>> &noiseMap, const char *outputLocation);
 
-    static void noiseMapToMesh(std::vector<std::vector<float>>& noiseMap, std::vector<GLfloat>& vertices, std::vector<GLuint>& indices, float heightScale, float gridScale);
+    static void noiseMapToMesh(std::vector<std::vector<float>>& noiseMap, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, float heightScale, float gridScale);
 };
 #endif //TERRAIN_CLASS_H

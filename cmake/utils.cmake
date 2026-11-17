@@ -13,5 +13,8 @@ set(UTIL_SOURCES
         include/utils/texture.h
         Src/utils/texture.cpp
 
+        include/utils/serialization.h
+        Src/utils/serialization.cpp
+
         include/utils/meshPicking.h
 )

@@ -12,9 +12,9 @@ private:
 	MeshInputs meshInputs;
 	IOInputs ioInputs;
 public:
-	void Init(Registry &registry, MeshPool &meshPool, Scene &scene, const std::string &workingDir, SharedState &sharedState, const
-	          Defaults &defaults, const Camera &camera, Inputs
-	          &inputs);
+	void Init(const Device& device, Command& command, Registry& registry, MeshPool& meshPool, Scene& scene, const std::string&
+	          workingDir, SharedState& sharedState, const Defaults& defaults, const Camera& camera, Inputs
+	          & inputs);
 };
 
 #endif //LSIM_EDITORINPUTS_H

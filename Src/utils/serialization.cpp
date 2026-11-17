@@ -69,7 +69,7 @@ void Serialization::saveToFile(std::ofstream &file, Registry& registry) {
     logger("stdInfo", "Successfully wrote to file");
 }
 
-void Serialization::loadFromFile(std::ifstream &file, Registry &registry, SharedState& sharedState, const std::string &workingDir) {
+void Serialization::loadFromFile(const Device& device, Command& command, std::ifstream &file, Registry &registry, SharedState& sharedState, const std::string &workingDir) {
     logger("stdInfo", "beginning to read from file");
 
     sharedState.set_current_entities(registry, {});
@@ -120,7 +120,7 @@ void Serialization::loadFromFile(std::ifstream &file, Registry &registry, Shared
 
             if (id == "engine.entity") { break; }
 
-            registry.deserializeComponent(e, id, ptr, data);
+            registry.deserializeComponent(device, command, e, id, ptr, data);
         }
     }
 

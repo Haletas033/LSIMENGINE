@@ -28,6 +28,8 @@ public:
 
         Command(Command&& other) noexcept;
         Command& operator=(Command&& other) noexcept;
+        std::expected<void, LSIM::Error> beginOneTimeBuffer(VkCommandBuffer& commandBuffer);
+        std::expected<void, LSIM::Error> endOneTimeBuffer(VkCommandBuffer& commandBuffer, VkQueue graphicsQueue);
 
         std::expected<void, LSIM::Error> copyBuffer(
                 VkBuffer source,

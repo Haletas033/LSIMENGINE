@@ -18,7 +18,7 @@ private:
 
     std::vector<unsigned char> getData();
     std::vector<float> getFloats(json accessor);
-    std::vector<GLuint> getIndices(json accessor);
+    std::vector<uint32_t> getIndices(json accessor);
 
     void TraverseNode(Registry &registry, MeshPool &meshPool, unsigned int nextNode, const glm::mat4 &matrix);
 

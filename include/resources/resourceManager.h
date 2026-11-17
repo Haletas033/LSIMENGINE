@@ -4,29 +4,42 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vulkan/vulkan_core.h>
 
-#include "gl/shaderClass.h"
+#include "utils/texture.h"
+#include "vk/device.h"
+#include "vk/pipeline.h"
 
 class ResourceManager {
 private:
-    static std::unordered_map<std::string, uint32_t> textures;
-    static std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
-    static std::unordered_map<uint32_t, Shader*> shadersById;
+        static std::unordered_map<std::string, TextureResource> textures;
+        static std::unordered_map<std::string, VkShaderModule> shaderModules;
+        static std::unordered_map<std::string, Pipeline> pipelines;
+
 public:
-    static std::unordered_map<std::string, uint32_t> getTextures() { return textures; }
-    static uint32_t getTexture(const std::string& name);
-    static uint32_t addTexture(const std::string &name, const std::string &path);
+        static std::unordered_map<std::string, TextureResource>& getTextures() { return textures; }
+        static std::expected<TextureResource*, LSIM::Error> getTexture(const std::string& name);
+        static TextureResource* addTexture(
+                const std::string& name,
+                const std::string& path,
+                VkFilter filter = VK_FILTER_NEAREST
+        );
 
-    static std::unordered_map<std::string, std::unique_ptr<Shader>>& getShaders() { return shaders; }
-    static Shader &addShader(const std::string &name, Shader &&shaderObj);
-    static Shader* getShaderById(uint32_t id);
-    static Shader* getShader(const std::string& name);
+        static std::unordered_map<std::string, VkShaderModule>& getShaderModules() { return shaderModules; }
+        static VkShaderModule* getShaderModule(const std::string& name);
+        static VkShaderModule* addShaderModule(
+                const Device& device,
+                const std::string& name, const std::string& path
+        );
 
-    static void clear() {
-        shadersById.clear();
-        shaders.clear();
-        textures.clear();
-    }
+        static std::unordered_map<std::string, Pipeline>& getPipelines() { return pipelines; }
+        static Pipeline* getPipeline(const std::string& name);
+        static Pipeline* addPipeline(
+                const std::string& name,
+                Pipeline pipeline
+        );
+
+        static void clear(const Device& device);
 };
 
 #endif //LSIM_RESOURCEMANAGER_H

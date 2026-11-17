@@ -82,7 +82,7 @@ std::vector<std::vector<float>> Terrain::GenerateNoiseMap(const unsigned int wid
     return noiseMap;
 }
 
-GLuint Terrain::noiseMapToTexture(std::vector<std::vector<float>>& noiseMap, const char* outputLocation) {
+TextureResource Terrain::noiseMapToTexture(std::vector<std::vector<float>>& noiseMap, const char* outputLocation) {
     int width = noiseMap.size();
     int height = noiseMap[0].size();
 
@@ -120,10 +120,10 @@ GLuint Terrain::noiseMapToTexture(std::vector<std::vector<float>>& noiseMap, con
     //Delete the colorMap to free up memory
     delete[] colorMap;
 
-    return Texture::GetTexId(outputLocation, GL_NEAREST);
+    return Texture::LoadTexture(outputLocation, VK_FILTER_NEAREST);
 }
 
-void Terrain::noiseMapToMesh(std::vector<std::vector<float>> &noiseMap, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, float heightScale, float gridScale) {
+void Terrain::noiseMapToMesh(std::vector<std::vector<float>> &noiseMap, std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, float heightScale, float gridScale) {
     int width = noiseMap[0].size();
     int height = noiseMap.size();
 
@@ -196,15 +196,12 @@ void Terrain::noiseMapToMesh(std::vector<std::vector<float>> &noiseMap, std::vec
         float u = static_cast<float>(i % width) / (width - 1);
         float v = static_cast<float>(i / width) / (height - 1);
 
-        vertices.push_back(pos.x);
-        vertices.push_back(pos.y);
-        vertices.push_back(pos.z);
+        Vertex vertex{
+            .position = pos,
+            .normal = norm,
+            .uv = {u,v}
+        };
 
-        vertices.push_back(norm.x);
-        vertices.push_back(norm.y);
-        vertices.push_back(norm.z);
-
-        vertices.push_back(u);
-        vertices.push_back(v);
+        vertices.push_back(vertex);
     }
 }

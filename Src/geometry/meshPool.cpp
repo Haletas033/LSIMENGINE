@@ -1,50 +1,6 @@
 #include <geometry/meshPool.h>
 
-void GPUMeshBuffer::configureInstanceAttributes(const GLuint instanceVBO) const {
-        vao.Bind();
-
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-
-        // mat4 model -> locations 4, 5, 6, 7
-        for (GLuint i = 0; i < 4; ++i) {
-                glEnableVertexAttribArray(4 + i);
-
-                glVertexAttribPointer(
-                    4 + i,
-                    4,
-                    GL_FLOAT,
-                    GL_FALSE,
-                    sizeof(InstanceGPUData),
-                    reinterpret_cast<void*>(
-                        offsetof(InstanceGPUData, model) +
-                        sizeof(glm::vec4) * i
-                    )
-                );
-
-                glVertexAttribDivisor(4 + i, 1);
-        }
-
-        // mat3 normalMatrix -> locations 8, 9, 10
-        for (GLuint i = 0; i < 3; ++i) {
-                glEnableVertexAttribArray(8 + i);
-
-                glVertexAttribPointer(
-                    8 + i,
-                    3,
-                    GL_FLOAT,
-                    GL_FALSE,
-                    sizeof(InstanceGPUData),
-                    reinterpret_cast<void*>(
-                        offsetof(InstanceGPUData, normalMatrix) +
-                        sizeof(glm::vec3) * i
-                    )
-                );
-
-                glVertexAttribDivisor(8 + i, 1);
-        }
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
+#include "vk/command.h"
 
 uint64_t MeshPool::hashBytes(const void *data, const size_t size, uint64_t hash) {
         const auto* bytes = static_cast<const uint8_t*>(data);
@@ -62,8 +18,8 @@ MeshKey MeshPool::makeMeshKey(const MeshData &data) {
         uint64_t hash = 14695981039346656037ULL;
 
         hash = hashBytes(
-                data.verticesWithTangents.data(),
-                data.verticesWithTangents.size() * sizeof(float),
+                data.vertices.data(),
+                data.vertices.size() * sizeof(Vertex),
                 hash
         );
 
@@ -75,31 +31,76 @@ MeshKey MeshPool::makeMeshKey(const MeshData &data) {
 
         return MeshKey{
                 hash,
-                static_cast<uint32_t>(data.verticesWithTangents.size()),
+                static_cast<uint32_t>(data.vertices.size()),
                 static_cast<uint32_t>(data.indices.size())
         };
 }
 
-MeshHandle MeshPool::allocate(const std::vector<float> &vertices, const std::vector<uint32_t> &indices, MeshMode mode) {
+std::expected<MeshHandle, LSIM::Error> MeshPool::allocate(
+        const Device& device,
+        Command& command,
+        const std::vector<Vertex> &vertices,
+        const std::vector<uint32_t> &indices,
+        MeshMode mode
+) {
+        const VkDeviceSize vertexSize = vertices.size() * sizeof(Vertex);
+        const VkDeviceSize indexSize = indices.size() * sizeof(uint32_t);
+
+        auto vertexBuffer = Buffer::createFromData(
+                device,
+                command,
+                vertices.data(),
+                vertexSize,
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+        );
+
+        if (!vertexBuffer)
+                return std::unexpected(vertexBuffer.error());
+
+        auto indexBuffer = Buffer::createFromData(
+                device,
+                command,
+                indices.data(),
+                indexSize,
+                VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+        );
+
+        if (!indexBuffer)
+                return std::unexpected(indexBuffer.error());
+
         uint32_t index = nextFreeHead;
+
+        GPUMeshBuffer gpuBuffer{
+                std::move(*vertexBuffer),
+                std::move(*indexBuffer),
+                static_cast<uint32_t>(indices.size()),
+                static_cast<uint32_t>(vertices.size()),
+                mode
+        };
+
         if (nextFreeHead == SENTINEL) {
                 generations.push_back(0);
                 alive.push_back(true);
                 nextFree.push_back(SENTINEL);
                 meshKeys.emplace_back(std::nullopt);
-                buffers.emplace_back(vertices, indices, mode);
+                buffers.push_back(std::move(gpuBuffer));
                 index = generations.size() - 1;
         } else {
                 nextFreeHead = nextFree[index];
                 if (nextFreeHead == SENTINEL) nextFreeTail = SENTINEL;
                 alive[index] = true;
-                buffers[index] = GPUMeshBuffer{vertices, indices, mode};
+                buffers[index] = std::move(gpuBuffer);
         }
 
         return MeshHandle{index, generations[index]};
 }
 
-MeshHandle MeshPool::upload(MeshData &data, const MeshMode mode) {
+std::expected<MeshHandle, LSIM::Error> MeshPool::upload(
+        const Device& device,
+        Command& command,
+        MeshData& data,
+        const MeshMode mode
+) {
         data.GenerateTangents();
 
         if (mode == MeshMode::STATIC) {
@@ -108,17 +109,22 @@ MeshHandle MeshPool::upload(MeshData &data, const MeshMode mode) {
                 if (const auto it = meshCache.find(key); it != meshCache.end())
                         return it->second;
 
-                const MeshHandle handle = allocate(data.verticesWithTangents, data.indices, mode);
+                const auto handle = allocate(device, command, data.vertices, data.indices, mode);
 
-                meshCache.emplace(key, handle);
+                if (!handle)
+                        return std::unexpected(handle.error());
 
-                meshKeys[handle.getIndex()] = key;
+                meshCache.emplace(key, *handle);
+
+                meshKeys[handle->getIndex()] = key;
 
                 return handle;
         }
 
         return allocate(
-                data.verticesWithTangents,
+                device,
+                command,
+                data.vertices,
                 data.indices,
                 mode
         );

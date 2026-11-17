@@ -25,7 +25,7 @@ private:
                 camera.view,
                 viewport
             );
-            if (const auto e = pickMesh(Registry::getDefaultRegistry(), camera.Position, rayDir); e.has_value()) {
+            if (const auto e = pickMesh(Registry::getDefaultRegistry(), camera.position, rayDir); e.has_value()) {
                 sharedState.current_entities() = {e.value()};
             }
         }

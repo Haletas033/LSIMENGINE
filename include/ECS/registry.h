@@ -11,6 +11,8 @@
 
 #include "entityManager.h"
 #include "ECS/componentTraits.h"
+#include "vk/command.h"
+#include "vk/device.h"
 
 class SharedState;
 
@@ -30,11 +32,12 @@ private:
 
         std::unordered_map<
                 std::string,
-                std::function<void(Registry&, EntityHandle, size_t&, const std::vector<uint8_t>&)>
+                std::function<void(const Device&, Command&, Registry&, EntityHandle, size_t&,
+                                   const std::vector<uint8_t>&)>
         > deserializeFuncs{};
 
 public:
-        template<typename T>
+        template <typename T>
         using Pool = std::vector<std::optional<std::decay_t<T>>>;
 
         template <typename T>
@@ -43,7 +46,7 @@ public:
                 using Component = std::decay_t<T>;
                 const auto id = std::type_index(typeid(Component));
 
-                auto &slot = pools[id];
+                auto& slot = pools[id];
                 componentTypes[e].emplace_back(id);
                 if (!slot.has_value()) {
                         componentIds[id] = ComponentTraits<Component>::id;
@@ -53,16 +56,19 @@ public:
                         serializeFuncs[id] = ComponentTraits<Component>::serialize;
 
                         deserializeFuncs[std::string(ComponentTraits<Component>::id)] =
-                                [](Registry& registry,
+                        [](
+                                const Device& device,
+                                Command& command,
+                                Registry& registry,
                                 const EntityHandle entity,
-                                size_t &ptr,
-                                const std::vector<uint8_t>& data)
-                                {
+                                size_t& ptr,
+                                const std::vector<uint8_t>& data
+                        ) {
                                         auto deserializeComponent = ComponentTraits<Component>::deserialize(data, ptr);
 
                                         registry.addComponent<Component>(
-                                        entity,
-                                        std::any_cast<Component>(std::move(deserializeComponent))
+                                                entity,
+                                                std::any_cast<Component>(std::move(deserializeComponent))
                                         );
                                 };
 
@@ -70,19 +76,19 @@ public:
 
                         // Function used to destroy all of an entities components
                         clearFuncs[id] = [this, id](uint32_t index) {
-                                auto &pool = std::any_cast<Pool<Component>&>(pools.at(id));
+                                auto& pool = std::any_cast<Pool<Component>&>(pools.at(id));
                                 if (index < pool.size()) pool[index] = std::nullopt;
                         };
 
                         // Function used to get component using a runtime type
                         getComponentFuncs[id] = [this, id](uint32_t index) -> std::any {
-                                auto &pool = std::any_cast<Pool<Component>&>(pools.at(id));
+                                auto& pool = std::any_cast<Pool<Component>&>(pools.at(id));
                                 if (index < pool.size() && pool[index].has_value()) return pool[index].value();
                                 return std::any{};
                         };
                 }
-                auto &pool = std::any_cast<Pool<Component>&>(slot);
-                if (e.getIndex() >= pool.size()) pool.resize(e.getIndex()+1);
+                auto& pool = std::any_cast<Pool<Component>&>(slot);
+                if (e.getIndex() >= pool.size()) pool.resize(e.getIndex() + 1);
                 pool[e.getIndex()].emplace(std::forward<T>(component));
         }
 
@@ -100,8 +106,8 @@ public:
         }
 
         std::vector<uint8_t> serializeComponent(
-            const EntityHandle entity,
-            const std::type_index type
+                const EntityHandle entity,
+                const std::type_index type
         ) {
                 const auto it = serializeFuncs.find(type);
                 if (it == serializeFuncs.end()) return {};
@@ -110,17 +116,19 @@ public:
         }
 
         void deserializeComponent(
-            const EntityHandle entity,
-            const std::string_view& id,
-            size_t &ptr,
-            const std::vector<uint8_t>& data
+                const Device& device,
+                Command& command,
+                const EntityHandle entity,
+                const std::string_view& id,
+                size_t& ptr,
+                const std::vector<uint8_t>& data
         ) {
                 const auto it = deserializeFuncs.find(std::string(id));
                 if (it == deserializeFuncs.end()) {
                         throw std::runtime_error("No deserializer registered for component");
                 }
 
-                it->second(*this, entity, ptr, data);
+                it->second(device, command, *this, entity, ptr, data);
         }
 
         template <typename T>
@@ -130,7 +138,7 @@ public:
                 const auto id = std::type_index(typeid(Component));
 
                 if (!pools.contains(id)) return false;
-                auto &pool = std::any_cast<const Pool<Component>&>(pools.at(id));
+                auto& pool = std::any_cast<const Pool<Component>&>(pools.at(id));
                 return pool.size() > e.getIndex() && pool[e.getIndex()];
         }
 
@@ -143,7 +151,7 @@ public:
                 const auto it = pools.find(id);
                 if (it == pools.end()) return nullptr;
 
-                auto &pool = std::any_cast<Pool<Component>&>(it->second);
+                auto& pool = std::any_cast<Pool<Component>&>(it->second);
 
                 if (e.getIndex() >= pool.size()) return nullptr;
                 if (!pool[e.getIndex()]) return nullptr;
@@ -160,7 +168,7 @@ public:
                 const auto it = pools.find(id);
                 if (it == pools.end()) return nullptr;
 
-                auto &pool = std::any_cast<const Pool<Component>&>(it->second);
+                auto& pool = std::any_cast<const Pool<Component>&>(it->second);
 
                 if (e.getIndex() >= pool.size()) return nullptr;
                 if (!pool[e.getIndex()]) return nullptr;
@@ -193,7 +201,7 @@ public:
                 const auto it = pools.find(id);
                 if (it == pools.end()) return;
 
-                auto &pool = std::any_cast<Pool<Component>&>(it->second);
+                auto& pool = std::any_cast<Pool<Component>&>(it->second);
                 componentTypes[e].erase(std::ranges::find(componentTypes[e], id));
 
                 if (e.getIndex() >= pool.size()) return;
@@ -205,7 +213,7 @@ public:
         void destroyEntity(const EntityHandle e) {
                 assert(isAlive(e));
 
-                for (auto &func: clearFuncs | std::views::values) {
+                for (auto& func : clearFuncs | std::views::values) {
                         func(e.getIndex());
                 }
                 componentTypes.erase(e);
@@ -214,6 +222,7 @@ public:
 
         EntityHandle create() { return entityManager.create(); }
         [[nodiscard]] bool isAlive(const EntityHandle e) const { return entityManager.isAlive(e); }
+
         [[nodiscard]] std::vector<EntityHandle> getAllAlive() const {
                 return entityManager.getAllAlive();
         }

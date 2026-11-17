@@ -96,17 +96,17 @@ add_executable(LSIM
 
         include/utils/fileIO.h
         Src/utils/fileIO.cpp
-#        ${ECS_SOURCES}
-#        ${EDITOR_SOURCES}
-#        ${ENGINE_SOURCES}
-#        ${GEOMETRY_SOURCES}
+        ${ECS_SOURCES}
+        ${EDITOR_SOURCES}
+        ${ENGINE_SOURCES}
+        ${GEOMETRY_SOURCES}
         ${VK_SOURCES}
-#        ${INPUT_SOURCES}
+        ${INPUT_SOURCES}
         ${PLATFORM_SOURCES}
-#        ${RENDERING_SOURCES}
-#        ${RESOURCE_SOURCES}
-#        ${SCENE_SOURCES}
-#        ${UTIL_SOURCES}
+        ${RENDERING_SOURCES}
+        ${RESOURCE_SOURCES}
+        ${SCENE_SOURCES}
+        ${UTIL_SOURCES}
 )
 target_include_directories(LSIM PRIVATE
         include

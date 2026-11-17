@@ -11,6 +11,7 @@
 #include "geometry/mesh.h"
 #include "rendering/light.h"
 #include "utils/fileIO.h"
+#include "utils/serialization.h"
 #include "utils/texture.h"
 
 std::optional<LSIM::Error> Scene::createDefaultScene(SharedState& sharedState, EntityHandle& skybox) {
@@ -61,7 +62,7 @@ std::optional<LSIM::Error> Scene::initializeScene(SharedState& sharedState, Came
 			if (file.path().extension().string() == ".lsim") {
 				engineLogger("stdInfo", file.path().string());
 				std::ifstream LSIMfile(file.path().string(), std::ios::binary);
-				IO::loadFromFile(LSIMfile, Registry::getDefaultRegistry(), sharedState, EngineContext::getWorkingDir());
+				Serialization::loadFromFile(TODO, TODO, LSIMfile, Registry::getDefaultRegistry(), sharedState, EngineContext::getWorkingDir());
 				engineLogger("stdInfo", "Successfully loaded the LSIM project");
 				foundFile = true;
 				break;
