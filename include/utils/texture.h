@@ -51,11 +51,11 @@ public:
                 VkFilter filter, TextureType type
         );
 
-        static TextureResource LoadCubemap(
+        static std::expected<TextureResource, LSIM::Error> LoadCubemap(
                 const Device& device,
                 Command& command,
                 const std::array<std::string, 6>& faces,
-                VkFilter filter
+                VkFilter filter, TextureType type
         );
 
         static void ByteArrayToPNG(
