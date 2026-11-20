@@ -38,7 +38,7 @@ EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, 
 
                         const auto uID = static_cast<long long>(glfwGetTime() * 1'000'000'000LL);
                         const std::string outputPath = std::string(EngineContext::getWorkingDir()) + "resources/" + std::to_string(uID) + "terrain.png";
-                        const TextureResource noiseMapTexture = Terrain::noiseMapToTexture(noiseMap, outputPath.c_str());
+                        const TextureResource* noiseMapTexture = Terrain::noiseMapToTexture(noiseMap, std::to_string(uID), outputPath.c_str());
 
                         std::vector<Vertex> vertices;
                         std::vector<uint32_t> indices;

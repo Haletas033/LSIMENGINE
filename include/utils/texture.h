@@ -29,7 +29,7 @@ struct TextureResource {
         TextureResource(TextureResource&& other) noexcept;
         TextureResource& operator=(TextureResource&& other) noexcept;
 
-        void Destroy();
+        void destroy();
 
         ~TextureResource();
 };
@@ -51,7 +51,7 @@ public:
                 VkFilter filter, TextureType type
         );
 
-        static std::expected<TextureResource, LSIM::Error> LoadCubemap(
+        static std::expected<TextureResource, LSIM::Error> loadCubemap(
                 const Device& device,
                 Command& command,
                 const std::array<std::string, 6>& faces,

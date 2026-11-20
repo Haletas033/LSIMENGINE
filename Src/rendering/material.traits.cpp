@@ -249,7 +249,7 @@ std::vector<uint8_t> ComponentTraits<Material>::serialize(Registry& registry, co
                 append(path.data(), path.size());
         }
 
-        const std::string shader = material->getShader();
+        const std::string shader = material->getPipeline();
         const auto shaderSize = static_cast<std::uint32_t>(shader.size());
         append(&shaderSize, sizeof(shaderSize));
         append(shader.data(), shader.size());
@@ -340,7 +340,7 @@ std::any ComponentTraits<Material>::deserialize(const std::vector<uint8_t> &data
         // Shader
         const std::string shader = readString();
 
-        result.addShader(shader);
+        result.addPipeline(shader);
 
         return result;
 }

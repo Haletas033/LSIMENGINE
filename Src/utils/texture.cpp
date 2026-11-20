@@ -7,6 +7,53 @@
 #include "vk/buffer.h"
 #include "vk/vk.h"
 
+TextureResource::TextureResource(TextureResource&& other) noexcept
+        : device(other.device),
+          image(other.image),
+          memory(other.memory),
+          imageView(other.imageView),
+          sampler(other.sampler),
+          width(other.width),
+          height(other.height),
+          channels(other.channels)
+{
+        other.channels = 0;
+        other.height = 0;
+        other.width = 0;
+        other.sampler = VK_NULL_HANDLE;
+        other.imageView = VK_NULL_HANDLE;
+        other.memory = VK_NULL_HANDLE;
+        other.image = VK_NULL_HANDLE;
+        other.device = VK_NULL_HANDLE;
+}
+
+TextureResource& TextureResource::operator=(TextureResource&& other) noexcept {
+        if (this == &other)
+                return *this;
+
+        destroy();
+
+        device = other.device;
+        image = other.image;
+        memory = other.memory;
+        imageView = other.imageView;
+        sampler = other.sampler;
+        width = other.width;
+        height = other.height;
+        channels = other.channels;
+
+        other.channels = 0;
+        other.height = 0;
+        other.width = 0;
+        other.sampler = VK_NULL_HANDLE;
+        other.imageView = VK_NULL_HANDLE;
+        other.memory = VK_NULL_HANDLE;
+        other.image = VK_NULL_HANDLE;
+        other.device = VK_NULL_HANDLE;
+
+        return *this;
+}
+
 std::expected<VkFormat, LSIM::Error> Texture::channelsToFormat(const int nrChannels, TextureType type) {
         switch (nrChannels) {
         case 1:
@@ -279,7 +326,7 @@ std::expected<TextureResource, LSIM::Error> Texture::loadTexture(
         return texture;
 }
 
-std::expected<TextureResource, LSIM::Error> Texture::LoadCubemap(
+std::expected<TextureResource, LSIM::Error> Texture::loadCubemap(
         const Device& device,
         Command& command,
         const std::array<std::string, 6>& faces,
@@ -554,4 +601,32 @@ std::expected<TextureResource, LSIM::Error> Texture::LoadCubemap(
 void Texture::ByteArrayToPNG(const char* filename, const unsigned char* texture,
                              const int width, const int height, const int channels) {
         stbi_write_png(filename, width, height, channels, texture, width * channels);
+}
+
+void TextureResource::destroy() {
+        if (sampler != VK_NULL_HANDLE) {
+                vkDestroySampler(device, sampler, nullptr);
+                sampler = VK_NULL_HANDLE;
+        }
+
+        if (imageView != VK_NULL_HANDLE) {
+                vkDestroyImageView(device, imageView, nullptr);
+                imageView = VK_NULL_HANDLE;
+        }
+
+        if (memory != VK_NULL_HANDLE) {
+                vkFreeMemory(device, memory, nullptr);
+                memory = VK_NULL_HANDLE;
+        }
+
+        if (image != VK_NULL_HANDLE) {
+                vkDestroyImage(device, image, nullptr);
+                image = VK_NULL_HANDLE;
+        }
+
+        device = VK_NULL_HANDLE;
+}
+
+TextureResource::~TextureResource() {
+        destroy();
 }

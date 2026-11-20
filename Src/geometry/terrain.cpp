@@ -5,6 +5,8 @@
 #include<glm/glm.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
+#include "resources/resourceManager.h"
+
 //Define regions based on height, color, and name
 std::vector<Terrain::TerrainType> Terrain::regions = {
     {"Deep Water", 0.3f, Color(0.0f, 0.0f, 0.5f, 1.0f)},
@@ -82,7 +84,7 @@ std::vector<std::vector<float>> Terrain::GenerateNoiseMap(const unsigned int wid
     return noiseMap;
 }
 
-TextureResource Terrain::noiseMapToTexture(std::vector<std::vector<float>>& noiseMap, const char* outputLocation) {
+TextureResource* Terrain::noiseMapToTexture(std::vector<std::vector<float>>& noiseMap, const std::string& texName, const char* outputLocation) {
     int width = noiseMap.size();
     int height = noiseMap[0].size();
 
@@ -117,10 +119,11 @@ TextureResource Terrain::noiseMapToTexture(std::vector<std::vector<float>>& nois
 
     Texture::ByteArrayToPNG(outputLocation, colorMap, width, height, 4);
 
-    //Delete the colorMap to free up memory
     delete[] colorMap;
 
-    return Texture::LoadTexture(outputLocation, VK_FILTER_NEAREST);
+    TextureResource* texture = ResourceManager::addTexture(texName, outputLocation, VK_FILTER_NEAREST);
+
+    return texture;
 }
 
 void Terrain::noiseMapToMesh(std::vector<std::vector<float>> &noiseMap, std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, float heightScale, float gridScale) {

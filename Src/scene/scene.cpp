@@ -8,6 +8,7 @@
 #include "engineContext.h"
 #include "ECS/name.h"
 #include "ECS/registry.h"
+#include "editor/sharedState.h"
 #include "geometry/mesh.h"
 #include "rendering/light.h"
 #include "utils/fileIO.h"
@@ -33,10 +34,10 @@ std::optional<LSIM::Error> Scene::createDefaultScene(SharedState& sharedState, E
 	};
 
 	//Get skybox texture id
-	const GLuint skyboxTexId = Texture::GetCubemapId(faces, GL_LINEAR);
+	const TextureResource* skyboxTexId = Texture::loadCubemap(faces, GL_LINEAR);
 
 	Material skyboxMat;
-	skyboxMat.addShader("skyboxShader");
+	skyboxMat.addPipeline("skyboxShader");
 	skyboxMat.addProperty("skybox", static_cast<int>(skyboxTexId));
 	skybox = Mesh::create(
 	    Primitive::CUBE,

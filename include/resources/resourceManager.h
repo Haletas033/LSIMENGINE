@@ -19,7 +19,7 @@ private:
 public:
         static std::unordered_map<std::string, TextureResource>& getTextures() { return textures; }
         static std::expected<TextureResource*, LSIM::Error> getTexture(const std::string& name);
-        static TextureResource* addTexture(
+        static std::expected<TextureResource*, LSIM::Error> addTexture(
                 const std::string& name,
                 const std::string& path,
                 VkFilter filter = VK_FILTER_NEAREST

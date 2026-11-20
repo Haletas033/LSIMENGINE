@@ -20,9 +20,11 @@ std::expected<TextureResource*, LSIM::Error> ResourceManager::getTexture(const s
         return &it->second;
 }
 
-TextureResource* ResourceManager::addTexture(const std::string& name, const std::string& path, const VkFilter filter) {
-        TextureResource tex = Texture::LoadTexture(path.c_str(), filter);
-        textures[name] = std::move(tex);
+std::expected<TextureResource*, LSIM::Error> ResourceManager::addTexture(
+        const std::string& name, const std::string& path, const VkFilter filter) {
+        auto tex = Texture::loadTexture(path.c_str(), filter);
+        if (!tex) return std::unexpected(tex.error());
+        textures[name] = std::move(*tex);
         return &textures[name];
 }
 
