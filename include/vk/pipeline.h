@@ -2,6 +2,7 @@
 #define LSIM_PIPELINE_H
 #include <expected>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
@@ -40,6 +41,9 @@ private:
         VkPipeline pipeline{VK_NULL_HANDLE};
         VkPipelineLayout pipelineLayout{VK_NULL_HANDLE};
 
+        std::unordered_map<std::string, size_t> pushConstantOffsets{};
+        uint32_t pushConstantSize = 0;
+
 public:
         Pipeline() = default;
 
@@ -59,6 +63,10 @@ public:
 
         [[nodiscard]] VkPipeline getPipeline() const { return pipeline; }
         [[nodiscard]] VkPipelineLayout getPipelineLayout() const { return pipelineLayout; }
+        [[nodiscard]] std::unordered_map<std::string, size_t> getPushConstantOffsets() const {
+                return pushConstantOffsets;
+        }
+        [[nodiscard]] uint32_t getPushConstantSize() const { return pushConstantSize; }
 
         void destroy();
 

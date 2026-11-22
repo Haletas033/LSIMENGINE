@@ -3,8 +3,8 @@
 #include <deque>
 
 #define LSIM_CHECK(func) do {\
-	if (const auto err = func; err)\
-		return err;\
+	if (const auto res = func; !res)\
+		return std::unexpected(res.error());\
 	} while (0)
 
 namespace LSIM {
@@ -57,6 +57,8 @@ namespace LSIM {
 		VK_INCOMPATIBLE_FORMAT_FOR_TYPE,
 		VK_BIND_IMAGE_MEMORY_FAILURE,
 		LSIM_GET_IMAGE_INFO_FAILURE,
+		LSIM_TEXTURE_EXISTS,
+		LSIM_NO_PUSH_CONSTANT,
 	};
 
 	enum class FatalityLevel {

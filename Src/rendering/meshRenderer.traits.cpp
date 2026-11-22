@@ -49,11 +49,11 @@ std::vector<uint8_t> ComponentTraits<MeshRenderer>::serialize(
 }
 
 
-std::any ComponentTraits<MeshRenderer>::deserialize(
+std::expected<std::any, LSIM::Error> ComponentTraits<MeshRenderer>::deserialize(
         const Device& device,
         Command& command,
-        const std::vector<uint8_t> &data,
-        size_t &ptr
+        const std::vector<uint8_t>& data,
+        size_t& ptr
 ) {
         const auto read = [&data, &ptr](void *dst, const size_t size) {
                 if (ptr > data.size() || size > data.size() - ptr) {

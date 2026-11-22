@@ -31,7 +31,8 @@ public:
     static std::vector<std::vector<float>> GenerateNoiseMap(unsigned int width, unsigned int height, int seed, float scale, int octaves, float persistence, float lacunarity);
 
     //Converts a generated noise map into an RGBA opengl Texture
-    static TextureResource* noiseMapToTexture(std::vector<std::vector<float>>& noiseMap, const std::string& texName, const char* outputLocation);
+    static std::expected<TextureResource*, LSIM::Error> noiseMapToTexture(
+        std::vector<std::vector<float>>& noiseMap, const std::string& texName, const char* outputLocation);
 
     static void noiseMapToMesh(std::vector<std::vector<float>>& noiseMap, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, float heightScale, float gridScale);
 };

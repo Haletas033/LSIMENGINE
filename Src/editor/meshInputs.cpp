@@ -82,18 +82,23 @@ void MeshInputs::Init(Registry& registry, MeshPool& meshPool, SharedState &share
 	meshInputs.addFunctionForAction("move_meshes_forward", [&](const Inputs::InputContext& context) {
 		Move(registry, sharedState, defaults, camera, context, Direction::FORWARD, sub);
 	});
+
 	meshInputs.addFunctionForAction("move_meshes_backward", [&](const Inputs::InputContext& context) {
 		Move(registry, sharedState, defaults, camera, context, Direction::FORWARD, add);
 	});
+
 	meshInputs.addFunctionForAction("move_meshes_left", [&](const Inputs::InputContext& context) {
 		Move(registry, sharedState, defaults, camera, context, Direction::SIDE, sub);
 	});
+
 	meshInputs.addFunctionForAction("move_meshes_right", [&](const Inputs::InputContext& context) {
 		Move(registry, sharedState, defaults, camera, context, Direction::SIDE, add);
 	});
+
 	meshInputs.addFunctionForAction("move_meshes_up", [&](const Inputs::InputContext& context) {
 		Move(registry, sharedState, defaults, camera, context, Direction::UP, add);
 	});
+
 	meshInputs.addFunctionForAction("move_meshes_down", [&](const Inputs::InputContext& context) {
 		Move(registry, sharedState, defaults, camera, context, Direction::UP, sub);
 	});
@@ -101,16 +106,19 @@ void MeshInputs::Init(Registry& registry, MeshPool& meshPool, SharedState &share
 	meshInputs.addFunctionForAction("select_move_mode", [&](const Inputs::InputContext& context) {
 		sharedState.set_current_transform(SharedState::Transform::POSITION);
 	});
+
 	meshInputs.addFunctionForAction("select_rotation_mode", [&](const Inputs::InputContext& context) {
 		sharedState.set_current_transform(SharedState::Transform::ROTATION);
 	});
+
 	meshInputs.addFunctionForAction("select_scale_mode", [&](const Inputs::InputContext& context) {
 		sharedState.set_current_transform(SharedState::Transform::SCALE);
 	});
 
 	meshInputs.addFunctionForAction("add_mesh", [&](const Inputs::InputContext& context) {
-		const EntityHandle mesh = Mesh::create(sharedState.selected_mesh_type(), MeshMode::STATIC, registry, meshPool);
-		sharedState.current_entities() = {mesh};
+		const auto mesh = Mesh::create(sharedState.selected_mesh_type(), MeshMode::STATIC, registry, meshPool);
+		if (!mesh) return;
+		sharedState.current_entities() = {*mesh};
 	});
 
 	meshInputs.addFunctionForAction("add_light", [&](const Inputs::InputContext& context) {

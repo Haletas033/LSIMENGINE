@@ -2,18 +2,22 @@
 
 #include "utils/logging/log.h"
 
-void Material::addTexture(const std::string &name, const std::string &path) {
+std::expected<TextureResource*, LSIM::Error> Material::addTexture(const std::string &name, const std::string &path, const VkFilter filter, const TextureType type) {
     if (textures.contains(name)) {
         engineLogger("stdError", "\"" + name + "\" already exists.");
-        return;
+        return std::unexpected(LSIM::Error{LSIM::ErrorCode::LSIM_TEXTURE_EXISTS, LSIM::FatalityLevel::FATAL});
     }
 
-    setTexture(name, path);
+    auto tex = setTexture(name, path, filter, type);
+    if (!tex) return std::unexpected(tex.error());
+    return *tex;
 }
 
-void Material::setTexture(const std::string &name, const std::string &path) {
-    ResourceManager::addTexture(name, path);
+std::expected<TextureResource*, LSIM::Error> Material::setTexture(const std::string &name, const std::string &path, const VkFilter filter, const TextureType type) {
+    auto tex = ResourceManager::addTexture(name, path, filter, type);
+    if (!tex) return std::unexpected(tex.error());
     textures[name] = path;
+    return *tex;
 }
 
 void Material::addTexture(const std::string &name) {
@@ -42,6 +46,10 @@ void Material::addPipeline(const std::string& name) {
     } else {
         engineLogger("stdError", "No pipeline named: \"" + name + "\" exists.");
     }
+
+    for (const auto& property : ResourceManager::getPipeline(pipeline)->getPushConstantOffsets() | std::views::keys) {
+        properties[property] = {};
+    }
 }
 
 void Material::setPipeline(const std::string &name, Pipeline&& pipelineToUse) {
@@ -52,6 +60,10 @@ void Material::setPipeline(const std::string &name, Pipeline&& pipelineToUse) {
     }
 
     pipeline = name;
+
+    for (const auto& property : ResourceManager::getPipeline(pipeline)->getPushConstantOffsets() | std::views::keys) {
+        properties[property] = {};
+    }
 }
 
 void Material::addPipeline(const std::string &name, Pipeline&& pipelineTouse) {
@@ -66,9 +78,15 @@ void Material::addPipeline(const std::string &name, Pipeline&& pipelineTouse) {
 Material Material::createStandardPBR() {
     Material mat;
     mat.addPipeline("PBRShader");
-    mat.addProperty("roughness", 0.5f);
-    mat.addProperty("F0", 0.03f);
-    mat.addProperty("emissiveIntensity", 0.f);
-    mat.addProperty("meshColor", glm::vec4(1.f));
+
+    std::expected<void, LSIM::Error> res{};
+    res = mat.setProperty("roughness", 0.5f);
+    if (!res) throw std::runtime_error("PBRShader missing roughness");
+    res = mat.setProperty("F0", 0.03f);
+    if (!res) throw std::runtime_error("PBRShader missing F0");
+    res = mat.setProperty("emissiveIntensity", 0.f);
+    if (!res) throw std::runtime_error("PBRShader missing emissiveIntensity");
+    res = mat.setProperty("meshColor", glm::vec4(1.f));
+    if (!res) throw std::runtime_error("PBRShader missing meshColor");
     return mat;
 }

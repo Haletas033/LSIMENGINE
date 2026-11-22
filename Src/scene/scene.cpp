@@ -3,7 +3,6 @@
 #include <array>
 
 #include "LSIMtypes.h"
-#include <optional>
 
 #include "engineContext.h"
 #include "ECS/name.h"
@@ -15,13 +14,22 @@
 #include "utils/serialization.h"
 #include "utils/texture.h"
 
-std::optional<LSIM::Error> Scene::createDefaultScene(SharedState& sharedState, EntityHandle& skybox) {
+std::expected<void, LSIM::Error> Scene::createDefaultScene(SharedState& sharedState, EntityHandle& skybox) {
 	const EntityHandle firstLight = Light::create(Registry::getDefaultRegistry(), Light::Type::POINT);
 	Registry::getDefaultRegistry().getComponent<Name>(firstLight)->value = "First Light";
 
-	EntityHandle firstCube = Mesh::create(Primitive::CUBE, MeshMode::STATIC, Registry::getDefaultRegistry(), MeshPool::getDefaultMeshPool(), Material::createStandardPBR(), Transform());
-	sharedState.current_entities() = {firstCube};
-	Registry::getDefaultRegistry().getComponent<Name>(firstCube)->value = "First Cube";
+	auto firstCube = Mesh::create(
+		Primitive::CUBE,
+		MeshMode::STATIC,
+		Registry::getDefaultRegistry(),
+		MeshPool::getDefaultMeshPool(),
+		Material::createStandardPBR(),
+		Transform()
+	);
+	if (!firstCube) return std::unexpected(firstCube.error());
+
+	sharedState.current_entities() = {*firstCube};
+	Registry::getDefaultRegistry().getComponent<Name>(*firstCube)->value = "First Cube";
 
 	//Skybox faces
 	const std::array<std::string, 6> faces = {
@@ -33,37 +41,45 @@ std::optional<LSIM::Error> Scene::createDefaultScene(SharedState& sharedState, E
 		"skybox/back.jpg",
 	};
 
-	//Get skybox texture id
-	const TextureResource* skyboxTexId = Texture::loadCubemap(faces, GL_LINEAR);
+	auto tex = ResourceManager::addCubeMapTexture(
+		"skybox",
+		faces,
+		VK_FILTER_LINEAR,
+		TextureType::COLOR
+	);
+	if (!tex) return std::unexpected(tex.error());
 
 	Material skyboxMat;
 	skyboxMat.addPipeline("skyboxShader");
-	skyboxMat.addProperty("skybox", static_cast<int>(skyboxTexId));
-	skybox = Mesh::create(
-	    Primitive::CUBE,
-	    MeshMode::STATIC,
-	    Registry::getDefaultRegistry(),
-	    MeshPool::getDefaultMeshPool(),
-	    skyboxMat
+	skyboxMat.addTexture("skybox");
+	auto mesh = Mesh::create(
+		Primitive::CUBE,
+		MeshMode::STATIC,
+		Registry::getDefaultRegistry(),
+		MeshPool::getDefaultMeshPool(),
+		skyboxMat
 	);
+	if (!mesh) return std::unexpected(mesh.error());
+	skybox = *mesh;
+
 	Registry::getDefaultRegistry().getComponent<Name>(skybox)->value = "Skybox";
 
 	engineLogger("stdInfo", "Successfully created the default scene");
 
-	return std::nullopt;
+	return {};
 }
 
-std::optional<LSIM::Error> Scene::initializeScene(SharedState& sharedState, Camera& camera, EntityHandle& skybox) {
+std::expected<void, LSIM::Error> Scene::initializeScene(const Device& device, Command& command, SharedState& sharedState, Camera& camera, EntityHandle& skybox) {
 	if (EngineContext::getWorkingDir().empty()) {
-		if (const auto err = createDefaultScene(sharedState, skybox); err)
-			return err;
+		if (const auto res = createDefaultScene(sharedState, skybox); !res)
+			return std::unexpected(res.error());
 	} else {
 		bool foundFile = false;
 		for (const auto &file : std::filesystem::recursive_directory_iterator(EngineContext::getWorkingDir())) {
 			if (file.path().extension().string() == ".lsim") {
 				engineLogger("stdInfo", file.path().string());
 				std::ifstream LSIMfile(file.path().string(), std::ios::binary);
-				Serialization::loadFromFile(TODO, TODO, LSIMfile, Registry::getDefaultRegistry(), sharedState, EngineContext::getWorkingDir());
+				Serialization::loadFromFile(device, command, LSIMfile, Registry::getDefaultRegistry(), sharedState, EngineContext::getWorkingDir());
 				engineLogger("stdInfo", "Successfully loaded the LSIM project");
 				foundFile = true;
 				break;
@@ -71,17 +87,20 @@ std::optional<LSIM::Error> Scene::initializeScene(SharedState& sharedState, Came
 		}
 		if (!foundFile) {
 			engineLogger("stdInfo", "Unable to find LSIM project. Creating default scene");
-			if (const auto err = createDefaultScene(sharedState, skybox); err)
-				return err;
+			if (const auto res = createDefaultScene(sharedState, skybox); !res)
+				return std::unexpected(res.error());
 		}
 	}
 
 	Defaults defaults = EngineContext::getDefaults();
-	camera = Camera(
+	auto res = Camera::create(
+		device,
 		static_cast<int>(defaults.defaultWindowWidth),
 		static_cast<int>(defaults.defaultWindowHeight),
 		glm::vec3(0.0f, 0.0f, 2.0f)
 	);
+	if (!res) return std::unexpected(res.error());
+	camera = std::move(*res);
 
-	return std::nullopt;
+	return {};
 }

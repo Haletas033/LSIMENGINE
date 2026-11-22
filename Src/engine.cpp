@@ -179,7 +179,7 @@ Engine::~Engine() {
 
 	Registry::getDefaultRegistry() = Registry{};
 	MeshPool::getDefaultMeshPool() = MeshPool{};
-	ResourceManager::clear(TODO);
+	ResourceManager::clear();
 
 	SystemManager::getDefaultSystemManager().clear();
 

@@ -29,8 +29,8 @@ private:
         std::string pipeline;
 
 public:
-        void addTexture(const std::string& name, const std::string& path);
-        void setTexture(const std::string& name, const std::string& path);
+        std::expected<TextureResource*, LSIM::Error> addTexture(const std::string& name, const std::string& path, VkFilter filter, TextureType type);
+        std::expected<TextureResource*, LSIM::Error> setTexture(const std::string& name, const std::string& path, VkFilter filter, TextureType type);
         void addTexture(const std::string& name);
         [[nodiscard]] const std::unordered_map<std::string, std::string>& getTextures() const { return textures; }
         void removeTexture(const std::string& name) { textures.erase(name); }
@@ -42,25 +42,22 @@ public:
         void removePipeline() { pipeline = ""; }
 
         template <typename T>
-        void addProperty(const std::string& name, T object) {
-                if (properties.contains(name)) {
-                        engineLogger("stdError", "\"" + name + "\" already exists.");
-                        return;
+        std::expected<void, LSIM::Error> setProperty(const std::string& name, T object) {
+                if (!ResourceManager::getPipeline(pipeline)->getPushConstantOffsets().contains(name)) {
+                        return std::unexpected(
+                                LSIM::Error{
+                                        LSIM::ErrorCode::LSIM_NO_PUSH_CONSTANT,
+                                        LSIM::FatalityLevel::FATAL
+                                }
+                        );
                 }
-
                 properties[name] = object;
-        }
-
-        template <typename T>
-        void setProperty(const std::string& name, T object) {
-                properties[name] = object;
+                return {};
         }
 
         [[nodiscard]] const std::unordered_map<std::string, MaterialProperty>& getProperties() const {
                 return properties;
         }
-
-        void removeProperty(const std::string& name) { properties.erase(name); }
 
         static Material createStandardPBR();
 };

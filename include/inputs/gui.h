@@ -37,9 +37,9 @@ public:
 
     static void CleanUp();
 
-    static void AddTexture(const std::string &slotName, std::string &fileName,
-                           Registry &registry, const std::set<EntityHandle> &currentMeshes,
-                           const std::string &workingDir);
+    static std::expected<void, LSIM::Error> AddTexture(const std::string& slotName, std::string& fileName,
+                                                       Registry& registry, const std::set<EntityHandle>& currentMeshes,
+                                                       const std::string& workingDir);
     static void RemoveTexture(const std::string &slotName,
                                Registry &registry, const std::set<EntityHandle> &currentMeshes);
 

@@ -72,7 +72,7 @@ std::vector<uint8_t> ComponentTraits<Light>::serialize(Registry &registry, Entit
         return data;
 }
 
-std::any ComponentTraits<Light>::deserialize(const std::vector<uint8_t> &data, uint64_t &ptr) {
+std::expected<std::any, LSIM::Error> ComponentTraits<Light>::deserialize(const Device& device, Command& command, const std::vector<uint8_t>& data, uint64_t& ptr) {
         Light result{};
 
         const auto read = [&data, &ptr](void* dst, const size_t size) {

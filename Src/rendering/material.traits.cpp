@@ -3,11 +3,13 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "utils/fileIO.h"
 
-void ComponentTraits<Material>::inspect(Registry& registry, SharedState &sharedState, const EntityHandle self) {
+std::expected<void, LSIM::Error> ComponentTraits<Material>::inspect(
+        Registry& registry,
+        SharedState& sharedState,
+        const EntityHandle self
+) {
         if (ImGui::CollapsingHeader("Material")) {
                 auto material = registry.getComponent<Material>(self);
-
-                std::string propertyToRemove;
 
                 ImGui::SeparatorText("Properties:");
 
@@ -73,67 +75,7 @@ void ComponentTraits<Material>::inspect(Registry& registry, SharedState &sharedS
                                 }
                         }, property.second);
 
-                        ImGui::SameLine();
-
-                        ImGui::SetCursorPosX(
-                                ImGui::GetWindowContentRegionMax().x -
-                                ImGui::CalcTextSize("-").x -
-                                ImGui::GetStyle().FramePadding.x * 2
-                        );
-
-                        if (ImGui::SmallButton("-")) {
-                                propertyToRemove = property.first;
-                        }
-
                         ImGui::PopID();
-                }
-
-                if (!propertyToRemove.empty()) {
-                        material->removeProperty(propertyToRemove);
-                }
-
-                static char propertyName[128] = "";
-
-                if (ImGui::Button("+ Add Property")) {
-                        ImGui::OpenPopup("Add Property");
-                }
-
-                if (ImGui::BeginPopup("Add Property")) {
-                        ImGui::InputText("Name", propertyName, IM_ARRAYSIZE(propertyName));
-
-                        ImGui::Separator();
-
-                        if (ImGui::MenuItem("Float")) {
-                                material->setProperty(propertyName, 0.0f);
-                        }
-
-                        if (ImGui::MenuItem("Int")) {
-                                material->setProperty(propertyName, 0);
-                        }
-
-                        if (ImGui::MenuItem("Vec3")) {
-                                material->setProperty(propertyName, glm::vec3(0.0f));
-                        }
-
-                        if (ImGui::MenuItem("Vec4")) {
-                                material->setProperty(propertyName, glm::vec4(1.0f));
-                        }
-
-                        if (ImGui::MenuItem("Mat3")) {
-                                material->setProperty(propertyName, glm::mat3(1.0f));
-                        }
-
-                        if (ImGui::MenuItem("Mat4")) {
-                                material->setProperty(propertyName, glm::mat4(1.0f));
-                        }
-
-                        ImGui::SameLine();
-
-                        if (ImGui::Button("Cancel")) {
-                                ImGui::CloseCurrentPopup();
-                        }
-
-                        ImGui::EndPopup();
                 }
 
                 ImGui::SeparatorText("Textures:");
@@ -143,7 +85,14 @@ void ComponentTraits<Material>::inspect(Registry& registry, SharedState &sharedS
                         ImGui::PushID(name.c_str());
 
                         if (ImGui::Button(name.c_str())) {
-                                material->setTexture(name, IO::OpenDialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga;*.hdr\0\0"));
+                                auto tex = material->setTexture(
+                                        name,
+                                        IO::OpenDialog("Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga;*.hdr\0\0"),
+                                        VK_FILTER_NEAREST,
+                                        TextureType::COLOR
+                                );
+
+                                if (!tex) return std::unexpected(tex.error());
                         }
 
                         ImGui::SameLine();
@@ -186,7 +135,15 @@ void ComponentTraits<Material>::inspect(Registry& registry, SharedState &sharedS
                                         );
 
                                         if (!path.empty()) {
-                                                material->addTexture(textureName, path);
+                                                auto tex = material->addTexture(
+                                                        textureName,
+                                                        path,
+                                                        VK_FILTER_NEAREST,
+                                                        TextureType::COLOR
+                                                );
+                                                if ((!tex && tex.error().code != LSIM::ErrorCode::LSIM_TEXTURE_EXISTS) || tex) {
+                                                        return std::unexpected(tex.error());
+                                                }
                                                 ImGui::CloseCurrentPopup();
                                         }
                                 }
@@ -201,6 +158,8 @@ void ComponentTraits<Material>::inspect(Registry& registry, SharedState &sharedS
                         ImGui::EndPopup();
                 }
         }
+
+        return {};
 }
 
 std::vector<uint8_t> ComponentTraits<Material>::serialize(Registry& registry, const EntityHandle self) {
@@ -257,7 +216,8 @@ std::vector<uint8_t> ComponentTraits<Material>::serialize(Registry& registry, co
         return data;
 }
 
-std::any ComponentTraits<Material>::deserialize(const std::vector<uint8_t> &data, size_t &ptr) {
+std::expected<std::any, LSIM::Error> ComponentTraits<Material>::deserialize(
+        const Device& device, Command& command, const std::vector<uint8_t>& data, size_t& ptr) {
         Material result{};
 
         const auto read = [&data, &ptr](void* dst, const size_t size) {
@@ -334,7 +294,13 @@ std::any ComponentTraits<Material>::deserialize(const std::vector<uint8_t> &data
                 const std::string name = readString();
                 const std::string path = readString();
 
-                result.setTexture(name, path);
+                auto tex = result.setTexture(
+                        name,
+                        path,
+                        VK_FILTER_NEAREST,
+                        TextureType::COLOR
+                );
+                if (!tex) return std::unexpected(tex.error());
         }
 
         // Shader

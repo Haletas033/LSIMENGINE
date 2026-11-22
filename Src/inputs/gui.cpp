@@ -53,9 +53,13 @@ void Gui::CleanUp() {
         ImGui::DestroyContext();
 }
 
-void Gui::AddTexture(const std::string &slotName, std::string &fileName,
-                     Registry &registry, const std::set<EntityHandle> &currentMeshes,
-                     const std::string &workingDir) {
+std::expected<void, LSIM::Error> Gui::AddTexture(
+        const std::string& slotName,
+        std::string& fileName,
+        Registry& registry,
+        const std::set<EntityHandle>& currentMeshes,
+        const std::string& workingDir
+) {
         if (ImGui::Button(slotName.c_str())) {
                 const std::string filePath = IO::OpenDialog(
                         "Image Files\0*.png;*.jpg;*.jpeg;*.bmp;*.tga\0All Files\0*.*\0");
@@ -68,12 +72,24 @@ void Gui::AddTexture(const std::string &slotName, std::string &fileName,
                 std::filesystem::copy(filePath.c_str(), std::string(workingDir + "resources/") + fileName,
                                       std::filesystem::copy_options::overwrite_existing);
 
-                const TextureResource texture = ResourceManager::addTexture(fileName,
-                        std::string(workingDir + "resources/") + fileName, VK_FILTER_NEAREST);
+                const auto tex = ResourceManager::addTexture(
+                        fileName,
+                        std::string(workingDir + "resources/") + fileName,
+                        VK_FILTER_NEAREST,
+                        TextureType::COLOR
+                );
+                if (!tex) return std::unexpected(tex.error());
+
                 for (const EntityHandle &mesh: currentMeshes) {
                         auto *material = registry.getComponent<Material>(mesh);
                         if (!material) continue;
-                        material->setTexture(slotName, workingDir + "resources/" + fileName);
+                        auto matTex = material->setTexture(
+                                slotName,
+                                workingDir + "resources/" + fileName,
+                                VK_FILTER_NEAREST,
+                                TextureType::COLOR
+                        );
+                        if (!matTex) return std::unexpected(matTex.error());
                 }
         }
 }
@@ -183,8 +199,15 @@ void Gui::SceneGUI(EntityHandle skybox, glm::vec4 &ambientLightColour,
                         faces[4] = findFace("front");
                         faces[5] = findFace("back");
 
-                        Registry::getDefaultRegistry().getComponent<Material>(skybox)
-                                ->setProperty("skybox", static_cast<int>(Texture::GetCubemapId(faces, GL_NEAREST)));
+                        const auto tex = ResourceManager::addCubeMapTexture(
+                                "skybox",
+                                faces,
+                                VK_FILTER_NEAREST,
+                                TextureType::COLOR
+                        );
+                        if (!tex) return;
+
+                        Registry::getDefaultRegistry().getComponent<Material>(skybox)->addTexture("skybox");
                 }
 
                 ImGui::ColorEdit4("Ambient Light Colour", glm::value_ptr(ambientLightColour));

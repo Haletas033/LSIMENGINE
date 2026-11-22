@@ -12,12 +12,23 @@
 #include "rendering/material.h"
 
 namespace Mesh {
-    EntityHandle create(Primitive::Type primitive, MeshMode mode,
-                        Registry &registry = Registry::getDefaultRegistry(), MeshPool &meshPool = MeshPool::getDefaultMeshPool(), const
-                        Material &material = Material::createStandardPBR(), const Transform &transform = Transform());
+        inline Device* device = nullptr;
+        inline Command* command = nullptr;
 
-    EntityHandle create(const std::vector<float> &vertices, const std::vector<uint32_t> &indices, MeshMode mode,
-                        Registry &registry = Registry::getDefaultRegistry(), MeshPool &meshPool = MeshPool::getDefaultMeshPool(), const
-                        Material &material = Material::createStandardPBR(), const Transform &transform = Transform());
+        inline void setDevice(Device* d) { device = d; }
+        inline void setCommand(Command* c) { command = c; }
+
+        std::expected<EntityHandle, LSIM::Error> create(Primitive::Type primitive, MeshMode mode,
+                                                        Registry& registry = Registry::getDefaultRegistry(),
+                                                        MeshPool& meshPool = MeshPool::getDefaultMeshPool(), const
+                                                        Material& material = Material::createStandardPBR(),
+                                                        const Transform& transform = Transform());
+
+        std::expected<EntityHandle, LSIM::Error> create(const std::vector<Vertex>& vertices,
+                                                        const std::vector<uint32_t>& indices, MeshMode mode,
+                                                        Registry& registry = Registry::getDefaultRegistry(),
+                                                        MeshPool& meshPool = MeshPool::getDefaultMeshPool(), const
+                                                        Material& material = Material::createStandardPBR(),
+                                                        const Transform& transform = Transform());
 }
 #endif //MESH_CLASS_H

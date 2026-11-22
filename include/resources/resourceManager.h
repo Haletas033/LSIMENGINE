@@ -10,25 +10,40 @@
 #include "vk/device.h"
 #include "vk/pipeline.h"
 
+#define MAX_TEXTURES 4096
+
 class ResourceManager {
 private:
         static std::unordered_map<std::string, TextureResource> textures;
         static std::unordered_map<std::string, VkShaderModule> shaderModules;
         static std::unordered_map<std::string, Pipeline> pipelines;
+        static VkDescriptorPool bindlessPool;
+        static VkDescriptorSetLayout bindlessSetLayout;
+        static VkDescriptorSet bindlessSet;
+        static Device* device;
+        static Command* command;
 
 public:
+        static void setDevice(Device* newDevice) { device = newDevice; }
+        static void setCommand(Command* newCommand) { command = newCommand; }
+
         static std::unordered_map<std::string, TextureResource>& getTextures() { return textures; }
+        static std::expected<void, LSIM::Error> init();
         static std::expected<TextureResource*, LSIM::Error> getTexture(const std::string& name);
         static std::expected<TextureResource*, LSIM::Error> addTexture(
                 const std::string& name,
                 const std::string& path,
-                VkFilter filter = VK_FILTER_NEAREST
+                VkFilter filter,
+                TextureType type
         );
+        static std::expected<TextureResource*, LSIM::Error> addCubeMapTexture(const std::string& name,
+                                                                              const std::array<std::string, 6>& faces,
+                                                                              VkFilter filter,
+                                                                              TextureType type);
 
         static std::unordered_map<std::string, VkShaderModule>& getShaderModules() { return shaderModules; }
         static VkShaderModule* getShaderModule(const std::string& name);
         static VkShaderModule* addShaderModule(
-                const Device& device,
                 const std::string& name, const std::string& path
         );
 
@@ -39,7 +54,7 @@ public:
                 Pipeline pipeline
         );
 
-        static void clear(const Device& device);
+        static void clear();
 };
 
 #endif //LSIM_RESOURCEMANAGER_H

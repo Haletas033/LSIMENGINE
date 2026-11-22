@@ -31,7 +31,7 @@ std::vector<uint8_t> ComponentTraits<Name>::serialize(Registry& registry, const 
         return data;
 }
 
-std::any ComponentTraits<Name>::deserialize(const std::vector<uint8_t> &data, size_t &ptr) {
+std::expected<std::any, LSIM::Error> ComponentTraits<Name>::deserialize(const Device& device, Command& command, const std::vector<uint8_t>& data, size_t& ptr) {
         Name result{};
 
         const auto read = [&data, &ptr](void* dst, const size_t size) {

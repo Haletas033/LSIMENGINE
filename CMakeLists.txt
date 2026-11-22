@@ -43,6 +43,20 @@ FetchContent_Declare(
         GIT_TAG v1.1.1
 )
 
+FetchContent_Declare(
+        spirv_cross
+        GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
+        GIT_TAG main
+)
+
+set(SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
+set(SPIRV_CROSS_ENABLE_GLSL OFF CACHE BOOL "" FORCE)
+set(SPIRV_CROSS_ENABLE_HLSL OFF CACHE BOOL "" FORCE)
+set(SPIRV_CROSS_ENABLE_MSL OFF CACHE BOOL "" FORCE)
+set(SPIRV_CROSS_ENABLE_CPP OFF CACHE BOOL "" FORCE)
+set(SPIRV_CROSS_ENABLE_REFLECT OFF CACHE BOOL "" FORCE)
+set(SPIRV_CROSS_CLI OFF CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(
         glfw
         glm
@@ -50,6 +64,7 @@ FetchContent_MakeAvailable(
         stb
         nlohmann_json
         fastnoiselite
+        spirv_cross
 )
 
 if(DEFINED SCRIPTS)
@@ -118,7 +133,7 @@ target_include_directories(LSIM PRIVATE
 
 file(COPY ${CMAKE_SOURCE_DIR}/skybox DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/config DESTINATION ${CMAKE_BINARY_DIR})
-target_link_libraries(LSIM PRIVATE Vulkan::Vulkan glfw glm::glm nlohmann_json::nlohmann_json)
+target_link_libraries(LSIM PRIVATE Vulkan::Vulkan glfw glm::glm nlohmann_json::nlohmann_json spirv-cross-core)
 
 add_dependencies(LSIM compile_shaders)
 

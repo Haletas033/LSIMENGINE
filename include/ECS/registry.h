@@ -1,7 +1,7 @@
 #ifndef LSIM_REGISTRY_H
 #define LSIM_REGISTRY_H
 #include <any>
-#include <assert.h>
+#include <cassert>
 #include <functional>
 #include <optional>
 #include <ranges>
@@ -32,7 +32,7 @@ private:
 
         std::unordered_map<
                 std::string,
-                std::function<void(const Device&, Command&, Registry&, EntityHandle, size_t&,
+                std::function<std::expected<void, LSIM::Error>(const Device&, Command&, Registry&, EntityHandle, size_t&,
                                    const std::vector<uint8_t>&)>
         > deserializeFuncs{};
 
@@ -63,14 +63,17 @@ public:
                                 const EntityHandle entity,
                                 size_t& ptr,
                                 const std::vector<uint8_t>& data
-                        ) {
-                                        auto deserializeComponent = ComponentTraits<Component>::deserialize(data, ptr);
+                        ) -> std::expected<void, LSIM::Error> {
+                                std::expected<std::any, LSIM::Error> deserializeComponent = ComponentTraits<Component>::deserialize(device, command, data, ptr);
+                                if (!deserializeComponent) return std::unexpected(deserializeComponent.error());
 
-                                        registry.addComponent<Component>(
-                                                entity,
-                                                std::any_cast<Component>(std::move(deserializeComponent))
-                                        );
-                                };
+                                registry.addComponent<Component>(
+                                        entity,
+                                        std::any_cast<Component>(std::move(*deserializeComponent))
+                                );
+
+                                return {};
+                        };
 
                         slot = Pool<Component>{};
 
@@ -115,7 +118,7 @@ public:
                 return it->second(*this, entity);
         }
 
-        void deserializeComponent(
+        std::expected<void, LSIM::Error> deserializeComponent(
                 const Device& device,
                 Command& command,
                 const EntityHandle entity,
@@ -128,7 +131,9 @@ public:
                         throw std::runtime_error("No deserializer registered for component");
                 }
 
-                it->second(device, command, *this, entity, ptr, data);
+                auto res = it->second(device, command, *this, entity, ptr, data);
+                if (!res) return std::unexpected(res.error());
+                return {};
         }
 
         template <typename T>

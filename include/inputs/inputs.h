@@ -101,8 +101,8 @@ public:
     void handleInputs(const InputContext& context);
 
 private:
-    [[nodiscard]] static std::optional<LSIM::Error> initializeInput(Inputs &inputs, GLFWwindow *window, EditorInputs &editorInputs, Scene &scene, SharedState &sharedState, const Camera &
-                                                                    camera);
+    [[nodiscard]] static std::expected<void, LSIM::Error> initializeInput(const Device& device, Command& command, Inputs& inputs, GLFWwindow* window, EditorInputs& editorInputs, Scene& scene, SharedState
+                                                                          & sharedState, const Camera& camera);
     [[nodiscard]] static std::optional<LSIM::Error> handleInputs(Inputs &inputs, GLFWwindow *window, Scene &scene, Camera &camera, float deltaTime);
     friend class Engine;
 };

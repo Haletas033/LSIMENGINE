@@ -1,5 +1,6 @@
 #include "vk/pipeline.h"
 
+#include "spirv_cross.hpp"
 #include "utils/fileIO.h"
 #include "vk/vk.h"
 
@@ -60,6 +61,22 @@ std::expected<Pipeline, LSIM::Error> Pipeline::create(
                         vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &shaderModule),
                         LSIM::ErrorCode::VK_CREATE_SHADER_MODULE_FAILURE
                 );
+
+                const auto* words = reinterpret_cast<const uint32_t*>(fileData.data());
+                const size_t wordCount = fileData.size() / sizeof(uint32_t);
+                spirv_cross::Compiler compiler(words, wordCount);
+
+                for (const auto& pushConstantBuffer : compiler.get_shader_resources().push_constant_buffers) {
+                        const spirv_cross::SPIRType& type = compiler.get_type(pushConstantBuffer.base_type_id);
+                        for (uint32_t i = 0; i < type.member_types.size(); i++) {
+                                const std::string& name = compiler.get_member_name(type.self, i);
+                                size_t offset = compiler.type_struct_member_offset(type, i);
+                                size_t size = compiler.get_declared_struct_member_size(type, i);
+
+                                pipeline.pushConstantOffsets[name] = offset;
+                                pipeline.pushConstantSize = std::max(pipeline.pushConstantSize, static_cast<uint32_t>(offset + size));
+                        }
+                }
 
 
                 VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfo{
@@ -224,10 +241,18 @@ std::expected<Pipeline, LSIM::Error> Pipeline::create(
                         .blendConstants = {0.f, 0.f, 0.f, 0.f}
                 };
 
+        VkPushConstantRange pushConstantRange = {
+                .stageFlags = VK_SHADER_STAGE_ALL,
+                .offset = 0,
+                .size = pipeline.pushConstantSize
+        };
+
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
                 .setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size()),
-                .pSetLayouts = descriptorSetLayouts.data()
+                .pSetLayouts = descriptorSetLayouts.data(),
+                .pushConstantRangeCount = pipeline.pushConstantSize > 0 ? 1u : 0u,
+                .pPushConstantRanges = pipeline.pushConstantSize > 0 ? &pushConstantRange : nullptr
         };
 
         VK_CHECK(

@@ -30,8 +30,10 @@ struct Scene {
     Scene(const Scene&) = delete;
     Scene& operator=(const Scene&) = delete;
 
-    [[nodiscard]] static std::optional<LSIM::Error> createDefaultScene(SharedState &sharedState, EntityHandle &skybox);
-    [[nodiscard]] static std::optional<LSIM::Error> initializeScene(SharedState &sharedState, Camera &camera, EntityHandle &skybox);
+    [[nodiscard]] static std::expected<void, LSIM::Error> createDefaultScene(
+        SharedState& sharedState, EntityHandle& skybox);
+    [[nodiscard]] static std::expected<void, LSIM::Error> initializeScene(
+        const Device& device, Command& command, SharedState& sharedState, Camera& camera, EntityHandle& skybox);
 };
 
 #endif //SCENE_H

@@ -84,7 +84,11 @@ std::vector<std::vector<float>> Terrain::GenerateNoiseMap(const unsigned int wid
     return noiseMap;
 }
 
-TextureResource* Terrain::noiseMapToTexture(std::vector<std::vector<float>>& noiseMap, const std::string& texName, const char* outputLocation) {
+std::expected<TextureResource*, LSIM::Error> Terrain::noiseMapToTexture(
+    std::vector<std::vector<float>>& noiseMap,
+    const std::string& texName,
+    const char* outputLocation
+) {
     int width = noiseMap.size();
     int height = noiseMap[0].size();
 
@@ -121,9 +125,9 @@ TextureResource* Terrain::noiseMapToTexture(std::vector<std::vector<float>>& noi
 
     delete[] colorMap;
 
-    TextureResource* texture = ResourceManager::addTexture(texName, outputLocation, VK_FILTER_NEAREST);
-
-    return texture;
+    auto tex = ResourceManager::addTexture(texName, outputLocation, VK_FILTER_NEAREST, TextureType::COLOR);
+    if (!tex) return std::unexpected(tex.error());
+    return *tex;
 }
 
 void Terrain::noiseMapToMesh(std::vector<std::vector<float>> &noiseMap, std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, float heightScale, float gridScale) {

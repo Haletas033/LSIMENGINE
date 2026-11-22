@@ -170,8 +170,22 @@ std::expected<VkDevice, LSIM::Error> Device::createLogicalDevice(const PhysicalD
                 deviceQueues.push_back(presentQueue);
         }
 
+        VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{
+                .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
+                .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
+                .descriptorBindingPartiallyBound = VK_TRUE,
+                .descriptorBindingVariableDescriptorCount = VK_TRUE,
+                .runtimeDescriptorArray = VK_TRUE
+        };
+
+        VkPhysicalDeviceFeatures2 features2{
+                .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+                .pNext = &indexingFeatures
+        };
+
         VkDeviceCreateInfo deviceCreateInfo{};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        deviceCreateInfo.pNext = &features2;
         deviceCreateInfo.queueCreateInfoCount = deviceQueues.size();
         deviceCreateInfo.pQueueCreateInfos = deviceQueues.data();
         deviceCreateInfo.enabledExtensionCount = 1;

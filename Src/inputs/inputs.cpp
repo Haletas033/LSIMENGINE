@@ -69,7 +69,7 @@ void Inputs::BindingTable::changeActionForFunction(const std::string &oldAction,
 }
 
 void Inputs::BindingTable::changeFunctionForAction(const std::string &action, std::function<void(const InputContext &)> newFunction) {
-    if (actionToKeys.find(action) == actionToKeys.end()) {
+    if (!actionToKeys.contains(action)) {
         logger("stdWarning", "FAILED TO CHANGE FUNCTION TO ACTION \"" + action + "\": DOES NOT EXIST");
         return;
     }
@@ -156,11 +156,20 @@ void Inputs::handleInputs(const InputContext& context) {
     lastKeyStates = currentKeyStates;
 }
 
-std::optional<LSIM::Error> Inputs::initializeInput(Inputs& inputs, GLFWwindow* window, EditorInputs& editorInputs, Scene& scene, SharedState& sharedState, const Camera& camera) {
+std::expected<void, LSIM::Error> Inputs::initializeInput(
+    const Device& device,
+    Command& command,
+    Inputs& inputs,
+    GLFWwindow* window,
+    EditorInputs& editorInputs,
+    Scene& scene,
+    SharedState& sharedState,
+    const Camera& camera
+) {
     inputs.InitInputs(window);
     editorInputs.Init(
-        TODO,
-        TODO,
+        device,
+        command,
         Registry::getDefaultRegistry(),
         MeshPool::getDefaultMeshPool(),
         scene,
@@ -169,7 +178,7 @@ std::optional<LSIM::Error> Inputs::initializeInput(Inputs& inputs, GLFWwindow* w
         EngineContext::getDefaults(), camera, inputs
     );
 
-    return std::nullopt;
+    return {};
 }
 
 std::optional<LSIM::Error> Inputs::handleInputs(Inputs& inputs, GLFWwindow* window, Scene& scene, Camera& camera, const float deltaTime) {

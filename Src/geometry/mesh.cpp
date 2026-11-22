@@ -12,7 +12,14 @@
 #include "rendering/meshRenderer.traits.h"
 #include "geometry/transform.traits.h"
 
-EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, Registry &registry, MeshPool &meshPool, const Material &material, const Transform &transform) {
+std::expected<EntityHandle, LSIM::Error> Mesh::create(
+        const Primitive::Type primitive,
+        const MeshMode mode,
+        Registry& registry,
+        MeshPool& meshPool,
+        const Material& material,
+        const Transform& transform
+) {
         MeshData meshData{};
 
         switch (primitive) {
@@ -38,42 +45,68 @@ EntityHandle Mesh::create(const Primitive::Type primitive, const MeshMode mode, 
 
                         const auto uID = static_cast<long long>(glfwGetTime() * 1'000'000'000LL);
                         const std::string outputPath = std::string(EngineContext::getWorkingDir()) + "resources/" + std::to_string(uID) + "terrain.png";
-                        const TextureResource* noiseMapTexture = Terrain::noiseMapToTexture(noiseMap, std::to_string(uID), outputPath.c_str());
+                        const auto noiseMapTexture = Terrain::noiseMapToTexture(
+                                noiseMap,
+                                std::to_string(uID),
+                                outputPath.c_str()
+                        );
+
+                        if (!noiseMapTexture) return std::unexpected(noiseMapTexture.error());
 
                         std::vector<Vertex> vertices;
                         std::vector<uint32_t> indices;
 
                         Terrain::noiseMapToMesh(noiseMap, vertices, indices, defaults.heightScale, defaults.gridScale);
 
-                        const EntityHandle mesh = create(vertices, indices, mode, registry, meshPool, material, transform);
-                        registry.getComponent<Name>(mesh)->value = "Terrain";
-                        Material *mat = registry.getComponent<Material>(mesh);
-                        mat->addTexture("albedo", outputPath);
-                        ResourceManager::getShader(mat->getShader())->SetInt("useTexture", 1);
+                        const auto mesh = create(vertices, indices, mode, registry, meshPool, material, transform);
+                        if (!mesh) return std::unexpected(mesh.error());
+                        registry.getComponent<Name>(*mesh)->value = "Terrain";
+                        Material *mat = registry.getComponent<Material>(*mesh);
+                        auto tex = mat->addTexture(
+                                "albedo",
+                                outputPath,
+                                VK_FILTER_NEAREST,
+                                TextureType::COLOR
+                        );
+                        if (!tex) return std::unexpected(tex.error());
+
+                        LSIM_CHECK(mat->setProperty("useTexture", 1));
                         return mesh;
                 }
                 case Primitive::MODEL: {
                         const auto filePath = IO::OpenDialog("Model Files\0*.gltf\0All Files\0*.*\0");
                         engineLogger("stdInfo", filePath);
 
-                        const Model model{registry, meshPool, filePath.c_str()};
-                        return model.meshes[0];
+                        auto model = Model::create(registry, meshPool, filePath.c_str());
+                        if (!model) return std::unexpected(model.error());
+                        return model->meshes[0];
                 }
         }
-        EntityHandle mesh = create(meshData.vertices, meshData.indices, mode, registry, meshPool, material, transform);
-        return mesh;
+        auto mesh = create(meshData.vertices, meshData.indices, mode, registry, meshPool, material, transform);
+        if (!mesh) return std::unexpected(mesh.error());
+        return *mesh;
 }
 
-EntityHandle Mesh::create(const std::vector<float>& vertices, const std::vector<uint32_t>& indices, const MeshMode mode,
-        Registry &registry, MeshPool &meshPool, const Material &material, const Transform &transform)
-{
+std::expected<EntityHandle, LSIM::Error> Mesh::create(
+        const std::vector<Vertex>& vertices,
+        const std::vector<uint32_t>& indices,
+        const MeshMode mode,
+        Registry& registry,
+        MeshPool& meshPool,
+        const Material& material,
+        const Transform& transform
+) {
         const EntityHandle e = registry.create();
-        MeshData data{ vertices, {}, indices };
-        const MeshHandle handle = meshPool.upload(TODO, TODO, data, mode);
+        MeshData data{
+                .vertices = vertices,
+                .indices = indices
+        };
+        const auto handle = meshPool.upload(*device, *command, data, mode);
+        if (!handle) return std::unexpected(handle.error());
         registry.addComponent<Name>(e, {"Mesh"});
         registry.addComponent<Transform>(e, transform);
         registry.addComponent<Material>(e, material);
-        registry.addComponent<MeshRenderer>(e, MeshRenderer{handle, vertices, indices, mode});
+        registry.addComponent<MeshRenderer>(e, MeshRenderer{*handle, vertices, indices, mode});
 
         return e;
 }

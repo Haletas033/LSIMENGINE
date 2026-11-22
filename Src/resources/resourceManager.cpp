@@ -9,6 +9,88 @@
 std::unordered_map<std::string, TextureResource> ResourceManager::textures;
 std::unordered_map<std::string, VkShaderModule> ResourceManager::shaderModules;
 std::unordered_map<std::string, Pipeline> ResourceManager::pipelines;
+VkDescriptorPool ResourceManager::bindlessPool;
+VkDescriptorSetLayout ResourceManager::bindlessSetLayout;
+VkDescriptorSet ResourceManager::bindlessSet;
+
+std::expected<void, LSIM::Error> ResourceManager::init() {
+        VkDescriptorPoolSize descriptorPoolSize {
+                .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = MAX_TEXTURES
+        };
+
+        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo {
+                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+                .flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
+                .maxSets = 1,
+                .poolSizeCount = 1,
+                .pPoolSizes = &descriptorPoolSize
+        };
+
+        VkDescriptorBindingFlags bindingFlags =
+                VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
+                VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+
+        VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo {
+                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+                .bindingCount = 1,
+                .pBindingFlags = &bindingFlags
+        };
+
+        VkDescriptorSetLayoutBinding descriptorSetLayoutBinding {
+                .binding = 0,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = MAX_TEXTURES,
+                .stageFlags = VK_SHADER_STAGE_ALL,
+                .pImmutableSamplers = nullptr
+        };
+
+        VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo {
+                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                .pNext = &bindingFlagsInfo,
+                .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
+                .bindingCount = 1,
+                .pBindings = &descriptorSetLayoutBinding
+        };
+
+        VK_CHECK(
+                vkCreateDescriptorSetLayout(
+                        device->getLogicalDevice(),
+                        &descriptorSetLayoutCreateInfo,
+                        nullptr,
+                        &bindlessSetLayout
+                ),
+                LSIM::ErrorCode::VK_ALLOCATE_DESCRIPTOR_SETS_FAILURE
+        );
+
+        VK_CHECK(
+                vkCreateDescriptorPool(
+                        device->getLogicalDevice(),
+                        &descriptorPoolCreateInfo,
+                        nullptr,
+                        &bindlessPool
+                ),
+                LSIM::ErrorCode::VK_CREATE_DESCRIPTOR_POOL_FAILURE
+        );
+
+        const VkDescriptorSetAllocateInfo descriptorSetAllocateInfo {
+                .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+                .descriptorPool = bindlessPool,
+                .descriptorSetCount = 1,
+                .pSetLayouts = &bindlessSetLayout
+        };
+
+        VK_CHECK(
+                vkAllocateDescriptorSets(
+                        device->getLogicalDevice(),
+                        &descriptorSetAllocateInfo,
+                        &bindlessSet
+                ),
+                LSIM::ErrorCode::VK_ALLOCATE_DESCRIPTOR_SETS_FAILURE
+        );
+
+        return {};
+}
 
 std::expected<TextureResource*, LSIM::Error> ResourceManager::getTexture(const std::string& name) {
         const auto it = textures.find(name);
@@ -21,15 +103,30 @@ std::expected<TextureResource*, LSIM::Error> ResourceManager::getTexture(const s
 }
 
 std::expected<TextureResource*, LSIM::Error> ResourceManager::addTexture(
-        const std::string& name, const std::string& path, const VkFilter filter) {
-        auto tex = Texture::loadTexture(path.c_str(), filter);
+        const std::string& name,
+        const std::string& path,
+        const VkFilter filter,
+        const TextureType type
+) {
+        auto tex = Texture::loadTexture(*device, *command, path.c_str(), filter, type);
         if (!tex) return std::unexpected(tex.error());
         textures[name] = std::move(*tex);
         return &textures[name];
 }
 
-VkShaderModule*
-ResourceManager::addShaderModule(const Device& device, const std::string& name, const std::string& path) {
+std::expected<TextureResource*, LSIM::Error> ResourceManager::addCubeMapTexture(
+        const std::string& name,
+        const std::array<std::string, 6>& faces,
+        const VkFilter filter,
+        const TextureType type
+) {
+        auto tex = Texture::loadCubemap(*device, *command, faces, filter, type);
+        if (!tex) return std::unexpected(tex.error());
+        textures[name] = std::move(*tex);
+        return &textures[name];
+}
+
+VkShaderModule* ResourceManager::addShaderModule(const std::string& name, const std::string& path) {
         const std::string code = IO::GetFileContents(path);
 
         const VkShaderModuleCreateInfo shaderModuleCreateInfo{
@@ -39,7 +136,7 @@ ResourceManager::addShaderModule(const Device& device, const std::string& name, 
         };
 
         vkCreateShaderModule(
-                device.getLogicalDevice(),
+                device->getLogicalDevice(),
                 &shaderModuleCreateInfo,
                 nullptr,
                 &shaderModules[name]
@@ -71,11 +168,11 @@ Pipeline* ResourceManager::getPipeline(const std::string& name) {
         return &it->second;
 }
 
-void ResourceManager::clear(const Device& device) {
+void ResourceManager::clear() {
         textures.clear();
 
         for (const auto& shader : shaderModules | std::views::values) {
-                vkDestroyShaderModule(device.getLogicalDevice(), shader, nullptr);
+                vkDestroyShaderModule(device->getLogicalDevice(), shader, nullptr);
         }
         shaderModules.clear();
 
