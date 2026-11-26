@@ -4,8 +4,9 @@
 #include "rendering/material.h"
 #include "rendering/meshRenderer.h"
 #include "resources/resourceManager.h"
+#include "vk/context.h"
 
-void RenderSystem::update(Registry &registry, float deltaTime) {
+void RenderSystem::update(Context& context, Registry &registry, float deltaTime) {
         Defaults defaults = EngineContext::getDefaults();
 
         std::unordered_map<BatchKey, RenderBatch, BatchKeyHash> batches;
@@ -24,18 +25,18 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                         material
                 };
 
-                auto &[instances] = batches[key];
-
-                InstanceGPUData instance{};
-                instance.model = transform->getModelMatrix();
-                instance.normalMatrix =
-                                glm::transpose(
-                                        glm::inverse(
-                                                glm::mat3(instance.model)
-                                        )
-                                );
-
-                instances.push_back(instance);
+                // auto &[instances] = batches[key];
+                //
+                // InstanceGPUData instance{};
+                // instance.model = transform->getModelMatrix();
+                // instance.normalMatrix =
+                //                 glm::transpose(
+                //                         glm::inverse(
+                //                                 glm::mat3(instance.model)
+                //                         )
+                //                 );
+                //
+                // instances.push_back(instance);
         }
 
         std::vector<LightGPUData> lightDatas;
@@ -68,11 +69,13 @@ void RenderSystem::update(Registry &registry, float deltaTime) {
                 Material *material = key.material;
                 GPUMeshBuffer *mesh = meshPool.get(key.mesh);
 
-                const Shader *shader = ResourceManager::getShader(material->getShader());
+                const Pipeline *shader = ResourceManager::getPipeline(material->getPipeline());
+
+                vkWaitForFences(context->)
 
                 shader->Activate();
 
-                camera.Matrix(defaults.FOVdeg, defaults.nearPlane, defaults.farPlane, *shader, "camMatrix", aspect);
+                camera.update(/*frameIndex*/);
 
                 const GLuint shaderId = shader->GetID();
 

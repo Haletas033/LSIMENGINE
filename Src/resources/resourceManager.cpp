@@ -6,12 +6,13 @@
 #include "vk/device.h"
 #include "vk/vk.h"
 
-std::unordered_map<std::string, TextureResource> ResourceManager::textures;
-std::unordered_map<std::string, VkShaderModule> ResourceManager::shaderModules;
-std::unordered_map<std::string, Pipeline> ResourceManager::pipelines;
-VkDescriptorPool ResourceManager::bindlessPool;
-VkDescriptorSetLayout ResourceManager::bindlessSetLayout;
-VkDescriptorSet ResourceManager::bindlessSet;
+std::unordered_map<std::string, TextureResource> ResourceManager::textures{};
+std::unordered_map<std::string, VkShaderModule> ResourceManager::shaderModules{};
+std::unordered_map<std::string, Pipeline> ResourceManager::pipelines{};
+VkDescriptorPool ResourceManager::bindlessPool{};
+VkDescriptorSetLayout ResourceManager::bindlessSetLayout{};
+VkDescriptorSet ResourceManager::bindlessSet{};
+uint32_t ResourceManager::nextTextureIndex{1};
 
 std::expected<void, LSIM::Error> ResourceManager::init() {
         VkDescriptorPoolSize descriptorPoolSize {
@@ -110,6 +111,32 @@ std::expected<TextureResource*, LSIM::Error> ResourceManager::addTexture(
 ) {
         auto tex = Texture::loadTexture(*device, *command, path.c_str(), filter, type);
         if (!tex) return std::unexpected(tex.error());
+
+        VkDescriptorImageInfo descriptorImageInfo {
+                .sampler = tex->sampler,
+                .imageView = tex->imageView,
+                .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        };
+
+        VkWriteDescriptorSet writeDescriptorSet {
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = bindlessSet,
+                .dstBinding = 0,
+                .dstArrayElement = nextTextureIndex,
+                .descriptorCount = 1,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .pImageInfo = &descriptorImageInfo,
+        };
+
+        vkUpdateDescriptorSets(
+                device->getLogicalDevice(),
+                1,
+                &writeDescriptorSet,
+                0,
+                nullptr
+        );
+
+        tex->bindlessIndex = nextTextureIndex++;
         textures[name] = std::move(*tex);
         return &textures[name];
 }

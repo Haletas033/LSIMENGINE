@@ -24,17 +24,10 @@ enum class PropertyType {
 
 class Material {
 private:
-        std::unordered_map<std::string, std::string> textures;
         std::unordered_map<std::string, MaterialProperty> properties;
         std::string pipeline;
 
 public:
-        std::expected<TextureResource*, LSIM::Error> addTexture(const std::string& name, const std::string& path, VkFilter filter, TextureType type);
-        std::expected<TextureResource*, LSIM::Error> setTexture(const std::string& name, const std::string& path, VkFilter filter, TextureType type);
-        void addTexture(const std::string& name);
-        [[nodiscard]] const std::unordered_map<std::string, std::string>& getTextures() const { return textures; }
-        void removeTexture(const std::string& name) { textures.erase(name); }
-
         void addPipeline(const std::string& name);
         void addPipeline(const std::string& name, Pipeline&& pipelineTouse);
         void setPipeline(const std::string& name, Pipeline&& pipelineToUse);

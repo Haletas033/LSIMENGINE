@@ -2,38 +2,6 @@
 
 #include "utils/logging/log.h"
 
-std::expected<TextureResource*, LSIM::Error> Material::addTexture(const std::string &name, const std::string &path, const VkFilter filter, const TextureType type) {
-    if (textures.contains(name)) {
-        engineLogger("stdError", "\"" + name + "\" already exists.");
-        return std::unexpected(LSIM::Error{LSIM::ErrorCode::LSIM_TEXTURE_EXISTS, LSIM::FatalityLevel::FATAL});
-    }
-
-    auto tex = setTexture(name, path, filter, type);
-    if (!tex) return std::unexpected(tex.error());
-    return *tex;
-}
-
-std::expected<TextureResource*, LSIM::Error> Material::setTexture(const std::string &name, const std::string &path, const VkFilter filter, const TextureType type) {
-    auto tex = ResourceManager::addTexture(name, path, filter, type);
-    if (!tex) return std::unexpected(tex.error());
-    textures[name] = path;
-    return *tex;
-}
-
-void Material::addTexture(const std::string &name) {
-    if (textures.contains(name)) {
-        engineLogger("stdError", "\"" + name + "\" already exists.");
-        return;
-    }
-
-    const auto &tex = ResourceManager::getTextures();
-    if (const auto it = tex.find(name); it != tex.end()) {
-        textures[name] = it->first;
-    } else {
-        engineLogger("stdError", "No texture named: \"" + name + "\" exists.");
-    }
-}
-
 void Material::addPipeline(const std::string& name) {
     if (!pipeline.empty()) {
         engineLogger("stdError", "Material already has pipeline");

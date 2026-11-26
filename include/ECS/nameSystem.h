@@ -9,7 +9,7 @@ private:
         std::unordered_map<EntityHandle, Gui::Node*> nodes{};
 
 public:
-        void update(Registry &registry, float deltaTime) override {
+        void update(Context& context, Registry &registry, float deltaTime) override {
                 for (const EntityHandle e : registry.getAllAlive()) {
                         if (!registry.hasComponent<Name>(e)) continue;
                         if (nodes.contains(e)) continue;

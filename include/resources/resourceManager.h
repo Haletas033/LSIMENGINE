@@ -20,6 +20,7 @@ private:
         static VkDescriptorPool bindlessPool;
         static VkDescriptorSetLayout bindlessSetLayout;
         static VkDescriptorSet bindlessSet;
+        static uint32_t nextTextureIndex;
         static Device* device;
         static Command* command;
 

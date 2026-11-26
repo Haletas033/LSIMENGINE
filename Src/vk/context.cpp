@@ -741,13 +741,7 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
         context.indexBuffer = std::move(*indexBuffer);
 
         for (uint32_t i{}; i < context.swapchain.getImagesViews().size(); ++i) {
-                constexpr VkCommandBufferBeginInfo commandBufferBeginInfo{
-                        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-                };
-                vkBeginCommandBuffer(
-                        context.command.getBuffers()[i],
-                        &commandBufferBeginInfo
-                );
+
 
                 const VkRenderPassBeginInfo gbufferRenderPassBeginInfo{
                         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -880,10 +874,110 @@ std::expected<Context, LSIM::Error> Context::create(GLFWwindow* window) {
 
                 vkCmdEndRenderPass(context.command.getBuffers()[i]);
 
-                vkEndCommandBuffer(context.command.getBuffers()[i]);
+
         }
 
         return context;
+}
+
+std::expected<std::pair<VkCommandBuffer, uint32_t>, LSIM::Error> Context::beginFrame() {
+        const auto& logicalDevice = device.getLogicalDevice();
+        const auto& imageAvailableSemaphores = command.getImageAvailableSemaphores();
+        const auto& fences = command.getInFlightFences();
+
+        vkWaitForFences(
+                logicalDevice,
+                1,
+                &fences[currentFrame],
+                VK_TRUE,
+                UINT64_MAX
+        );
+
+        uint32_t imageIndex{};
+        vkAcquireNextImageKHR(
+                logicalDevice,
+                swapchain.getSwapchain(),
+                UINT64_MAX,
+                imageAvailableSemaphores[currentFrame],
+                VK_NULL_HANDLE,
+                &imageIndex
+        );
+
+        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
+                vkWaitForFences(
+                    logicalDevice,
+                    1,
+                    &imagesInFlight[imageIndex],
+                    VK_TRUE,
+                    UINT64_MAX
+                );
+        }
+
+        imagesInFlight[imageIndex] = fences[currentFrame];
+
+        vkResetFences(
+            logicalDevice,
+            1,
+            &fences[currentFrame]
+        );
+
+        vkResetCommandBuffer(
+                command.getBuffers()[currentFrame],
+                0
+        );
+
+        constexpr VkCommandBufferBeginInfo commandBufferBeginInfo{
+                .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        };
+        vkBeginCommandBuffer(
+                command.getBuffers()[currentFrame],
+                &commandBufferBeginInfo
+        );
+
+        return std::make_pair(command.getBuffers()[currentFrame], imageIndex);
+}
+
+void Context::endFrame(const uint32_t imageIndex) {
+        const auto& buffers = command.getBuffers();
+        const auto& imageAvailableSemaphores = command.getImageAvailableSemaphores();
+        const auto& renderFinishedSemaphores = command.getRenderFinishedSemaphores();
+        const auto& fences = command.getInFlightFences();
+
+        vkEndCommandBuffer(command.getBuffers()[currentFrame]);
+
+        const VkSubmitInfo submitInfo{
+                .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+                .waitSemaphoreCount = 1,
+                .pWaitSemaphores = &imageAvailableSemaphores[currentFrame],
+                .pWaitDstStageMask = WAIT_STAGES,
+                .commandBufferCount = 1,
+                .pCommandBuffers = &buffers[imageIndex],
+                .signalSemaphoreCount = 1,
+                .pSignalSemaphores = &renderFinishedSemaphores[imageIndex]
+        };
+
+        vkQueueSubmit(
+                device.getGraphicsQueue(),
+                1,
+                &submitInfo,
+                fences[currentFrame]
+        );
+
+        const VkPresentInfoKHR presentInfo{
+                .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+                .waitSemaphoreCount = 1,
+                .pWaitSemaphores = &renderFinishedSemaphores[imageIndex],
+                .swapchainCount = 1,
+                .pSwapchains = &swapchain.getSwapchain(),
+                .pImageIndices = &imageIndex
+        };
+
+        vkQueuePresentKHR(
+                device.getPresentQueue(),
+                &presentInfo
+        );
+
+        currentFrame = (currentFrame + 1) % 2;
 }
 
 std::expected<void, LSIM::Error> Context::render() {
@@ -928,67 +1022,6 @@ std::expected<void, LSIM::Error> Context::render() {
         if (const auto result = uniformBuffers[currentFrame].upload(&ubo); !result)
                 return std::unexpected(result.error());
 
-        uint32_t imageIndex{};
-        vkAcquireNextImageKHR(
-                logicalDevice,
-                swapchain.getSwapchain(),
-                UINT64_MAX,
-                imageAvailableSemaphores[currentFrame],
-                VK_NULL_HANDLE,
-                &imageIndex
-        );
-
-        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
-                vkWaitForFences(
-                    logicalDevice,
-                    1,
-                    &imagesInFlight[imageIndex],
-                    VK_TRUE,
-                    UINT64_MAX
-                );
-        }
-
-        imagesInFlight[imageIndex] = fences[currentFrame];
-
-        vkResetFences(
-            logicalDevice,
-            1,
-            &fences[currentFrame]
-        );
-
-        const VkSubmitInfo submitInfo{
-                .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-                .waitSemaphoreCount = 1,
-                .pWaitSemaphores = &imageAvailableSemaphores[currentFrame],
-                .pWaitDstStageMask = WAIT_STAGES,
-                .commandBufferCount = 1,
-                .pCommandBuffers = &buffers[imageIndex],
-                .signalSemaphoreCount = 1,
-                .pSignalSemaphores = &renderFinishedSemaphores[imageIndex]
-        };
-
-        vkQueueSubmit(
-                device.getGraphicsQueue(),
-                1,
-                &submitInfo,
-                fences[currentFrame]
-        );
-
-        const VkPresentInfoKHR presentInfo{
-                .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-                .waitSemaphoreCount = 1,
-                .pWaitSemaphores = &renderFinishedSemaphores[imageIndex],
-                .swapchainCount = 1,
-                .pSwapchains = &swapchain.getSwapchain(),
-                .pImageIndices = &imageIndex
-        };
-
-        vkQueuePresentKHR(
-                device.getPresentQueue(),
-                &presentInfo
-        );
-
-        currentFrame = (currentFrame + 1) % 2;
 
         return {};
 }

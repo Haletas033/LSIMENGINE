@@ -249,7 +249,7 @@ public:
                         auto& data = systems.at(type);
 
                         if (data.isEnabled) {
-                                data.system->update(registry, deltaTime);
+                                data.system->update(TODO, registry, deltaTime);
                         }
                 }
         }

@@ -5,7 +5,7 @@
 
 class TransformSystem final : public System {
 public:
-        void update(Registry &registry, float deltaTime) override {
+        void update(Context& context, Registry &registry, float deltaTime) override {
                 for (const EntityHandle& e : registry.getAllAlive()) {
                         if (!registry.hasComponent<Transform>(e)) continue;
                         auto* transform = registry.getComponent<Transform>(e);

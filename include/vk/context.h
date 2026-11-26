@@ -80,6 +80,8 @@ public:
         void destroyDebugMessenger();
 
         static std::expected<Context, LSIM::Error> create(GLFWwindow *window);
+        std::expected<std::pair<VkCommandBuffer, uint32_t>, LSIM::Error> beginFrame();
+        void endFrame(uint32_t imageIndex);
 
         std::expected<void, LSIM::Error> render();
 

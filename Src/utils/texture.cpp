@@ -13,6 +13,7 @@ TextureResource::TextureResource(TextureResource&& other) noexcept
           memory(other.memory),
           imageView(other.imageView),
           sampler(other.sampler),
+          bindlessIndex(other.bindlessIndex),
           width(other.width),
           height(other.height),
           channels(other.channels)
@@ -20,6 +21,7 @@ TextureResource::TextureResource(TextureResource&& other) noexcept
         other.channels = 0;
         other.height = 0;
         other.width = 0;
+        other.bindlessIndex = 0;
         other.sampler = VK_NULL_HANDLE;
         other.imageView = VK_NULL_HANDLE;
         other.memory = VK_NULL_HANDLE;
@@ -38,6 +40,7 @@ TextureResource& TextureResource::operator=(TextureResource&& other) noexcept {
         memory = other.memory;
         imageView = other.imageView;
         sampler = other.sampler;
+        bindlessIndex = other.bindlessIndex;
         width = other.width;
         height = other.height;
         channels = other.channels;
@@ -45,6 +48,7 @@ TextureResource& TextureResource::operator=(TextureResource&& other) noexcept {
         other.channels = 0;
         other.height = 0;
         other.width = 0;
+        other.bindlessIndex = 0;
         other.sampler = VK_NULL_HANDLE;
         other.imageView = VK_NULL_HANDLE;
         other.memory = VK_NULL_HANDLE;

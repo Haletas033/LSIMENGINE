@@ -9,7 +9,6 @@
 #include "scene/scene.h"
 
 class Material;
-constexpr GLuint LIGHT_UBO_BINDING_POINT = 1;
 
 struct RenderBatch {
         std::vector<InstanceGPUData> instances;
@@ -43,41 +42,12 @@ private:
         Camera& camera;
         Scene& scene;
         float& aspect;
-        GLuint lightUBOId;
-        GLuint instanceVBO;
+
 public:
-        RenderSystem(MeshPool& meshPool, Camera& camera, Scene& scene, float& aspect) : meshPool(meshPool), camera(camera), scene(scene), aspect(aspect) {
-                // Lights
-                glGenBuffers(1, &lightUBOId);
-                glBindBuffer(GL_UNIFORM_BUFFER, lightUBOId);
-                glBufferData(GL_UNIFORM_BUFFER, sizeof(LightGPUData) * EngineContext::getDefaults().MAX_LIGHTS, nullptr,
-                             GL_DYNAMIC_DRAW);
+        RenderSystem(MeshPool& meshPool, Camera& camera, Scene& scene, float& aspect) : meshPool(meshPool), camera(camera), scene(scene), aspect(aspect) {}
 
-                glBindBufferBase(GL_UNIFORM_BUFFER, LIGHT_UBO_BINDING_POINT, lightUBOId);
 
-                glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-                // Instances
-                glGenBuffers(1, &instanceVBO);
-
-                glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-
-                glBufferData(
-                    GL_ARRAY_BUFFER,
-                    sizeof(InstanceGPUData) * 1024,
-                    nullptr,
-                    GL_DYNAMIC_DRAW
-                );
-
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-        }
-
-        ~RenderSystem() override {
-                glDeleteBuffers(1, &lightUBOId);
-                glDeleteBuffers(1, &instanceVBO);
-        }
-
-        void update(Registry &registry, float deltaTime) override;
+        void update(Context& context, Registry &registry, float deltaTime) override;
 };
 
 #endif //LSIM_RENDERSYSTEM_H
